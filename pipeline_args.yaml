@@ -1,0 +1,65 @@
+# Model can be "lseq" or "usleep"
+model: "lseq"
+
+training:
+ iterations: 100
+ batch_size: 8
+ use_pretrained: True
+ pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
+ max_epochs: 15
+ early_stop_patience: 50
+ lr_patience: 100
+ lr_reduction: 0.5
+ subject_percentage: 1.0
+ devices: 1
+ num_nodes: 1
+ datasplit_path: "shared/splits/usleep_split.json"
+ augmentation:
+  use: True
+  min_frac: 0.001
+  max_frac: 0.3
+  apply_prob: 0.1
+  sigma: 1.0
+  mean: 0.0
+  
+test:
+ model_path: ".neptune/lseq/BIG-301/checkpoints/latest.ckpt"
+ 
+neptune:
+ api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI4NjAwMjZkMC1iZTg1LTQ3ZTgtOGJhMC05MmU0YzcwZDU0ZDMifQ=="
+ project: "NTLAB/bigsleep"
+ 
+datasets:
+ base_path: "/home/alec/repos/data/hdf5"
+ train:
+  - "dcsm"
+ val:
+  - "dcsm"
+ test:
+  - "dcsm"
+
+lseq:
+ features: 129,
+ epochs: 200
+ sequences: 29
+ classes: 5
+ lr: 2.0E-03
+ seed: 4
+ weight_decay: 0.001
+ F: 129
+ M: 32
+ num_channels: 2
+ minF: 0
+ maxF: 50
+ source_samplerate: 128
+ samplerate: 100
+ K: 10
+ B: 20
+ lstm_hidden_size: 64
+ fc_hidden_size: 512
+ classes: 5
+ attention_size: 64
+
+usleep:
+ epochs: 35
+ lr: 1.0E-03

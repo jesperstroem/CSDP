@@ -1,0 +1,8 @@
+parameters:
+ scale_and_clip: False
+ output_sample_rate: 128
+target_path:
+ "/home/alec/repos/data/hdf5"
+datasets:
+ - name: Abc
+   path: "/home/alec/repos/data/abc/"
