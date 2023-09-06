@@ -1,8 +1,3 @@
-import os
-
-from shared.utility import log_dataset_splits
-from usleep_pytorch.usleep import USleepModel
-from lseqsleepnet_pytorch.model.lseqsleepnet import LSeqSleepNet_Lightning
 import torch
 from torch.utils.data import DataLoader
 from shared.pipeline.pipeline_dataset import PipelineDataset
@@ -10,41 +5,42 @@ from shared.pipeline.pipeline_dataset import PipelineDataset
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
-from lightning.pytorch.loggers import NeptuneLogger
 from pytorch_lightning.callbacks import ModelCheckpoint
-import neptune.new as neptune
-import json
+from lightning.pytorch.loggers.neptune import NeptuneLogger
+
+import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
-import importlib
 from neptune.utils import stringify_unsupported
+from lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
+from lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
 
 def main():  
     with open('pipeline_args.yaml') as f:
         data = yaml.load(f, Loader=SafeLoader)
         model = data['model']
-        lseq = data['lseq']
-        usleep = data['usleep']
+        model_parameters = data['model_parameters']
         training = data['training']
         neptune = data['neptune']
         datasets = data['datasets']
     
-    torch.set_float32_matmul_precision('high')    
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+    torch.set_float32_matmul_precision('high')
+    accelerator = "gpu" if training["use_gpu"] == True else "cpu"
+
     if model == "lseq":
-        if training["use_pretrained"] == True:
-            net = LSeqSleepNet_Lightning.get_pretrained_net(lseq, training, training["pretrained_path"])
-        else:    
-            net = LSeqSleepNet_Lightning.get_new_net(lseq, training)
+        model_fac = LSeqSleepNet_Factory()
+        pipeline_fac = LSeqSleepNet_Pipeline_Factory()
     elif model == "usleep":
-        if training["use_pretrained"] == True:
-            net = USleepModel.get_pretrained_net(training["pretrained_path"])
-        else:
-            net = USleepModel.get_new_net(usleep, training)
+        model_fac = USleep_Factory()
+        pipeline_fac = USleep_Pipeline_Factory()
     else:
         print("No valid model specified")
         exit()
+
+    if training["use_pretrained"] == True:
+        net = model_fac.create_pretrained_net(model_parameters, training, training["pretrained_path"])
+    else:
+        net = model_fac.create_new_net(model_parameters, training)    
     
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",
@@ -56,13 +52,8 @@ def main():
     
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
     
-    base = datasets["base_path"]
-    split_file = training["datasplit_path"]
-    
-    with open(split_file, "r") as split:
-        splitdata = json.load(split)
-    
-    train_pipes, val_pipes, _ = net.get_pipes(training, datasets)
+    train_pipes = pipeline_fac.create_training_pipeline(training, datasets)
+    val_pipes = pipeline_fac.create_validation_pipeline(training, datasets)
     
     iterations=training["iterations"]
     richbar = RichProgressBar()
@@ -80,21 +71,19 @@ def main():
             name=model
         )
 
-        logger.log_hyperparams(stringify_unsupported(lseq))
-        logger.log_hyperparams(stringify_unsupported(usleep))
         logger.log_hyperparams(stringify_unsupported(training))
         logger.log_hyperparams(stringify_unsupported(neptune))
     except:
         print("Error: No valid neptune logging credentials configured.")
         exit()
-    
+
     trainer = pl.Trainer(logger=logger,
                          max_epochs=training["max_epochs"],
                          callbacks= callbacks,
-                         accelerator="gpu",
+                         accelerator=accelerator,
                          devices=training["devices"],
                          num_nodes=training["num_nodes"],
-                         strategy="ddp_find_unused_parameters_false")
+                         strategy="ddp")
 
     trainset = PipelineDataset(pipes=train_pipes,
                                batch_size=None,

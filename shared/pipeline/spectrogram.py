@@ -11,11 +11,8 @@ import numpy as np
 import sys
 sys.path.append(os.path.abspath('../..'))
 from shared.pipeline.pipe import IPipe # This only works from usleep folder or 
-from shared.pipeline.sampler import Sampler
-from shared.pipeline.resampler import Resampler
-from shared.pipeline.determ_sampler import Determ_sampler
 
-from lseqsleepnet_pytorch.preprocessing.utils import create_spectrogram_images
+from lightning_models.preprocessing.utils import create_spectrogram_images
 
 class Spectrogram(IPipe):
     def __init__(self, 

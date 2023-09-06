@@ -182,15 +182,3 @@ class Sampler(IPipe):
                 subjects.append(subjects_to_add)
 
         return subjects, num_records
-                
-if __name__ == '__main__':
-    s = Sampler("/home/alec/repos/data/hdf5",
-                ["dod-h"],
-                "/home/jose/repo/Speciale2023/shared/usleep_split.json",
-                split_type="test",
-                num_epochs=200,
-                subject_percentage=1.0)
-    
-    while True:
-        x_eeg, x_eog ,y,tag = s.process(1)
-        print(tag)

@@ -1,4 +1,3 @@
-import DataClasses
 import yaml
 from yaml.loader import SafeLoader
 import importlib
@@ -19,9 +18,9 @@ def main():
         name = dataset['name']
         path = dataset['path']
         
-        module = importlib.import_module("DataClasses")
+        module = importlib.import_module("datastore_classes")
         class_ = getattr(module, name)
-        instance = class_(num_sub, path, target, scale_and_clip, output_sample_rate)
+        _ = class_(num_sub, path, target, scale_and_clip, output_sample_rate)
         
 if __name__ == "__main__":
     main() 

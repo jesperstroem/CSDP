@@ -5,26 +5,12 @@ Created on Thu Feb  2 13:40:59 2023
 @author: repse
 """
 
-import torch.nn as nn
 import torch
 import torch.nn.functional as F
-from .long_sequence_model import LongSequenceModel
-from .epoch_encoder import MultipleEpochEncoder
-from .classifier import Classifier
-from shared.utility import dump, acc, kappa, plot_confusionmatrix, create_confusionmatrix, majority_vote, f1, log_test_step
-import numpy as np
-import math
-import sys
-from neptune.utils import stringify_unsupported
-import pickle
-import pytorch_lightning as pl
 
-from shared.pipeline.pipeline_dataset import PipelineDataset
-from shared.pipeline.resampler import Resampler
-from shared.pipeline.sampler import Sampler
-from shared.pipeline.determ_sampler import Determ_sampler
-from shared.pipeline.spectrogram import Spectrogram
-from shared.pipeline.augmenters import Augmenter
+from shared.utility import acc, kappa, f1, log_test_step
+import math
+import pytorch_lightning as pl
 
 class LSeqSleepNet_Lightning(pl.LightningModule):
     def __init__(self, 
@@ -43,6 +29,7 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
         self.lr_patience = lr_patience
         self.num_epochs = num_epochs
         self.num_classes = classes
+        self.training_step_outputs = []
         
     def forward(self, x):
         return self.lseqsleep(x)
@@ -120,21 +107,26 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
         y_pred = torch.reshape(y_pred, (-1, 5))
         loss = F.cross_entropy(y_pred, y_temp, ignore_index=5)   
 
+        self.training_step_outputs.append(loss)
+
         return loss
     
-    def training_epoch_end(self, training_step_outputs):
-        all_outputs = self.all_gather(training_step_outputs)
+#    def training_step_end(self, training_step_output):
+#        print(f'Training step end output: {training_step_output}')
+#        training_step_output = self.trainer.strategy.reduce(training_step_output)
+#        self.training_step_outputs.append(training_step_output)
+#        return training_step_output
 
-        loss = [x['loss'] for x in all_outputs] 
+    def on_train_epoch_end(self):
+        all_outputs = self.training_step_outputs
 
-        loss = torch.cat(loss)
+        mean_loss = torch.mean(torch.stack(all_outputs, dim=0))
 
-        mean_loss = torch.mean(loss)
+        print("Hello from rank zero in train")
+        self.log('trainLoss', mean_loss, rank_zero_only=True)
+        self.trainer.save_checkpoint(f"{self.logger.save_dir}/lseq/{self.logger.version}/checkpoints/latest.ckpt")
         
-        if self.trainer.is_global_zero:
-            print("Hello from rank zero in train")
-            self.log('trainLoss', mean_loss, rank_zero_only=True)
-            self.trainer.save_checkpoint(f"{self.logger.save_dir}/lseq/{self.logger.version}/checkpoints/latest.ckpt")
+        self.training_step_outputs.clear()
        
     def predict_single_channel(self, x_eegs, x_eogs, y_temp):
         # Assumes x_eegs, x_eogs to be: (Channels, Epochs, 29, 129)
@@ -262,145 +254,5 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
             results = trainer.test(self, dataloader)
         
         return results
-    
-    def get_pipes(self, train_args, dataset_args):
-        aug = train_args["augmentation"]
-        
-        if aug["use"] == True:
-            print("Running with augmentation")
-            train_pipes = [Sampler(dataset_args["base_path"],
-                                   dataset_args["train"],
-                                   train_args["datasplit_path"],
-                                   split_type="train",
-                                   num_epochs=200,
-                                   subject_percentage = train_args["subject_percentage"]),
-                           Augmenter(
-                               min_frac=aug["min_frac"], 
-                               max_frac=aug["max_frac"], 
-                               apply_prob=aug["apply_prob"], 
-                               sigma=aug["sigma"],
-                               mean=aug["mean"]
-                           ),
-                           Resampler(128, 100),
-                           Spectrogram()]
-        else:
-            train_pipes = [Sampler(dataset_args["base_path"],
-                                   dataset_args["train"],
-                                   train_args["datasplit_path"],
-                                   split_type="train",
-                                   num_epochs=200,
-                                   subject_percentage = train_args["subject_percentage"]),
-                           Resampler(128, 100),
-                           Spectrogram()]
-
-        val_pipes = [Determ_sampler(dataset_args["base_path"],
-                                    dataset_args["val"],
-                                    train_args["datasplit_path"],
-                                    split_type="val",
-                                    num_epochs=200,
-                                    subject_percentage = train_args["subject_percentage"]),
-                     Resampler(128, 100),
-                     Spectrogram()]
-        
-        test_pipes = [Determ_sampler(dataset_args["base_path"],
-                             dataset_args["test"],
-                             train_args["datasplit_path"],
-                             split_type="test",
-                             num_epochs=200),
-              Resampler(128, 100),
-              Spectrogram()]
-        
-        return train_pipes, val_pipes, test_pipes
-    
-    @staticmethod
-    def get_inner(model_args, train_args):
-        features = model_args["features"]
-        epochs = model_args["epochs"]
-        sequences = model_args["sequences"]
-        classes = model_args["classes"]
-        lr=model_args["lr"]
-        seed=model_args["seed"]
-        weight_decay=model_args["weight_decay"]
-        F = model_args["F"]
-        M = model_args["M"]
-        num_channels = model_args["num_channels"]
-        minF = model_args["minF"]
-        maxF = model_args["maxF"]
-        source_samplerate = model_args["source_samplerate"]
-        samplerate = model_args["samplerate"]
-        K = model_args["K"]
-        B = model_args["B"]
-        lstm_hidden_size = model_args["lstm_hidden_size"]
-        fc_hidden_size = model_args["fc_hidden_size"]
-        classes = model_args["classes"]
-        attention_size = model_args["attention_size"]
-
-        earlyStoppingPatience = train_args["early_stop_patience"]
-
-        enc_conf = MultipleEpochEncoder.Config(F,M,minF=minF,maxF=maxF,samplerate=samplerate,
-                                               seq_len=sequences, lstm_hidden_size=lstm_hidden_size,
-                                               attention_size=attention_size, num_channels=num_channels)
-
-        lsm_conf = LongSequenceModel.Config(K, B, lstm_input_size=lstm_hidden_size*2,
-                                            lstm_hidden_size=lstm_hidden_size)
-
-        clf_conf = Classifier.Config(lstm_hidden_size*2, fc_hidden_size, classes)
-        
-        inner = LSeqSleepNet(enc_conf, lsm_conf, clf_conf)
-        return inner
-    
-    @staticmethod
-    def get_new_net(model_args, train_args):
-        inner = LSeqSleepNet_Lightning.get_inner(model_args,train_args)
-
-        net = LSeqSleepNet_Lightning(inner,
-                                     model_args["lr"],
-                                     model_args["weight_decay"],
-                                     lr_red_factor=train_args["lr_reduction"],
-                                     lr_patience=train_args["lr_patience"])
-        
-        return net
-    
-    @staticmethod
-    def get_pretrained_net(model_args, train_args, pretrained_path):
-        inner = LSeqSleepNet_Lightning.get_inner(model_args,train_args)
-        
-        net = LSeqSleepNet_Lightning.load_from_checkpoint(pretrained_path,
-                                                          lseqsleep=inner,
-                                                          lr=model_args["lr"],
-                                                          wd=model_args["weight_decay"])
-        return net
-        
-        
-class LSeqSleepNet(nn.Module):
-    class Config():
-        def __init__(self, encoder_conf, lsm_conf, clf_conf):
-            self.encoder_conf = encoder_conf
-            self.lsm_conf = lsm_conf
-            self.clf_conf = clf_conf
-
-    def __init__(self, enc_conf, lsm_conf, clf_conf):
-        super().__init__()
-        self.epoch_encoder = MultipleEpochEncoder(enc_conf)
-        self.sequence_model = LongSequenceModel(lsm_conf)
-        self.classifier = Classifier(clf_conf)
-        
-    def forward(self, x):
-        # x is (Batch, Epoch, Channels, Sequence, Feature)
-        x = self.epoch_encoder(x)
-        
-        # x is (Batch, Epoch, Feature)        
-        x = self.sequence_model(x)
-        
-        # x is (Batch, Epoch, Feature)
-        x = self.classifier(x)
-        
-        # x is (Batch, Epoch, Probabilities)
-        return x
-
-
-
-
-
 
 

@@ -1,22 +1,15 @@
-import os
-
-from shared.utility import log_dataset_splits
-from usleep_pytorch.usleep import USleepModel
-from lseqsleepnet_pytorch.model.lseqsleepnet import LSeqSleepNet_Lightning
+from lightning_models.usleep import USleep_Lightning
+from lightning_models.lseqsleepnet import LSeqSleepNet_Lightning
 import torch
 from torch.utils.data import DataLoader
 from shared.pipeline.pipeline_dataset import PipelineDataset
 
 import pytorch_lightning as pl
-from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
 from lightning.pytorch.loggers import NeptuneLogger
-from pytorch_lightning.callbacks import ModelCheckpoint
 import neptune.new as neptune
-import json
 import yaml
 from yaml.loader import SafeLoader
-import importlib
 from neptune.utils import stringify_unsupported
 
 def main():  
@@ -36,16 +29,10 @@ def main():
     if model == "lseq":
         net = LSeqSleepNet_Lightning.get_pretrained_net(lseq, training, test["model_path"])
     elif model == "usleep":
-        net = USleepModel.get_pretrained_net(test["model_path"])
+        net = USleep_Lightning.get_pretrained_net(test["model_path"])
     else:
         print("No valid model specified")
         exit()
-    
-    base = datasets["base_path"]
-    split_file = training["datasplit_path"]
-    
-    with open(split_file, "r") as split:
-        splitdata = json.load(split)
     
     _, _, test_pipes = net.get_pipes(training, datasets)
     

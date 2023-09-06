@@ -16,7 +16,7 @@ class Pipeline:
     def get_batch(self, index):
         x = index
         
-        for i, p in enumerate(self.pipes):
+        for _, p in enumerate(self.pipes):
             x = p.process(x)
             x = p.adapt(x)
             
@@ -24,20 +24,3 @@ class Pipeline:
                 return x
         
         return x
-
-class TestPipe(IPipe):
-    def process(self, x):
-        return x + 1
-    
-class TestPipe2(IPipe):
-    def process(self, x):
-        return x * 2    
-
-
-if __name__ == "__main__":
-    pipes = [TestPipe(), TestPipe2()]
-
-    p = Pipeline(pipes, 5)
-
-    print(p.get_batch())
-
