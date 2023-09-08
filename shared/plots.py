@@ -7,23 +7,44 @@ Created on Tue Apr 25 13:26:04 2023
 
 import functools
 import os
-import csv
 import matplotlib.pyplot as plt
 import seaborn as sns
 import pandas as pd
 import statistics
-import sys
 
 import pickle
 import torch
 import io
 import numpy as np
-sys.path.append(os.path.abspath('..'))
-from shared.utility import acc, kappa, f1, create_confusionmatrix, plot_confusionmatrix
+from utility import kappa, create_confusionmatrix, plot_confusionmatrix
 
 hold_out_sets = ["isruc_sg1", "isruc_sg2", "isruc_sg3", "mass_c1", "mass_c3", "svuh", "dod-h", "dod-o"]
 non_hold_out_sets = ["abc", "ccshs", "cfs", "chat", "dcsm", "homepap", "mesa", "mros", "phys", "sedf_sc", "sedf_st", "shhs", "sof"]
 all_sets = ["abc", "ccshs", "cfs", "chat", "dcsm", "homepap", "mesa", "mros", "phys", "sedf_sc", "sedf_st", "shhs", "sof", "isruc_sg1", "isruc_sg2", "isruc_sg3", "mass_c1", "mass_c3", "svuh", "dod-h", "dod-o"]
+
+name_dictionary = {
+    "abc": "ABC",
+    "ccshs": "CCSHS", 
+    "cfs": "CFS", 
+    "chat": "CHAT", 
+    "dcsm": "DCSM", 
+    "homepap": "HPAP", 
+    "mesa": "MESA", 
+    "mros": "MROS", 
+    "phys": "PHYS", 
+    "sedf_sc": "SEDF SC", 
+    "sedf_st": "SEDF ST", 
+    "shhs": "SHHS", 
+    "sof": "SOF", 
+    "isruc_sg1": "ISRUC 1", 
+    "isruc_sg2": "ISRUC 2", 
+    "isruc_sg3": "ISRUC 3", 
+    "mass_c1": "MASS 1", 
+    "mass_c3": "MASS 3", 
+    "svuh": "SVUH", 
+    "dod-h": "DOD H", 
+    "dod-o": "DOD O"
+}
 
 class CPU_Unpickler(pickle.Unpickler):
     def find_class(self, module, name):
@@ -233,11 +254,6 @@ def plot_kappa_boxplot(result_path_1, result_path_2, model_1_name, model_2_name,
             kappa_scores = object_file["kappa_scores"]
             kappa_scores = kappa_scores.tolist()
             
-            if "sedf_sc_physionet" == filename:
-                filename = "sedf_sc"
-            if "sedf_st_physionet" == filename:
-                filename = "sedf_st"
-            
             additional_df = pd.DataFrame(kappa_scores, columns=[filename])
 
             df = pd.concat([df, additional_df], axis=1)
@@ -253,11 +269,6 @@ def plot_kappa_boxplot(result_path_1, result_path_2, model_1_name, model_2_name,
             
             kappa_scores = object_file["kappa_scores"]
             kappa_scores = kappa_scores.tolist()
-            
-            if "sedf_sc_physionet" == filename:
-                filename = "sedf_sc"
-            if "sedf_st_physionet" == filename:
-                filename = "sedf_st"
             
             additional_df = pd.DataFrame(kappa_scores, columns=[filename])
 
@@ -291,7 +302,94 @@ def plot_kappa_boxplot(result_path_1, result_path_2, model_1_name, model_2_name,
     plt.ylim(0, 1)
     
     fig.savefig(output_path)
+
+def plot_kappa_boxplot_v2(result_path_1,
+                          result_path_2, 
+                          model_1_name, 
+                          model_2_name, 
+                          datasets, 
+                          output_path,
+                          title,
+                          ylabelpad=6):
+    """
+    Function for comparing two models kappa values for each dataset on a boxplot.
     
+    ============= ARGS =============
+    result_path_1: Path to test_metrics folder of model 1 results.
+    result_path_2: Path to test_metrics folder of model 2 results.
+    model_1_name: Name of model 1, string.
+    model_2_name: Name of model 2, string.
+    datasets: List of strings of datasets that is to be plotted. E.g. ["dod-h", "dod-o", "svuh"]
+    output_path: Path where plot is saved.
+    ================================
+    """
+    
+    df = pd.DataFrame()
+    
+    resultfiles_1 = os.listdir(result_path_1)
+    resultfiles_2 = os.listdir(result_path_2)
+    
+    resultfiles_1 = sorted(resultfiles_1, key=functools.cmp_to_key(compare))
+    resultfiles_2 = sorted(resultfiles_2, key=functools.cmp_to_key(compare))
+
+    dfs = []
+
+    for result in [(resultfiles_1, result_path_1), (resultfiles_2, result_path_2)]:
+        for filename in result[0]:
+            f = os.path.join(result[1], filename)
+            
+            if os.path.isfile(f) and filename in datasets:
+                file = open(f,'rb')
+                
+                object_file = pickle.load(file)
+                
+                kappa_scores = object_file["kappa_scores"]
+                kappa_scores = kappa_scores.tolist()
+                
+                additional_df = pd.DataFrame(kappa_scores, columns=[name_dictionary[filename]])
+
+                df = pd.concat([df, additional_df], axis=1)
+        
+        dfs.append(df)
+        df = pd.DataFrame()
+    
+    # Merging the two dataframes
+    df = pd.melt(dfs[0])
+    df["model"] = model_1_name
+    
+    df2 = pd.melt(dfs[1])
+    df2["model"] = model_2_name
+    
+    final_df = pd.concat([df, df2])
+    final_df.columns = ["datasets", "kappa", "model"]
+
+    final_df = final_df.dropna()
+
+    # Plotting dataframe
+    plt.figure(figsize=(9,6))
+    boxplot = sns.boxplot(x="kappa",
+                          hue="model",
+                          y="datasets",
+                          data=final_df,
+                          orient="h",
+                          saturation=0.6)
+    
+    label_fontsize=16
+    tick_fontsize=12
+
+    plt.legend()
+    fig = boxplot.get_figure()
+    plt.xlim(0, 1)
+    plt.xlabel("Cohen's Kappa", labelpad=12, fontsize=label_fontsize)
+    plt.ylabel("Datasets", labelpad=ylabelpad, fontsize=label_fontsize)
+
+    plt.xticks(fontsize=tick_fontsize)
+    plt.yticks(fontsize=tick_fontsize)
+    plt.title(title, fontsize=20, pad=16)
+    
+    plt.tight_layout()
+    fig.savefig(output_path) 
+
 def plot_mean_f1_differences(models,
                              output_path,
                              lim=(0.0,1.0),
@@ -649,6 +747,23 @@ def plot_avg_f1_class_score():
 
 def main():
     print("Hello world from plots.py")
+
+    plot_kappa_boxplot_v2("C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/lseq/BIG-75/test_metrics",
+                          "C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/usleep/test_primary/test_metrics",
+                          "L-SeqSleepNet",
+                          "U-Sleep",
+                          non_hold_out_sets,
+                          "1.png",
+                          title="Training Sets")
+    
+    plot_kappa_boxplot_v2("C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/lseq/BIG-75/test_metrics",
+                          "C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/usleep/test_primary/test_metrics",
+                          "L-SeqSleepNet",
+                          "U-Sleep",
+                          hold_out_sets,
+                          "2.png",
+                          title="Hold-Out Sets",
+                          ylabelpad=12)
     
     
 if __name__ == '__main__':

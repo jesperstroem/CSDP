@@ -21,17 +21,15 @@ class CPU_Unpickler(pickle.Unpickler):
         else: return super().find_class(module, name)
 
 def main():
-    run_id = sys.argv[1]
+    #run_id = sys.argv[1]
     
-    base = f"results/{run_id}/"
+    base = "C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/lseq/BIG-75/"
   
     files = os.listdir(base)
     
     files = [f for f in os.listdir(base) if os.path.isfile(base+f)]
     
     scores = {}
-    
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
     acc_overall = []
     kap_overall = []
