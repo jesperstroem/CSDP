@@ -303,27 +303,11 @@ def plot_kappa_boxplot(result_path_1, result_path_2, model_1_name, model_2_name,
     
     fig.savefig(output_path)
 
-def plot_kappa_boxplot_v2(result_path_1,
-                          result_path_2, 
-                          model_1_name, 
-                          model_2_name, 
-                          datasets, 
-                          output_path,
-                          title,
-                          ylabelpad=6):
-    """
-    Function for comparing two models kappa values for each dataset on a boxplot.
-    
-    ============= ARGS =============
-    result_path_1: Path to test_metrics folder of model 1 results.
-    result_path_2: Path to test_metrics folder of model 2 results.
-    model_1_name: Name of model 1, string.
-    model_2_name: Name of model 2, string.
-    datasets: List of strings of datasets that is to be plotted. E.g. ["dod-h", "dod-o", "svuh"]
-    output_path: Path where plot is saved.
-    ================================
-    """
-    
+def get_dataframe_for_boxplot(result_path_1, 
+                              result_path_2,
+                              datasets,
+                              model_1_name,
+                              model_2_name):
     df = pd.DataFrame()
     
     resultfiles_1 = os.listdir(result_path_1)
@@ -364,30 +348,86 @@ def plot_kappa_boxplot_v2(result_path_1,
     final_df.columns = ["datasets", "kappa", "model"]
 
     final_df = final_df.dropna()
+    return final_df
+
+def plot_kappa_boxplot_v2(result_path_1,
+                          result_path_2, 
+                          model_1_name, 
+                          model_2_name,
+                          output_path):
+    """
+    Function for comparing two models kappa values for each dataset on a boxplot.
+    
+    ============= ARGS =============
+    result_path_1: Path to test_metrics folder of model 1 results.
+    result_path_2: Path to test_metrics folder of model 2 results.
+    model_1_name: Name of model 1, string.
+    model_2_name: Name of model 2, string.
+    datasets: List of strings of datasets that is to be plotted. E.g. ["dod-h", "dod-o", "svuh"]
+    output_path: Path where plot is saved.
+    ================================
+    """
+
+    df1 = get_dataframe_for_boxplot(result_path_1,
+                                    result_path_2,
+                                    non_hold_out_sets,
+                                    model_1_name,
+                                    model_2_name)
+    
+    df2 = get_dataframe_for_boxplot(result_path_1,
+                                    result_path_2,
+                                    hold_out_sets,
+                                    model_1_name,
+                                    model_2_name)
+
+    fig, axes = plt.subplots(nrows=2,ncols=1, figsize=(12,18), gridspec_kw={'height_ratios': [13, 8]})
 
     # Plotting dataframe
-    plt.figure(figsize=(9,6))
-    boxplot = sns.boxplot(x="kappa",
-                          hue="model",
-                          y="datasets",
-                          data=final_df,
-                          orient="h",
-                          saturation=0.6)
+    saturation=0.5
     
+    sns.boxplot(x="kappa",
+                hue="model",
+                y="datasets",
+                data=df1,
+                orient="h",
+                saturation=saturation,
+                ax=axes[0])
+
+    sns.boxplot(x="kappa",
+                hue="model",
+                y="datasets",
+                data=df2,
+                orient="h",
+                saturation=saturation,
+                ax=axes[1])
+
+    title_fontsize=24
+    title_pad=16
     label_fontsize=16
-    tick_fontsize=12
+    label_pad=16
+    tick_fontsize=14
+    legend_fontsize=18
 
-    plt.legend()
-    fig = boxplot.get_figure()
-    plt.xlim(0, 1)
-    plt.xlabel("Cohen's Kappa", labelpad=12, fontsize=label_fontsize)
-    plt.ylabel("Datasets", labelpad=ylabelpad, fontsize=label_fontsize)
+    first: plt.Axes = axes[0]
+    second: plt.Axes = axes[1]
 
-    plt.xticks(fontsize=tick_fontsize)
-    plt.yticks(fontsize=tick_fontsize)
-    plt.title(title, fontsize=20, pad=16)
-    
-    plt.tight_layout()
+    first.set_title("Training", fontsize=title_fontsize, pad=title_pad)
+    first.legend(fontsize=legend_fontsize)
+    first.set_xlabel("Cohen's Kappa", fontsize=label_fontsize)
+    first.set_xlabel("")
+    first.set_ylabel("")
+    first.tick_params(axis='both', labelsize=tick_fontsize)
+    first.set_xlim(0,1)
+
+    second.set_title("Hold-Out", fontsize=title_fontsize, pad=title_pad)
+    second.set_xlabel("Cohen's Kappa", fontsize=label_fontsize, labelpad=label_pad)
+    second.legend().remove()
+    second.set_xlim(0,1)
+    second.set_ylabel("")
+    second.tick_params(axis="both", labelsize=tick_fontsize)
+
+    #fig.text(0.00, 0.5, 'Datasets', va='center', rotation='vertical', fontsize=label_fontsize)
+    fig.tight_layout(pad=4.0)
     fig.savefig(output_path) 
 
 def plot_mean_f1_differences(models,
@@ -752,18 +792,16 @@ def main():
                           "C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/usleep/test_primary/test_metrics",
                           "L-SeqSleepNet",
                           "U-Sleep",
-                          non_hold_out_sets,
-                          "1.png",
-                          title="Training Sets")
+                          "1.png")
     
-    plot_kappa_boxplot_v2("C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/lseq/BIG-75/test_metrics",
-                          "C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/usleep/test_primary/test_metrics",
-                          "L-SeqSleepNet",
-                          "U-Sleep",
-                          hold_out_sets,
-                          "2.png",
-                          title="Hold-Out Sets",
-                          ylabelpad=12)
+    # plot_kappa_boxplot_v2("C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/lseq/BIG-75/test_metrics",
+    #                       "C:/Users/au588953/OneDrive - Aarhus universitet/Documents/Speciale resultater/usleep/test_primary/test_metrics",
+    #                       "L-SeqSleepNet",
+    #                       "U-Sleep",
+    #                       hold_out_sets,
+    #                       "2.png",
+    #                       title="Hold-Out Sets",
+    #                       ylabelpad=12)
     
     
 if __name__ == '__main__':
