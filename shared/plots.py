@@ -363,7 +363,6 @@ def plot_kappa_boxplot_v2(result_path_1,
     result_path_2: Path to test_metrics folder of model 2 results.
     model_1_name: Name of model 1, string.
     model_2_name: Name of model 2, string.
-    datasets: List of strings of datasets that is to be plotted. E.g. ["dod-h", "dod-o", "svuh"]
     output_path: Path where plot is saved.
     ================================
     """
