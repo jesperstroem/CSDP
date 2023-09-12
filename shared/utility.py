@@ -4,22 +4,15 @@ import torch
 from torchmetrics.classification import MulticlassCohenKappa, MulticlassF1Score
 from torchmetrics.functional import accuracy # pytorch_lightning.metrics.Accuracy does not work anymore
 
-from sklearn.metrics import confusion_matrix
-import seaborn as sn
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 from collections import Counter
 import h5py
 import pickle
 from neptune.utils import stringify_unsupported
 import os
 
-
 def dump(t):
     print(t)
     print(t.shape)
-
 
 def log_step(logger, logpath, global_rank, stage, tags, preds, labels, **kwargs):
     """
@@ -60,13 +53,6 @@ def log_test_step(base, run_id, dataset, subject, record, **kwargs):
         print(f"logging for: {dataset}/{subject}/{record}")
         
         print(f"kwargs: {kwargs}")
-        
-
-        #step_data = {
-        #    "ensemble_preds": ensemble_preds,
-        #    "single_preds": single_preds,
-        #    "labels": labels
-        #}
 
         path = f"{base}/{run_id}"
 
@@ -146,25 +132,6 @@ def f1(predictions, labels, average=True):
     score = metric(predictions, labels)
     
     return score
-
-def create_confusionmatrix(pred, labels):
-    pred, labels = filter_unknowns(pred, labels)
-    
-    return confusion_matrix(labels,pred)
-
-def plot_confusionmatrix(conf, title, percentages = True, formatting = '.2f', save_figure=False, save_path=None):
-    if percentages:
-        conf = conf.astype('float') / conf.sum(axis=1)[:, np.newaxis]
-        
-    df_cm = pd.DataFrame(conf,
-                         index = [i for i in ["Wake", "N1", "N2", "N3", "REM"]],
-                         columns = [i for i in ["Wake", "N1", "N2", "N3", "REM"]])
-    plt.figure(figsize=(10,7))
-    plt.title(title)
-    f = sn.heatmap(df_cm, annot=True, fmt=formatting)
-    f.set(xlabel='Predicted', ylabel='Truth')
-    if(save_figure):
-        plt.savefig(save_path)
     
 def majority_vote(preds):
     # Expects preds to be (Num_votes, num_epochs)
@@ -192,15 +159,3 @@ def ensemble_vote(votes):
         chosen_pred = max(epoch, key=data.get)
         preds.append(chosen_pred)
     return preds
-    
-
-if __name__ == '__main__':
-    ensemple_voting("lol")
-    #preds = torch.tensor([1,1,2,0,1,1,1,0,1,2,0])
-    #
-    #labels = torch.tensor([1,1,2,0,1,1,1,0,1,2,0])
-    #
-    #score = f1(preds,
-    #           labels,
-    #           average=False)
-    #print(score)
