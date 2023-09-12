@@ -17,10 +17,11 @@ class SleepdataPipeline(ABC):
         max_num_subjects, 
         dataset_path, 
         output_path,
-        scale_and_clip,
-        output_sample_rate,
+        scale_and_clip = True,
+        output_sample_rate = 128,
         data_format="hdf5",
-        logging_path = "./SleepDataPipeline/logs"
+        logging_path = "./SleepDataPipeline/logs",
+        port_on_init = True,
     ):
         self.max_num_subjects = max_num_subjects
         self.dataset_path = dataset_path
@@ -43,8 +44,9 @@ class SleepdataPipeline(ABC):
 
         self.__check_paths(paths_dict)
 
-        self.port_data(write_function=self.write_function, paths_dict=paths_dict)
-        self.log_info('Successfully ported dataset')
+        if port_on_init == True:
+            self.port_data(write_function=self.write_function, paths_dict=paths_dict)
+            self.log_info('Successfully ported dataset')
     
     
     class Mapping:

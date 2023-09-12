@@ -3,7 +3,7 @@ from abc import abstractmethod
 
 import sys
 sys.path.append('../DataClasses')
-from DataClasses.base import SleepdataPipeline
+from datastore_classes.base import SleepdataPipeline
 
 
 class Base_Sedf(SleepdataPipeline):

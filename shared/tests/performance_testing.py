@@ -1,19 +1,13 @@
 import timeit
 import tracemalloc
-import matplotlib.pyplot as plt
-import numpy as np
 
 import pyarrow as pa
 import pyarrow.parquet as pq
-import os
-from h5py import File
 import h5py
 import pickle
-import sys
+import statistics
 
-sys.path.append(os.path.abspath('../../..'))
-import SleepDataPipeline
-
+from datastore_classes import CFS
 
 """
 Program for performance testing different types of data formats.
@@ -27,34 +21,25 @@ Feather was not considered as it is not expected to be used as a long term file 
 # TODO: Create data files with all needed channels
 # Implement choosing random of EEG and EOG
 # Test if this has an impact
-
-
 """
 
-
-
-def test_load_parquet():
-    data = pq.read_table("./performance_test_data/psg.parquet").column("C3")
-    #print(len(data))
+def test_load_parquet(path):
+    data = pq.read_table(f"{path}/psg.parquet").column("C3")
     
     return data
     
-    
-def test_load_hdf5():
-    f = h5py.File("./performance_test_data/psg.hdf5", "r")
+def test_load_hdf5(path, iterations):
+    f = h5py.File(f"{path}/psg.hdf5", "r")
     data = f["C3"][()]
     f.close()
-    #print(len(data))
     
     return data
 
-
-def test_load_pickle():
-    with open(f"./performance_test_data/psg.pickle", "rb") as f:
+def test_load_pickle(path):
+    with open(f"{path}/psg.pickle", "rb") as f:
         data = pickle.load(f)["C3"]
         
         return data
-    
     
 def write_record_to_database_parquet(output_path, x):
     psg_table = pa.table(
@@ -69,97 +54,83 @@ def write_record_to_database_parquet(output_path, x):
     )
     pq.write_table(psg_table, output_path + "psg.parquet")
     
-    
 def write_record_to_database_hdf5(output_path, x):
-    with h5py.File(f"{output_path}psg.hdf5", "w") as f:
+    with h5py.File(f"{output_path}/psg.hdf5", "w") as f:
         for channel_name in x.keys():
             f.create_dataset(channel_name, data=x[channel_name][0])
             
-        
-     
-    
 def write_record_to_database_pickle(output_path, x):
-    with open(f"{output_path}psg.pickle", "wb") as f:
+    with open(f"{output_path}/psg.pickle", "wb") as f:
         pickle.dump(x, f, protocol=pickle.HIGHEST_PROTOCOL)
     
-    
-def init_test_data():
-    cfs = SleepDataPipeline.Cfs(max_num_subjects=1,dataset_path="../../data/cfs/", output_path="../../data/parquet_test/", port_on_init=False )
-    
-    
-    x, y = cfs.read_psg(("/home/alec/repos/data/cfs/cfs/polysomnography/edfs/cfs-visit5-800002.edf/","/home/alec/repos/data/cfs/cfs/polysomnography/annotations-events-profusion/cfs-visit5-800002-profusion.xml"))
+def init_test_data(datapath, outputpath):
+    cfs = CFS(max_num_subjects=1,
+              dataset_path=datapath,
+              output_path=outputpath,
+              port_on_init=False)
 
-    # region Setup test databases
-    
+    x, _ = cfs.read_psg((f"{datapath}polysomnography/edfs/cfs-visit5-800002.edf",
+                        f"{datapath}polysomnography/annotations-events-profusion/cfs-visit5-800002-profusion.xml"))
+
     # Write to Parquet
-    write_record_to_database_parquet("./performance_test_data/", x)
-    
-    # Write to HDF5
-    write_record_to_database_hdf5("./performance_test_data/", x)
+    write_record_to_database_parquet(outputpath, x)
+
+    write_record_to_database_hdf5(outputpath, x)
     
     # Write to Pickle
-    write_record_to_database_pickle("./performance_test_data/", x)
-    # endregion
-    
-    
-def main():
-    # region Run performance test
+    write_record_to_database_pickle(outputpath, x)
+
+def run_performance_testv2(datapath, fileformat):
     num_iterations = 100
     
     time_data = {}
     mem_data = {}
-    
-    
-    tracemalloc.start()
-    t = timeit.timeit("test_load_parquet()", globals=globals(), number=num_iterations)
-    avg_time = t/num_iterations
-    peak_mem = tracemalloc.get_traced_memory()[1]
-    print(f"Parquet loading time based on {num_iterations} iterations: {avg_time}")
-    print(f"    Memory consumption peak at: {peak_mem}")
-    tracemalloc.stop()
-    
-    time_data["Parquet"] = avg_time
-    mem_data["Parquet"] = peak_mem
-    
-    
-    tracemalloc.start()
-    t = timeit.timeit("test_load_hdf5()", globals=globals(), number=num_iterations)
-    avg_time = t/num_iterations
-    peak_mem = tracemalloc.get_traced_memory()[1]
-    print(f"HDF5 loading time based on {num_iterations} iterations: {avg_time}")
-    print(f"    Memory consumption peak at: {peak_mem}")
-    tracemalloc.stop()
-    
-    time_data["HDF5"] = avg_time
-    mem_data["HDF5"] = peak_mem
-    
-    
-    tracemalloc.start()
-    t = timeit.timeit("test_load_pickle()", globals=globals(), number=num_iterations)
-    avg_time = t/num_iterations
-    peak_mem = tracemalloc.get_traced_memory()[1]
-    print(f"Pickle loading time based on {num_iterations} iterations: {avg_time}")
-    print(f"    Memory consumption peak at: {peak_mem}")
-    tracemalloc.stop()
-    
-    time_data["Pickle"] = avg_time
-    mem_data["Pickle"] = peak_mem
-    # endregion
-    
-    fig = plt.figure(figsize = (5, 5))
-    plt.bar(list(time_data.keys()), list(time_data.values()))
-    plt.xlabel("Data format")
-    plt.ylabel("Seconds")
-    plt.savefig("./performance_test_data/time_data.png")
-    
-    plt.bar(list(mem_data.keys()), list(mem_data.values()))
-    plt.xlabel("Data format")
-    plt.ylabel("Bytes")
-    plt.savefig("./performance_test_data/mem_data.png")
 
+    tracemalloc.start()
+
+    t = timeit.timeit(f"test_load_{fileformat}(o)", setup=f"o='{datapath}'", globals=globals(), number=num_iterations)
+
+    peak_mem = tracemalloc.get_traced_memory()[1]
+    tracemalloc.stop()
+
+    time_data[fileformat] = t
+    mem_data[fileformat] = peak_mem
+
+    print(t)
+    print(peak_mem)
+
+def run_performance_test(datapath,
+                         outputpath):
     
-if __name__ == "__main__":
-    #init_test_data()    
-    #exit()
-    main()
+    init_test_data(datapath, outputpath)
     
+    num_iterations = 100
+    
+    time_data = {}
+    mem_data = {}
+
+    for fileformat in ['parquet', 'hdf5', 'pickle']:
+        times = []
+        tracemalloc.start()
+
+        for _ in range(num_iterations):
+            t = timeit.timeit(f"test_load_{fileformat}(o)", setup=f"o='{outputpath}'", globals=globals(), number=1)
+            times.append(t)
+
+        peak_mem = tracemalloc.get_traced_memory()[1]
+        tracemalloc.stop()
+
+        time_data[fileformat] = times
+        mem_data[fileformat] = peak_mem
+
+    with open(f'{outputpath}/time.pickle', 'wb') as handle:
+        pickle.dump(time_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    with open(f'{outputpath}/memory.pickle', 'wb') as handle:
+        pickle.dump(mem_data, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    for fileformat in ['parquet', 'hdf5', 'pickle']:
+        print(f"Mean of {fileformat}: {statistics.mean(time_data[fileformat])}\n")
+        print(f"Std deviation of {fileformat}: {statistics.stdev(time_data[fileformat])}\n")
+        print(f"Peak memory of {fileformat}: {mem_data[fileformat]}\n")
+        print("\n\n")

@@ -10,7 +10,6 @@ import os
 import pickle
 import torch
 import io
-import numpy as np
 sys.path.append(os.path.abspath('../..'))
 from shared.utility import acc, kappa, f1
 

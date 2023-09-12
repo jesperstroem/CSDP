@@ -6,7 +6,7 @@ from abc import abstractmethod
 
 import sys
 sys.path.append('../DataClasses')
-from DataClasses.base import SleepdataPipeline
+from datastore_classes.base import SleepdataPipeline
 
 class Isruc_base(SleepdataPipeline):
     """
