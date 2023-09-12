@@ -6,7 +6,7 @@ import warnings
 
 import sys
 sys.path.append('../DataClasses')
-from DataClasses.base import SleepdataPipeline
+from datastore_classes.base import SleepdataPipeline
 
 class SleepdataOrg(SleepdataPipeline):
     """
@@ -117,7 +117,7 @@ class SleepdataOrg(SleepdataPipeline):
         sample_rate = int(data.info['sfreq'])
 
         not_found_chnls = []
-        
+                
         for channel in self.channel_mapping().keys():
             try:
                 channel_data = data.get_data(channel)

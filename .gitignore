@@ -22,6 +22,8 @@ lightning_logs/
 *.txt
 *.pyc
 
+test_data/
+
 results/
 .neptune/
 lseqsleepnet_pytorch/model/__pycache__/

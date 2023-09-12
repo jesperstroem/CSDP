@@ -1,0 +1,4 @@
+lines.linewidth : 2
+lines.markersize : 10
+text.usetex : True
+font.family : Helvetica

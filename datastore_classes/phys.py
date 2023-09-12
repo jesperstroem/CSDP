@@ -1,11 +1,7 @@
 import os
-import mne
-import wfdb
 import h5py
-
-import scipy.io
+import wfdb
 import numpy as np
-import torch
 
 from .base import SleepdataPipeline
 
