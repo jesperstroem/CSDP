@@ -56,12 +56,10 @@ class PipeIterator:
             raise StopIteration      
 
         while True:
-            #print(f"Fetching data for iteration {self.cnt}")
-            
-       	    batch = self.pipeline.get_batch(self.cnt)
-
+            batch = self.pipeline.get_batch(self.cnt)
+               
             self.cnt += (self.num_workers * self.world_size)
-
+               
             if batch == -2:
                 raise StopIteration
             if batch == -1:
@@ -72,15 +70,3 @@ class PipeIterator:
         x_eegs, x_eogs, ybatch, tags = batch
         
         return (x_eegs, x_eogs, ybatch, tags)
-    
-if __name__ == '__main__':
-    testsets = ["/home/alec/repos/data/hdf5/"+"abc.hdf5"]
-    test_pipes = [Determ_sampler(trainsets, num_epochs=epochs, split_type="test"),
-                  Resampler(128, 100),
-                  Spectrogram()]
-    
-    testset = PipelineDataset(pipes=test_pipes, batch_size=None, iterations=10000)
-    testloader = DataLoader(testset, batch_size=8, shuffle=False)
-    
-    for i in enumerate(testloader):
-        print(i)

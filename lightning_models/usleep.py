@@ -198,11 +198,11 @@ class USleep_Lightning(LightningModule):
         return votes
     
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, _):
         x_eeg, x_eog, ybatch, _ = batch
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
-
+        
         pred = self(xbatch.float())
         
         step_loss, _, _, _ = self.compute_train_metrics(pred, ybatch)
@@ -225,7 +225,7 @@ class USleep_Lightning(LightningModule):
         self.training_step_outputs.clear()
 
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, _ = batch
         
@@ -243,7 +243,7 @@ class USleep_Lightning(LightningModule):
         self.log('val_f1_c4', step_f1[4], sync_dist=True)
         
                 
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, tags = batch
         
@@ -253,18 +253,4 @@ class USleep_Lightning(LightningModule):
         tag = tags[0]
         tags = tag.split("/")
 
-        log_test_step(self.result_basepath, self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)
-        
-    def run_tests(self,
-                  trainer,
-                  dataloader,
-                  result_basepath,
-                  model_id):
-        self.model_id = model_id
-        self.result_basepath = result_basepath
-        
-        with torch.no_grad():
-            self.eval()
-            results = trainer.test(self, dataloader)
-        
-        return results
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)

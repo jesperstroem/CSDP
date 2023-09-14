@@ -94,7 +94,7 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
         
         return totLoss, a, k, f
     
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, _):
         x_eegs, x_eogs, y_temp, _ = batch
 
         x_temp = torch.cat([x_eegs, x_eogs], dim=1)
@@ -152,7 +152,7 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
         
         return y_pred, loss
     
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, _):
         x_eegs, x_eogs, y_temp, _ = batch
 
         x_eegs = torch.squeeze(x_eegs, dim=0)
@@ -224,7 +224,7 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
 
         return votes
     
-    def test_step(self, batch, batch_idx):
+    def test_step(self, batch, _):
         x_eegs, x_eogs, y_temp, tags = batch
         
         x_eegs = torch.squeeze(x_eegs, dim=0)
@@ -238,21 +238,11 @@ class LSeqSleepNet_Lightning(pl.LightningModule):
         y_temp_cut = y_temp[0:epochs_to_keep]
         
         y_pred_ensemble = self.ensemble_testing(x_eegs, x_eogs)
-        y_pred_single, loss = self.predict_single_channel(x_eegs_cut, x_eogs_cut, y_temp_cut)
+        y_pred_single, _ = self.predict_single_channel(x_eegs_cut, x_eogs_cut, y_temp_cut)
         
         tag = tags[0]
         tags = tag.split("/")
 
         log_test_step(self.result_basepath, self.logger.version, tags[0], tags[1], tags[2], channel_pred=y_pred_ensemble, single_pred=y_pred_single, labels=y_temp)
-
-    def run_tests(self, trainer, dataloader, result_basepath, model_id):
-        self.model_id = model_id
-        self.result_basepath = result_basepath
-        
-        with torch.no_grad():
-            self.eval()
-            results = trainer.test(self, dataloader)
-        
-        return results
 
 

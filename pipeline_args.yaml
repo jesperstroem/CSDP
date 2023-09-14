@@ -1,11 +1,12 @@
 # Model can be "lseq" or "usleep"
-model: "lseq"
+model: "usleep"
 
 training:
  iterations: 1000
  batch_size: 8
- use_gpu: True
+ use_gpu: False
  use_pretrained: False
+ test: False
  pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
  max_epochs: 50
  early_stop_patience: 50
@@ -22,9 +23,6 @@ training:
   apply_prob: 0.1
   sigma: 1.0
   mean: 0.0
-  
-test:
- model_path: ".neptune/lseq/BIG-301/checkpoints/latest.ckpt"
  
 neptune:
  api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI4NjAwMjZkMC1iZTg1LTQ3ZTgtOGJhMC05MmU0YzcwZDU0ZDMifQ=="

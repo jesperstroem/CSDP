@@ -54,6 +54,7 @@ def main():
     
     train_pipes = pipeline_fac.create_training_pipeline(training, datasets)
     val_pipes = pipeline_fac.create_validation_pipeline(training, datasets)
+    test_pipes = pipeline_fac.create_test_pipeline(training, datasets)
     
     iterations=training["iterations"]
     richbar = RichProgressBar()
@@ -96,18 +97,34 @@ def main():
                              iterations=100000,
                              global_rank=trainer.global_rank,
                              world_size=trainer.world_size)
-
-    trainloader = DataLoader(trainset,
-                             batch_size=training["batch_size"],
-                             shuffle=False,
-                             num_workers=1)
     
-    valloader = DataLoader(valset,
-                           batch_size=1,
-                           shuffle=False,
-                           num_workers=1)
+    testset = PipelineDataset(pipes=test_pipes,
+                              batch_size=None,
+                              iterations=100000,
+                              global_rank=trainer.global_rank,
+                              world_size=trainer.world_size)
+    
+    if training["test"]==False:
+        trainloader = DataLoader(trainset,
+                                batch_size=training["batch_size"],
+                                shuffle=False,
+                                num_workers=1)
+        
+        valloader = DataLoader(valset,
+                            batch_size=1,
+                            shuffle=False,
+                            num_workers=1)
 
-    trainer.fit(net, trainloader, valloader)
+        trainer.fit(net, trainloader, valloader)
+    else:
+        testloader = DataLoader(testset,
+                                batch_size=1,
+                                shuffle=False,
+                                num_workers=1)
+        
+        with torch.no_grad():
+            net.eval()
+            _ = trainer.test(net, testloader)
         
 if __name__ == '__main__':
     main()
