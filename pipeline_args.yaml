@@ -3,13 +3,8 @@ model: "usleep"
 
 training:
  iterations: 1000
-<<<<<<< HEAD
  batch_size: 8
  use_gpu: False
-=======
- batch_size: 64
- use_gpu: True
->>>>>>> feature/fix-usleep
  use_pretrained: False
  test: False
  pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
