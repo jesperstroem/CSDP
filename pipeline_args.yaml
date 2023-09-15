@@ -2,9 +2,9 @@
 model: "usleep"
 
 training:
- iterations: 1000
- batch_size: 8
- use_gpu: False
+ iterations: 28352
+ batch_size: 64
+ use_gpu: True
  use_pretrained: False
  test: False
  pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
@@ -35,7 +35,7 @@ datasets:
  val:
   - "dcsm"
  test:
-  - "dscm"
+  - "dcsm"
 
 model_parameters:
   lseq:
@@ -62,4 +62,4 @@ model_parameters:
 
   usleep:
     epochs: 35
-    lr: 1.0E-06
+    lr: 1.0E-05

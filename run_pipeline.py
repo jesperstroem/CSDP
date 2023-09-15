@@ -69,11 +69,10 @@ def main():
         logger = NeptuneLogger(
             api_key=neptune["api_key"],
             project=neptune["project"],
-            name=model
+            name=model,
+            source_files=["pipeline_args.yaml", "run_pipeline.py"],
         )
 
-        logger.log_hyperparams(stringify_unsupported(training))
-        logger.log_hyperparams(stringify_unsupported(neptune))
     except:
         print("Error: No valid neptune logging credentials configured.")
         exit()

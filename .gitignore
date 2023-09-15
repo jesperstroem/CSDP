@@ -21,6 +21,7 @@ lightning_logs/
 *.mat
 *.txt
 *.pyc
+*.out
 
 test_data/
 
