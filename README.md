@@ -103,8 +103,6 @@ Only SS1 and SS3 are available for transformation.
 
 1. Edit the "args.yaml" file to the desired configuration.
 
-2. Run "python train.py" to train a model with the configuration from the yaml file.
-
-3. Run "python test.py" to test an existing model with the configuration from the yaml file. This creates result files in the results folder.
+2. Run "python run_pipeline.py" to run the configuration from the yaml file. This can either be training a new network from scratch, finetuning an existing one or testing an existing one. Test results are saved to a results folder.
 
 4. Run "python report.py --run_id--" to get a report of the results for the given run id. --run_id-- should match the appropriate foldername inside the results folder.
