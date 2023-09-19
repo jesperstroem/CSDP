@@ -1,5 +1,5 @@
 parameters:
- scale_and_clip: False
+ scale_and_clip: True
  output_sample_rate: 128
 target_path:
  "/home/alec/repos/data/hdf5"
