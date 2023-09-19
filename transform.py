@@ -18,7 +18,7 @@ def main():
         name = dataset['name']
         path = dataset['path']
         
-        module = importlib.import_module("datastore_classes")
+        module = importlib.import_module("common_sleep_data_store.datastore_classes")
         class_ = getattr(module, name)
         _ = class_(num_sub, path, target, scale_and_clip, output_sample_rate)
         

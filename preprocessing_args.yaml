@@ -4,5 +4,5 @@ parameters:
 target_path:
  "/home/alec/repos/data/hdf5"
 datasets:
- - name: Abc
+ - name: ABC
    path: "/home/alec/repos/data/abc/"
