@@ -4,20 +4,23 @@ This repository contains a pipeline for training neural networks to perform auto
 
 It is two part and consists of: data preprocessing/standardization and data serving.
 
-The preprocessing can be used to transform most avaiable PSG datasets to a standardized HDF5 file.
+The preprocessing can be used to transform most available PSG datasets to a standardized HDF5 file.
 
 The data serving can be used for two neural networks with customizable training setups.
 
 ## Installation
 
 First of all, Git needs to be installed on your machine: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+Then you need a distribution of Anaconda, check here: https://www.anaconda.com/download/ 
 
 Then run the following commands in shell:
 
 git clone https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline.git
 cd common-sleep-data-pipeline
-conda env create --file environment.yaml
+conda env create --file env.yml
 conda activate csdp
+
+The conda environment file assumes you run your code on a CUDA compatible system.
 
 ## How to preprocess and standardize your data
 
@@ -25,17 +28,18 @@ A lot of public PSG datasets are available for preprocessing.
 
 The code does not download the data, so this is assumed to be performed in advance by users.
 
-Configuration is specified in conf.yaml - the below example transforms ABC:
+Configuration is specified in conf.yaml - the below example transforms ABC.
+Use sample rate 100 for L-SeqSleepNet and 128 for U-Sleep.
 
 ```yaml
 parameters:
  scale_and_clip: True
  output_sample_rate: 128
 target_path:
- "/my/target/output/path"
+ "/my/target/output/path/"
 datasets:
- - name: Abc
-   path: "/path/to/abc/data/"
+ - name: ABC
+   path: "/path/to/abc/data/basepath/"
 ```
 
 Datasets is a list, so multiple datasets can be transformed in the same execution.
