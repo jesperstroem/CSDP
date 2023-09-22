@@ -8,6 +8,17 @@ The preprocessing can be used to transform most avaiable PSG datasets to a stand
 
 The data serving can be used for two neural networks with customizable training setups.
 
+## Installation
+
+First of all, Git needs to be installed on your machine: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
+
+Then run the following commands in shell:
+
+git clone https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline.git
+cd common-sleep-data-pipeline
+conda env create --file environment.yaml
+conda activate csdp
+
 ## How to preprocess and standardize your data
 
 A lot of public PSG datasets are available for preprocessing.
