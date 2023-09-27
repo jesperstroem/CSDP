@@ -25,6 +25,7 @@ class USleep_Lightning(LightningModule):
         monitor_mode,
     ):
         super().__init__()
+
         self.usleep = usleep
         self.lr = lr
         self.batch_size = batch_size
@@ -206,7 +207,7 @@ class USleep_Lightning(LightningModule):
         x_eeg, x_eog, ybatch, _ = batch
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
-        start_time = time.time()
+        #start_time = time.time()
         xbatch = xbatch.float()
         
         #print("First: %s seconds ---" % (time.time() - start_time))
