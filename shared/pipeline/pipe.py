@@ -19,8 +19,5 @@ class Pipeline:
         for _, p in enumerate(self.pipes):
             x = p.process(x)
             x = p.adapt(x)
-            
-            if (x == None) or (x == -1) or (x == -2):
-                return x
         
         return x

@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from shared.pipeline.pipeline_dataset import PipelineDataset
+from shared.pipeline.pipeline_dataset import PipelineDataset, PipelineDatasetV2
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -94,10 +94,8 @@ def main():
                          devices=training["devices"],
                          num_nodes=training["num_nodes"])
 
-    trainset = PipelineDataset(pipes=train_pipes,
-                               iterations=iterations,
-                               global_rank=trainer.global_rank,
-                               world_size=trainer.world_size)
+    trainset = PipelineDatasetV2(pipes=train_pipes,
+                               iterations=iterations)
 
     valset = PipelineDataset(pipes=val_pipes,
                              iterations=100000,

@@ -11,6 +11,23 @@ from .pipe import Pipeline
 Iterable dataset to read batches of data from chunks of spectrogram files.
 '''
 
+class PipelineDatasetV2(torch.utils.data.Dataset):
+    def __init__(self, pipes, iterations):
+        self.pipeline = Pipeline(pipes)
+        self.iterations = iterations
+        
+    def __len__(self):
+        return self.iterations
+
+    def __getitem__(self, idx):
+        batch = self.pipeline.get_batch(idx)
+
+        x_eegs, x_eogs, ybatch, tags = batch
+        
+        return (x_eegs, x_eogs, ybatch, tags)
+
+
+
 class PipelineDataset(torch.utils.data.IterableDataset):
     def __init__(self, pipes, iterations, global_rank, world_size):
         super(PipelineDataset, self)
