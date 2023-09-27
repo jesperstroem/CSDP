@@ -28,8 +28,8 @@ class Determ_sampler(IPipe):
         self.sample_rate = sample_rate
         
     def process(self, index):
-        if index >= len(self.records):
-            return -2
+        #if index >= len(self.records):
+        #    return -2
         
         sample = self.__get_sample(index)
   
@@ -91,14 +91,13 @@ class Determ_sampler(IPipe):
                 if "EOG" in k:
                     eogs.append(psg[k][()])
 
-        if len(eegs) == 0 or len(eogs) == 0:
-            print(f"Record {r} did not have either EEG or EOG")
-            return -1
+        if len(eogs) == 0:
+            eogs.extend(eegs)
+        #    print(f"Record {r} did not have either EEG or EOG")
+        #    return None
 
         eegs = torch.tensor(np.array(eegs))
         eogs = torch.tensor(np.array(eogs))
-        
-        x = torch.cat([eegs, eogs])
 
         y = torch.tensor(y)
 
