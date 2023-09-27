@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
 from shared.utility import kappa, acc, f1, log_test_step
+import time
 
 def get_model(args):
     model = USleep_Lightning(**vars(args))
@@ -21,7 +22,7 @@ class USleep_Lightning(LightningModule):
         lr_scheduler_factor,
         lr_scheduler_patience,
         monitor_metric,
-        monitor_mode
+        monitor_mode,
     ):
         super().__init__()
         self.usleep = usleep
@@ -62,11 +63,10 @@ class USleep_Lightning(LightningModule):
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
         y_pred = torch.reshape(y_pred, (-1, 5))
-        
         y_true = torch.flatten(y_true)
-        
+
         loss = self.loss(y_pred, y_true)
-        
+
         y_pred = torch.argmax(y_pred, dim=1)
         
         accu = acc(y_pred, y_true)
@@ -206,10 +206,15 @@ class USleep_Lightning(LightningModule):
         x_eeg, x_eog, ybatch, _ = batch
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
+        start_time = time.time()
+        xbatch = xbatch.float()
         
-        pred = self(xbatch.float())
-        
+        #print("First: %s seconds ---" % (time.time() - start_time))
+        pred = self.forward(xbatch)
+        #print("Second: %s seconds ---" % (time.time() - start_time))
+
         step_loss, _, _, _ = self.compute_train_metrics(pred, ybatch)
+        #print("Third: %s seconds ---" % (time.time() - start_time))
 
         self.training_step_outputs.append(step_loss)
 

@@ -12,11 +12,10 @@ Iterable dataset to read batches of data from chunks of spectrogram files.
 '''
 
 class PipelineDataset(torch.utils.data.IterableDataset):
-    def __init__(self, pipes, batch_size, iterations, global_rank, world_size):
+    def __init__(self, pipes, iterations, global_rank, world_size):
         super(PipelineDataset, self)
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.iterations = iterations
-        self.batch_size = batch_size
         self.pipes = pipes
         self.global_rank = global_rank
         self.world_size = world_size
@@ -28,12 +27,11 @@ class PipelineDataset(torch.utils.data.IterableDataset):
         global_rank = self.global_rank
         world_size = self.world_size
       
-        return iter(PipeIterator(self.pipes, self.batch_size, self.iterations, worker_id, num_workers, global_rank, world_size))
+        return iter(PipeIterator(self.pipes, self.iterations, worker_id, num_workers, global_rank, world_size))
 
 class PipeIterator:
     def __init__(self,
                  pipes,
-                 batch_size,
                  iterations,
                  worker_id,
                  num_workers,
@@ -68,5 +66,6 @@ class PipeIterator:
                 break
 
         x_eegs, x_eogs, ybatch, tags = batch
+        #print(f"Count: {self.cnt}, tag: {tags}")
         
         return (x_eegs, x_eogs, ybatch, tags)

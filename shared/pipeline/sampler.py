@@ -38,7 +38,7 @@ class Sampler(IPipe):
             
         while not success:
             sample = self.__get_sample()
-            
+
             if sample != None:
                 success = True
 
@@ -75,7 +75,7 @@ class Sampler(IPipe):
             subjects = self.subjects[index]
  
             if len(subjects) == 0:
-                    raise ValueError(f"No subjects in split type: {self.split_type}")
+                    raise ValueError(f"No subjects in split type: {self.split_type} for dataset {r_dataset}")
             
             # Choose random subject
             r_subject = np.random.choice(subjects, 1)[0]
