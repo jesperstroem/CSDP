@@ -97,10 +97,8 @@ def main():
     trainset = PipelineDatasetV2(pipes=train_pipes,
                                iterations=iterations)
 
-    valset = PipelineDataset(pipes=val_pipes,
-                             iterations=100000,
-                             global_rank=trainer.global_rank,
-                             world_size=trainer.world_size)
+    valset = PipelineDatasetV2(pipes=val_pipes,
+                             iterations=len(val_pipes[0].records))
     
     testset = PipelineDataset(pipes=test_pipes,
                               iterations=100000,
@@ -115,9 +113,9 @@ def main():
                                 pin_memory=True)
         
         valloader = DataLoader(valset,
-                            batch_size=1,
-                            shuffle=False,
-                            num_workers=1)
+                               batch_size=training["batch_size"],
+                               shuffle=False,
+                               num_workers=training["num_workers"])
 
         trainer.fit(net, trainloader, valloader)
     else:
