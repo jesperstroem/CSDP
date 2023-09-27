@@ -2,9 +2,9 @@
 model: "usleep"
 
 training:
- iterations: 1024
+ iterations: 6400
  batch_size: 64
- use_gpu: False
+ use_gpu: True
  use_pretrained: False
  test: False
  pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
@@ -15,7 +15,7 @@ training:
  subject_percentage: 1.0
  devices: 1
  num_nodes: 1
- datasplit_path: "C:/Users/au588953/Git Repos/CSDP/shared/splits/usleep_split.json"
+ datasplit_path: "/home/js/repos/common-sleep-data-pipeline/shared/splits/usleep_split.json"
  num_workers: 1
  augmentation:
   use: False
@@ -30,7 +30,7 @@ neptune:
  project: "NTLAB/bigsleep"
  
 datasets:
- base_path: "C:/Users/au588953/hdf5"
+ base_path: "/com/ecent/NOBACKUP/HDF5/usleep_data_small"
  train:
   - "abc"
   - "ccshs"
