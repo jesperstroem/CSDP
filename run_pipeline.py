@@ -14,9 +14,13 @@ from yaml.loader import SafeLoader
 from neptune.utils import stringify_unsupported
 from lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
 from lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
+from pathlib import Path
 
-def main():  
-    with open('pipeline_args.yaml') as f:
+def main():
+    file_path = Path(__file__).parent.absolute()
+    args_path = f"{file_path}/pipeline_args.yaml"
+
+    with open(args_path) as f:
         data = yaml.load(f, Loader=SafeLoader)
         model = data['model']
         model_parameters = data['model_parameters']

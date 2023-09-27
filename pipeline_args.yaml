@@ -15,7 +15,7 @@ training:
  subject_percentage: 1.0
  devices: 1
  num_nodes: 1
- datasplit_path: "shared/splits/usleep_split.json"
+ datasplit_path: "/users/strmjesp/common-sleep-data-pipeline/shared/splits/usleep_split.json"
  augmentation:
   use: False
   min_frac: 0.001
@@ -25,17 +25,41 @@ training:
   mean: 0.0
  
 neptune:
- api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI4NjAwMjZkMC1iZTg1LTQ3ZTgtOGJhMC05MmU0YzcwZDU0ZDMifQ=="
+ api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
  project: "NTLAB/bigsleep"
  
 datasets:
- base_path: "/com/ecent/NOBACKUP/HDF5/"
+ base_path: "/users/strmjesp/mnt/Big_Sleep_Set/transformed"
  train:
+  - "abc"
+  - "ccshs"
+  - "cfs"
+  - "chat"
   - "dcsm"
+  - "homepap"
+  - "mesa"
+  - "mros"
+  - "phys"
+  - "sedf_st"
+  - "sedf_sc"
+  - "shhs"
+  - "sof"
  val:
+  - "abc"
+  - "ccshs"
+  - "cfs"
+  - "chat"
   - "dcsm"
+  - "homepap"
+  - "mesa"
+  - "mros"
+  - "phys"
+  - "sedf_st"
+  - "sedf_sc"
+  - "shhs"
+  - "sof"
  test:
-  - "dcsm"
+  - "abc"
 
 model_parameters:
   lseq:
@@ -62,4 +86,4 @@ model_parameters:
 
   usleep:
     epochs: 35
-    lr: 1.0E-05
+    lr: 1.0E-06
