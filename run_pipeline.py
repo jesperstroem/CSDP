@@ -109,10 +109,11 @@ def main():
         trainloader = DataLoader(trainset,
                                  batch_size=training["batch_size"],
                                  shuffle=False,
-                                num_workers=training["num_workers"])
+                                num_workers=training["num_workers"],
+                                pin_memory=True)
         
         valloader = DataLoader(valset,
-                               batch_size=training["batch_size"],
+                               batch_size=1,
                                shuffle=False,
                                num_workers=training["num_workers"])
 
