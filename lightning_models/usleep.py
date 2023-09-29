@@ -5,12 +5,6 @@ import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
 from shared.utility import kappa, acc, f1, log_test_step
-import time
-
-def get_model(args):
-    model = USleep_Lightning(**vars(args))
-
-    return model
 
 class USleep_Lightning(LightningModule):
     def __init__(
