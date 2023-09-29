@@ -91,11 +91,6 @@ class Determ_sampler(IPipe):
                 if "EOG" in k:
                     eogs.append(psg[k][()])
 
-        if len(eogs) == 0:
-            eogs.extend(eegs)
-        #    print(f"Record {r} did not have either EEG or EOG")
-        #    return None
-
         eegs = torch.tensor(np.array(eegs))
         eogs = torch.tensor(np.array(eogs))
 
