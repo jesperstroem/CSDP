@@ -96,8 +96,6 @@ class Determ_sampler(IPipe):
 
             psg = hdf5[subject][rec]["psg"]
 
-            print(f"time1: {time.time() - start}")
-            
             if self.single_channels == False:
                 for k in psg.keys():
                     if "EEG" in k:
@@ -111,22 +109,19 @@ class Determ_sampler(IPipe):
             else:
                 eeg = psg.visit(self.__find_eeg)
                 eog = psg.visit(self.__find_eog)
+                
+                start = time.time()
+                eeg1 = psg[eeg][:]
+                eog1 = psg[eog][:]
 
-                print(f"time2: {time.time() - start}")
-                eegs = torch.from_numpy(np.array(psg[eeg][:]))
-                eogs = torch.from_numpy(np.array(psg[eog][:]))
-                eegs = eegs.unsqueeze(0)
-                eogs = eogs.unsqueeze(0)
+                eeg3 = torch.Tensor(eeg1)
+                eog3 = torch.Tensor(eog1)
 
-        print(f"time3: {time.time() - start}")
+                eegs = eeg3.unsqueeze(0)
+                eogs = eog3.unsqueeze(0)
 
-        #print(eegs.shape)
-        #print(eogs.shape)
-        
         tag = f"{dataset}/{subject}/{rec}"
         y = torch.tensor(y)
-
-        print(f"time4: {time.time() - start}")
         
         return eegs, eogs, y, tag
                 
