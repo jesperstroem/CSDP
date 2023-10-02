@@ -89,7 +89,7 @@ class Determ_sampler(IPipe):
         eogs = []
         eegs = []
 
-        start = time.time()
+        #start = time.time()
 
         with h5py.File(f"{self.base_file_path}/{dataset}.hdf5", "r") as hdf5:
             y = hdf5[subject][rec]["hypnogram"][()]
@@ -110,7 +110,7 @@ class Determ_sampler(IPipe):
                 eeg = psg.visit(self.__find_eeg)
                 eog = psg.visit(self.__find_eog)
                 
-                start = time.time()
+                #start = time.time()
                 eeg1 = psg[eeg][:]
                 eog1 = psg[eog][:]
 

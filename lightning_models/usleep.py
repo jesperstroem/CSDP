@@ -144,7 +144,7 @@ class USleep_Lightning(LightningModule):
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
 
-        print(f"Batch shape: {xbatch.shape}, batch index: {idx}")
+        #print(f"Batch shape: {xbatch.shape}, batch index: {idx}")
 
         xbatch = xbatch.float()
         
