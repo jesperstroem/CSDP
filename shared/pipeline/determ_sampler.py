@@ -12,12 +12,13 @@ import numpy as np
 import h5py
 import math
 import json
+import time
 
 sys.path.append(os.path.abspath('../..'))
 from shared.pipeline.pipe import IPipe
 
 class Determ_sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, subject_percentage = 1, sample_rate = 128):
+    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, read_all_channels = True, subject_percentage = 1, sample_rate = 128):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -26,6 +27,7 @@ class Determ_sampler(IPipe):
         self.records = self.list_records()
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
+        self.read_all_channels = read_all_channels
         
     def process(self, index):
         #if index >= len(self.records):
@@ -69,27 +71,41 @@ class Determ_sampler(IPipe):
 
         return list_of_records
     
+    def __find_eog(self, phrase):
+        if 'EOG' in phrase:
+            return phrase
+    
+    def __find_eeg(self, phrase):
+        if 'EEG' in phrase:
+            return phrase
+
     def __get_sample(self, index):
         r = self.records[index]
 
         dataset = r[0]
         subject = r[1]
         rec = r[2]
-        
+
+        eogs = []
+        eegs = []
+
         with h5py.File(f"{self.base_file_path}/{dataset}.hdf5", "r") as hdf5:
             record = hdf5[subject][rec]
             
             y = record["hypnogram"][()]
-            psg = record["psg"]
+            psg = record["psg"] 
 
-            eogs = []
-            eegs = []
-
-            for k in psg.keys():
-                if "EEG" in k:
-                    eegs.append(psg[k][()])
-                if "EOG" in k:
-                    eogs.append(psg[k][()])
+            if self.read_all_channels:
+                for k in psg.keys():
+                    if "EEG" in k:
+                        eegs.append(psg[k][()])
+                    if "EOG" in k:
+                        eogs.append(psg[k][()])
+            else:
+                eeg = psg.visit(self.__find_eeg)
+                eog = psg.visit(self.__find_eog)
+                eegs.append(psg[eeg][()])
+                eogs.append(psg[eog][()])
 
         eegs = torch.tensor(np.array(eegs))
         eogs = torch.tensor(np.array(eogs))

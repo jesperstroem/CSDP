@@ -39,6 +39,7 @@ class USleep_Pipeline_Factory(Pipeline_Factory):
                                     train_args["datasplit_path"],
                                     split_type="val",
                                     num_epochs=35,
+                                    read_all_channels = False,
                                     subject_percentage = train_args["subject_percentage"])]
         
         return val_pipes
@@ -48,7 +49,8 @@ class USleep_Pipeline_Factory(Pipeline_Factory):
                         dataset_args["test"],
                         train_args["datasplit_path"],
                         split_type="test",
-                        num_epochs=35)]
+                        num_epochs=35,
+                        read_all_channels=True)]
         
         return test_pipes
 
