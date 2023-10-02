@@ -74,17 +74,20 @@ def main():
                  richbar,
                  checkpoint_callback]
     
-    try:
-        logger = NeptuneLogger(
-            api_key=neptune["api_key"],
-            project=neptune["project"],
-            name=model,
-            source_files=["pipeline_args.yaml", "run_pipeline.py"],
-        )
+    if neptune["log"] == True:
+        try:
+            logger = NeptuneLogger(
+                api_key=neptune["api_key"],
+                project=neptune["project"],
+                name=model,
+                source_files=["pipeline_args.yaml", "run_pipeline.py"],
+            )
 
-    except:
-        print("Error: No valid neptune logging credentials configured.")
-        exit()
+        except:
+            print("Error: No valid neptune logging credentials configured.")
+            exit()
+    else:
+        logger = True
 
     trainer = pl.Trainer(logger=logger,
                          profiler=profiler,

@@ -81,7 +81,7 @@ class Sampler(IPipe):
             # Choose random subject
             records = list(hdf5[r_subject].keys())
             
-            print(f"time1: {time.time() - start}")
+      #      print(f"time1: {time.time() - start}")
 
             #choose Random record
             r_record = np.random.choice(records, 1)[0]
@@ -89,13 +89,13 @@ class Sampler(IPipe):
             hyp = hdf5[r_subject][r_record]["hypnogram"][()]
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
-            print(f"time2: {time.time() - start}")
+      #      print(f"time2: {time.time() - start}")
 
             #Choose random eeg and eog
             eegs = [x for x in psg if x.startswith("EEG")]
             eogs = [x for x in psg if x.startswith("EOG")]
 
-            print(f"time3: {time.time() - start}")
+   ##         print(f"time3: {time.time() - start}")
             # Eog not always available, skip if so
             try:
                 r_eog = np.random.choice(eogs, 1)[0]
@@ -103,7 +103,7 @@ class Sampler(IPipe):
             except ValueError:
                 return None
             
-            print(f"time4: {time.time() - start}")
+   #         print(f"time4: {time.time() - start}")
 
             # Choose random index of a random label
             label_set = np.unique(hyp)
@@ -134,10 +134,10 @@ class Sampler(IPipe):
             r_eeg_segment = hdf5[r_subject][r_record]["psg"][r_eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
             r_eog_segment = hdf5[r_subject][r_record]["psg"][r_eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
 
-            print(f"time5: {time.time() - start}")
-            self.acum_time += time.time() - start
+       #     print(f"time5: {time.time() - start}")
+        #    self.acum_time += time.time() - start
         
-        print(f"Time spent: {self.acum_time}")
+    #    print(f"Time spent: {self.acum_time}")
         
         x_eeg = torch.tensor(r_eeg_segment)
         x_eog = torch.tensor(r_eog_segment)
