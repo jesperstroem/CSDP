@@ -18,7 +18,7 @@ sys.path.append(os.path.abspath('../..'))
 from shared.pipeline.pipe import IPipe
 
 class Determ_sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, read_all_channels = True, subject_percentage = 1, sample_rate = 128):
+    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, single_channels = False, subject_percentage = 1, sample_rate = 128):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -27,7 +27,7 @@ class Determ_sampler(IPipe):
         self.records = self.list_records()
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
-        self.read_all_channels = read_all_channels
+        self.single_channels = single_channels
         
     def process(self, index):
         #if index >= len(self.records):
@@ -89,31 +89,45 @@ class Determ_sampler(IPipe):
         eogs = []
         eegs = []
 
-        with h5py.File(f"{self.base_file_path}/{dataset}.hdf5", "r") as hdf5:
-            record = hdf5[subject][rec]
-            
-            y = record["hypnogram"][()]
-            psg = record["psg"] 
+        start = time.time()
 
-            if self.read_all_channels:
+        with h5py.File(f"{self.base_file_path}/{dataset}.hdf5", "r") as hdf5:
+            y = hdf5[subject][rec]["hypnogram"][()]
+
+            psg = hdf5[subject][rec]["psg"]
+
+            print(f"time1: {time.time() - start}")
+            
+            if self.single_channels == False:
                 for k in psg.keys():
                     if "EEG" in k:
                         eegs.append(psg[k][()])
                     if "EOG" in k:
                         eogs.append(psg[k][()])
+                
+                eegs = torch.tensor(np.array(eegs))
+                eogs = torch.tensor(np.array(eogs))
+
             else:
                 eeg = psg.visit(self.__find_eeg)
                 eog = psg.visit(self.__find_eog)
-                eegs.append(psg[eeg][()])
-                eogs.append(psg[eog][()])
 
-        eegs = torch.tensor(np.array(eegs))
-        eogs = torch.tensor(np.array(eogs))
+                print(f"time2: {time.time() - start}")
+                eegs = torch.from_numpy(np.array(psg[eeg][:]))
+                eogs = torch.from_numpy(np.array(psg[eog][:]))
+                eegs = eegs.unsqueeze(0)
+                eogs = eogs.unsqueeze(0)
 
+        print(f"time3: {time.time() - start}")
+
+        #print(eegs.shape)
+        #print(eogs.shape)
+        
+        tag = f"{dataset}/{subject}/{rec}"
         y = torch.tensor(y)
 
-        tag = f"{dataset}/{subject}/{rec}"
-
+        print(f"time4: {time.time() - start}")
+        
         return eegs, eogs, y, tag
                 
 if __name__ == '__main__':

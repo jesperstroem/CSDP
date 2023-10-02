@@ -81,6 +81,9 @@ class USleep_Lightning(LightningModule):
     
             
     def single_prediction(self, x_eeg, x_eog):
+        assert x_eeg.shape[1] == 1
+        assert x_eog.shape[1] == 1
+        
         chan1 = x_eeg[:,0,...]
         chan2 = x_eog[:,0,...]
         
