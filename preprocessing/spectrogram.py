@@ -8,49 +8,6 @@ Created on Fri Feb 17 10:27:04 2023
 import numpy as np
 import scipy.signal
 #import matlab.engine
-from scipy.signal import resample_poly
-from scipy.interpolate import interp1d 
-import torch
-
-def findRuns(input):
-    sequence=np.asarray(input)
-    assert ~(sequence.all() | ((1-sequence).all())),'Sequence is all 0 or all 1'
-
-    changes=np.diff([0, *sequence, 0])
-    runStarts=(changes>0).nonzero()[0]
-    runEnds=(changes<0).nonzero()[0]
-    runLengths=runEnds-runStarts
-    assert all(runLengths>0)
-
-    return runStarts, runLengths
-
-def interpolateOverNans(allDeriv,fs):
-    #we can't have nans at the end:
-    allDeriv[np.isnan(allDeriv[:,0]),0]=0
-    allDeriv[np.isnan(allDeriv[:,-1]),-1]=0
-
-
-    for iDeriv in range(allDeriv.shape[0]):
-        
-        nanSamples=np.isnan(allDeriv[iDeriv,:]).nonzero()[0]
-
-        if nanSamples.size>0:
-            [nanStart, nanDur]=findRuns(np.isnan(allDeriv[iDeriv,:]))
-            nanDur=nanDur-1
-            realSamples=np.unique([nanStart-1, (nanStart+nanDur)+1])
-            
-            distanceToReal=nanSamples*0
-            counter=0
-            for iRun in range(len(nanDur)):
-                distanceToReal[range(counter,counter+nanDur[iRun])]=[*range(int(np.floor(nanDur[iRun]/2))), *range(int(np.ceil(nanDur[iRun]/2)),0,-1) ]
-                counter=counter+nanDur[iRun]
-           
-            interpValues=interp1d(realSamples,allDeriv[iDeriv,realSamples])(nanSamples)
-            interpValues=interpValues*np.exp(-distanceToReal/(fs*1))
-            
-            allDeriv[iDeriv,nanSamples]=interpValues
-
-    return allDeriv
 
 def create_spectrogram_images(x, sample_rate, win_size, fs_fourier, overlap):
     #if original_sample_rate != target_sample_rate:
@@ -75,27 +32,6 @@ def create_spectrogram_images(x, sample_rate, win_size, fs_fourier, overlap):
         spectrograms.append(sxx)
     
     return t, f,spectrograms
-
-def create_spectrogram_matlab(x, win_size, fs_fourier, overlap):
-    nfft = next_power_of_2(win_size*fs_fourier)
-
-    window=scipy.signal.windows.hamming(int(win_size *fs_fourier))
-    window=window*0+1
-    
-    eng=matlab.engine.start_matlab()
-    
-    eng.workspace['signal']=x
-    eng.workspace['fs_fourier']=fs_fourier
-    eng.workspace['overlap']=overlap 
-    eng.workspace['win_size']=win_size
-    eng.workspace['nfft']=nfft
-    eng.workspace['window']=window
-    
-    eng.eval('[sxx,f,t]=spectrogram(signal,window,overlap*fs_fourier,nfft,fs_fourier);',nargout=0)
-    sxx=eng.workspace['sxx']
-    sxxmatlab=np.array(sxx).T
-    
-    return sxxmatlab
 
 def create_spectrogram(x, win_size, fs_fourier, overlap):
     """
