@@ -8,6 +8,12 @@ The preprocessing can be used to transform most avaiable PSG datasets to a stand
 
 The data serving can be used for two neural networks with customizable training setups.
 
+## How to install the package
+
+Run the following command to install the repo as a package:
+
+pip install git+https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline.git
+
 ## How to preprocess and standardize your data
 
 A lot of public PSG datasets are available for preprocessing.
