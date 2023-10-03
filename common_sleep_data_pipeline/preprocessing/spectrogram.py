@@ -9,7 +9,7 @@ import numpy as np
 import scipy.signal
 #import matlab.engine
 
-def create_spectrogram_images(x, sample_rate, win_size, fs_fourier, overlap):
+def create_spectrogram_images(x, sample_rate, win_size = 2, fs_fourier = 100, overlap = 1):
     #if original_sample_rate != target_sample_rate:
     #    x = resample_poly(x, target_sample_rate, original_sample_rate, axis=0)
 
