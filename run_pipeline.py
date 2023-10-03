@@ -1,13 +1,13 @@
 import torch
 from torch.utils.data import DataLoader
-from shared.pipeline.pipeline_dataset import PipelineDataset, PipelineDatasetV2
+from shared.pipeline.pipeline_dataset import PipelineDataset
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
 from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
-from lightning.pytorch.profilers import AdvancedProfiler, SimpleProfiler
+from lightning.pytorch.profilers import AdvancedProfiler
 
 import neptune as neptune
 import yaml
@@ -97,10 +97,10 @@ def main():
                          devices=training["devices"],
                          num_nodes=training["num_nodes"])
 
-    trainset = PipelineDatasetV2(pipes=train_pipes,
+    trainset = PipelineDataset(pipes=train_pipes,
                                iterations=iterations)
 
-    valset = PipelineDatasetV2(pipes=val_pipes,
+    valset = PipelineDataset(pipes=val_pipes,
                              iterations=len(val_pipes[0].records))
     
     testset = PipelineDataset(pipes=test_pipes,
