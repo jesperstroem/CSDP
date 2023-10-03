@@ -32,6 +32,4 @@ lseqsleepnet_pytorch/model/__pycache__/
 lseqsleepnet_pytorch/pytorch_datasets/datastream/
 *.png
 lseq_results/THES-348/metrics/
-usleep/1/checkpoints/latest.ckpt
-usleep/3/checkpoints/latest.ckpt
-usleep/4/checkpoints/latest.ckpt
+usleep/*
