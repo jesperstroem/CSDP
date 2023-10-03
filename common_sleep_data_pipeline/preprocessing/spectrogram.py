@@ -22,7 +22,7 @@ def create_spectrogram_images(x, sample_rate, win_size = 2, fs_fourier = 100, ov
     spectrograms = []
     
     for i in range(nEpochs):
-        t,f,sxx = create_spectrogram(x[i], win_size, fs_fourier, overlap)
+        t,f,sxx = __create_spectrogram(x[i], win_size, fs_fourier, overlap)
 
         sxxabs = np.abs(sxx)
         #sxx = sxxabs
@@ -33,16 +33,16 @@ def create_spectrogram_images(x, sample_rate, win_size = 2, fs_fourier = 100, ov
     
     return t, f,spectrograms
 
-def create_spectrogram(x, win_size, fs_fourier, overlap):
+def __create_spectrogram(x, win_size, fs_fourier, overlap):
     """
     Takes a one-dimensional time-series signal and converts it to a time-frequency spectrogram image representation
     """
-    nfft = next_power_of_2(win_size*fs_fourier)
+    nfft = __next_power_of_2(win_size*fs_fourier)
 
     window=scipy.signal.windows.hamming(int(win_size *fs_fourier))
     window=window*0+1
     
-    t,f,sxx = spectrogram(x,
+    t,f,sxx = __spectrogram(x,
                           window,
                           overlap*fs_fourier,
                           nfft,
@@ -50,10 +50,10 @@ def create_spectrogram(x, win_size, fs_fourier, overlap):
     
     return t,f,sxx
 
-def next_power_of_2(x):
+def __next_power_of_2(x):
     return 1 if x == 0 else int(2**(np.ceil(np.log2(x))))
 
-def spectrogram(x=None, win=None, noverlap=None, nfft=None,fs=None, sides='onesided'):
+def __spectrogram(x=None, win=None, noverlap=None, nfft=None,fs=None, sides='onesided'):
     """
     light weight approach to spectrogram calculation. basically a slightly polished version of 
     scipy.signal._fft_helper
