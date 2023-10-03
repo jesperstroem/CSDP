@@ -33,3 +33,5 @@ lseqsleepnet_pytorch/pytorch_datasets/datastream/
 *.png
 lseq_results/THES-348/metrics/
 usleep/*
+commonsleepdatapipeline.egg-info/PKG-INFO
+build/

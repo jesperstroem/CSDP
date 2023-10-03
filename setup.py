@@ -8,7 +8,7 @@ setup(
     author="Jesper Strøm",
     author_email="js@ece.au.dk",
     packages=[
-        "preprocessing",
+        "common_sleep_data_pipeline.preprocessing",
     ],
     install_requires=["numpy", "scipy"],
 )
