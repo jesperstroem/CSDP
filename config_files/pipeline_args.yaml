@@ -1,0 +1,56 @@
+# Model can be "lseq" or "usleep"
+model: "usleep"
+
+pipeline_configuration:
+ gradient_steps_per_epoch: 443
+ subject_sample_percentage: 1.0
+ dataloader_num_workers: 1
+
+ data:
+  data_split_path: "C:/Users/au588953/Git Repos/CSDP/shared/splits/usleep_split.json"
+  hdf5_base_path: "C:/Users/au588953/hdf5"
+   train:
+    - "dcsm"
+   val:
+    - "abc"
+    - "dcsm"
+    - "cfs"
+   test:
+    - "abc"
+
+ augmentation:
+  use: False
+  min_frac: 0.001
+  max_frac: 0.3
+  apply_prob: 0.1
+  sigma: 1.0
+  mean: 0.0
+
+model_parameters:
+ lseq:
+  batch_size: 8
+  features: 129
+  epochs: 200
+  sequences: 29
+  classes: 5
+  lr: 2.0E-03
+  seed: 4
+  weight_decay: 0.001
+  F: 129
+  M: 32
+  num_channels: 2
+  minF: 0
+  maxF: 50
+  source_samplerate: 128
+  samplerate: 100
+  K: 10
+  B: 20
+  lstm_hidden_size: 64
+  fc_hidden_size: 512
+  classes: 5
+  attention_size: 64
+
+ usleep:
+  batch_size: 64
+  epochs: 35
+  lr: 1.0E-06

@@ -34,20 +34,25 @@ def main():
 
     profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
 
-    if model == "lseq":
-        model_fac = LSeqSleepNet_Factory()
-        pipeline_fac = LSeqSleepNet_Pipeline_Factory()
-    elif model == "usleep":
-        model_fac = USleep_Factory()
-        pipeline_fac = USleep_Pipeline_Factory()
-    else:
-        print("No valid model specified")
-        exit()
+    # CREATE SOMETHING HERE LIKE:
+
+    # model_fac = Model_Factory()
+    # pipeline_fac = Pipeline_Factory()
+
+    #if model == "lseq":
+    #    model_fac = LSeqSleepNet_Factory()
+    #    pipeline_fac = LSeqSleepNet_Pipeline_Factory()
+    #elif model == "usleep":
+    #    model_fac = USleep_Factory()
+    #    pipeline_fac = USleep_Pipeline_Factory()
+    #else:
+    #    print("No valid model specified")
+    #    exit()
 
     if training["use_pretrained"] == True:
-        net = model_fac.create_pretrained_net(model_parameters, training, training["pretrained_path"])
+        net = model_fac.create_pretrained_net()
     else:
-        net = model_fac.create_new_net(model_parameters, training)    
+        net = model_fac.create_new_net()    
     
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",

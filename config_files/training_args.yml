@@ -1,0 +1,14 @@
+training:
+ use_gpu: False
+ use_pretrained: False
+ test: False
+ pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
+ max_epochs: 1
+ early_stop_patience: 100000
+ devices: 1
+ num_nodes: 1
+ 
+neptune:
+ log: False
+ api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
+ project: "NTLAB/bigsleep"
