@@ -1,6 +1,6 @@
 from lightning_models.factories.concrete_pipeline_factories import USleep_Pipeline_Factory, LSeqSleepNet_Pipeline_Factory
 
-class Pipeline_Dataloader_Factory():
+class Dataloader_Factory():
     def get_training_dataloader(self):
         pass
 

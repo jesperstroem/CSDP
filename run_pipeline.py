@@ -107,9 +107,7 @@ def main():
                              iterations=len(val_pipes[0].records))
     
     testset = PipelineDataset(pipes=test_pipes,
-                              iterations=100000,
-                              global_rank=trainer.global_rank,
-                              world_size=trainer.world_size)
+                              iterations=100000)
     
     if training["test"]==False:
         trainloader = DataLoader(trainset,
@@ -128,14 +126,11 @@ def main():
         testloader = DataLoader(testset,
                                 batch_size=1,
                                 shuffle=False,
-                                num_workers=1)
+                                num_workers=training["num_workers"])
         
         with torch.no_grad():
             net.eval()
             _ = trainer.test(net, testloader)
-    
-    print(timer.time_elapsed("train"))
-    print(timer.time_elapsed("validate"))
         
 if __name__ == '__main__':
     main()
