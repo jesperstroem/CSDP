@@ -5,8 +5,9 @@ from shared.pipeline.pipeline_dataset import PipelineDataset
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
+from lightning.pytorch.profilers import AdvancedProfiler
 
 import neptune as neptune
 import yaml
@@ -14,9 +15,13 @@ from yaml.loader import SafeLoader
 from neptune.utils import stringify_unsupported
 from lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
 from lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
+from pathlib import Path
 
-def main():  
-    with open('pipeline_args.yaml') as f:
+def main():
+    file_path = Path(__file__).parent.absolute()
+    args_path = f"{file_path}/pipeline_args.yaml"
+
+    with open(args_path) as f:
         data = yaml.load(f, Loader=SafeLoader)
         model = data['model']
         model_parameters = data['model_parameters']
@@ -26,6 +31,8 @@ def main():
     
     torch.set_float32_matmul_precision('high')
     accelerator = "gpu" if training["use_gpu"] == True else "cpu"
+
+    profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
 
     if model == "lseq":
         model_fac = LSeqSleepNet_Factory()
@@ -59,60 +66,59 @@ def main():
     iterations=training["iterations"]
     richbar = RichProgressBar()
     checkpoint_callback = ModelCheckpoint(monitor="valKap", mode="max")
+    timer = Timer()
 
     callbacks = [early_stopping,
+                 timer,
                  lr_monitor,
                  richbar,
                  checkpoint_callback]
     
-    try:
-        logger = NeptuneLogger(
-            api_key=neptune["api_key"],
-            project=neptune["project"],
-            name=model,
-            source_files=["pipeline_args.yaml", "run_pipeline.py"],
-        )
+    if neptune["log"] == True:
+        try:
+            logger = NeptuneLogger(
+                api_key=neptune["api_key"],
+                project=neptune["project"],
+                name=model,
+                source_files=["pipeline_args.yaml", "run_pipeline.py"],
+            )
 
-    except:
-        print("Error: No valid neptune logging credentials configured.")
-        exit()
+        except:
+            print("Error: No valid neptune logging credentials configured.")
+            exit()
+    else:
+        logger = True
 
     trainer = pl.Trainer(logger=logger,
+                         profiler=profiler,
                          max_epochs=training["max_epochs"],
                          callbacks= callbacks,
                          accelerator=accelerator,
                          devices=training["devices"],
-                         num_nodes=training["num_nodes"],
-                         strategy="ddp")
+                         num_nodes=training["num_nodes"])
 
     trainset = PipelineDataset(pipes=train_pipes,
-                               batch_size=None,
-                               iterations=iterations,
-                               global_rank=trainer.global_rank,
-                               world_size=trainer.world_size)
+                               iterations=iterations)
 
     valset = PipelineDataset(pipes=val_pipes,
-                             batch_size=None,
-                             iterations=100000,
-                             global_rank=trainer.global_rank,
-                             world_size=trainer.world_size)
+                             iterations=len(val_pipes[0].records))
     
     testset = PipelineDataset(pipes=test_pipes,
-                              batch_size=None,
                               iterations=100000,
                               global_rank=trainer.global_rank,
                               world_size=trainer.world_size)
     
     if training["test"]==False:
         trainloader = DataLoader(trainset,
-                                batch_size=training["batch_size"],
-                                shuffle=False,
-                                num_workers=1)
+                                 batch_size=training["batch_size"],
+                                 shuffle=False,
+                                num_workers=training["num_workers"],
+                                pin_memory=True)
         
         valloader = DataLoader(valset,
-                            batch_size=1,
-                            shuffle=False,
-                            num_workers=1)
+                               batch_size=1,
+                               shuffle=False,
+                               num_workers=training["num_workers"])
 
         trainer.fit(net, trainloader, valloader)
     else:
@@ -124,6 +130,9 @@ def main():
         with torch.no_grad():
             net.eval()
             _ = trainer.test(net, testloader)
+    
+    print(timer.time_elapsed("train"))
+    print(timer.time_elapsed("validate"))
         
 if __name__ == '__main__':
     main()

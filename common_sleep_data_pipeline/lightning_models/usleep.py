@@ -6,11 +6,6 @@ import torch.nn as nn
 from pytorch_lightning import LightningModule
 from shared.utility import kappa, acc, f1, log_test_step
 
-def get_model(args):
-    model = USleep_Lightning(**vars(args))
-
-    return model
-
 class USleep_Lightning(LightningModule):
     def __init__(
         self,
@@ -21,13 +16,13 @@ class USleep_Lightning(LightningModule):
         lr_scheduler_factor,
         lr_scheduler_patience,
         monitor_metric,
-        monitor_mode
+        monitor_mode,
     ):
         super().__init__()
+
         self.usleep = usleep
         self.lr = lr
         self.batch_size = batch_size
-        self.ensemble_window_size = ensemble_window_size
         self.lr_scheduler_factor = lr_scheduler_factor
         self.lr_scheduler_patience = lr_scheduler_patience
         self.monitor_metric = monitor_metric
@@ -62,11 +57,10 @@ class USleep_Lightning(LightningModule):
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
         y_pred = torch.reshape(y_pred, (-1, 5))
-        
         y_true = torch.flatten(y_true)
-        
+
         loss = self.loss(y_pred, y_true)
-        
+
         y_pred = torch.argmax(y_pred, dim=1)
         
         accu = acc(y_pred, y_true)
@@ -87,6 +81,9 @@ class USleep_Lightning(LightningModule):
     
             
     def single_prediction(self, x_eeg, x_eog):
+        assert x_eeg.shape[1] == 1
+        assert x_eog.shape[1] == 1
+        
         chan1 = x_eeg[:,0,...]
         chan2 = x_eog[:,0,...]
         
@@ -141,75 +138,22 @@ class USleep_Lightning(LightningModule):
         votes = votes.to(device)
         
         return votes
-    
-            
-    def ensemble_prediction(self, x_eegs, x_eogs):
-        window_len = self.ensemble_window_size * 128 * 30
-        epoch_step_size = 1 # Should always be one
-        step_size = epoch_step_size * 128 * 30 # Number  of epochs per step * sample rate * seconds
-        
-        eegshape = x_eegs.shape
-        eogshape = x_eogs.shape
-        
-        num_eegs = eegshape[1]
-        num_eogs = eogshape[1]
-        
-        assert eegshape[2] == eogshape[2]
-        
-        signal_len = eegshape[2]
-        num_epochs = int(signal_len / 128 / 30)
-        num_windows = int(signal_len/step_size) - int(window_len/step_size) + 1
-        
-        votes = torch.zeros(num_epochs, 5) # fordi vi summerer løbende
-        
-        for i in range(num_eegs):
-            for p in range(num_eogs):
-                x_eeg = x_eegs[:,i,...]
-                x_eog = x_eogs[:,p,...]
 
-                assert x_eeg.shape == x_eog.shape
-                
-                x_temp = torch.stack([x_eeg, x_eog], dim=0)
-                x_temp = torch.squeeze(x_temp)
-                x_temp = torch.unsqueeze(x_temp, 0)
-
-                assert x_temp.shape[1] == 2
-                assert x_temp.shape[0 ]
-                
-                for ii in range(num_windows):
-                    start_index = (ii * step_size)
-                    end_index = (start_index + window_len)
-                    
-                    window = x_temp[:,:,start_index:end_index]
-                    
-                    pred = self(window.float())
-                    pred = torch.nn.functional.softmax(pred, dim=1)
-                    pred = torch.squeeze(pred)
-                    pred = pred.swapaxes(0,1)
-                    pred = pred.cpu()
-                    
-                    votes[ii:ii+self.ensemble_window_size] = torch.add(
-                        votes[ii:ii+self.ensemble_window_size],
-                        pred
-                    )
-                               
-        votes = torch.argmax(votes, axis=1)
-
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-        votes = votes.to(device)
-        
-        return votes
-    
-
-    def training_step(self, batch, _):
+    def training_step(self, batch, idx):
         x_eeg, x_eog, ybatch, _ = batch
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
+
+        #print(f"Batch shape: {xbatch.shape}, batch index: {idx}")
+
+        xbatch = xbatch.float()
         
-        pred = self(xbatch.float())
-        
+        #print("First: %s seconds ---" % (time.time() - start_time))
+        pred = self.forward(xbatch)
+        #print("Second: %s seconds ---" % (time.time() - start_time))
+
         step_loss, _, _, _ = self.compute_train_metrics(pred, ybatch)
+        #print("Third: %s seconds ---" % (time.time() - start_time))
 
         self.training_step_outputs.append(step_loss)
 
@@ -233,6 +177,10 @@ class USleep_Lightning(LightningModule):
     def validation_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, _ = batch
+
+        if x_eog.shape[1] == 0:
+            print("Found no EOG channel, duplicating EEG instead")
+            x_eog = x_eeg
         
         pred = self.single_prediction(x_eeg, x_eog)
         

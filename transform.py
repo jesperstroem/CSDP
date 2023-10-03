@@ -3,9 +3,6 @@ from yaml.loader import SafeLoader
 import importlib
 
 def main():
-    target = "/home/alec/repos/data/hdf5"
-    num_sub = None
-    
     with open('preprocessing_args.yaml') as f:
         data = yaml.load(f, Loader=SafeLoader)
         datasets = data['datasets']
@@ -18,9 +15,9 @@ def main():
         name = dataset['name']
         path = dataset['path']
         
-        module = importlib.import_module("datastore_classes")
+        module = importlib.import_module("common_sleep_data_store.datastore_classes")
         class_ = getattr(module, name)
-        _ = class_(num_sub, path, target, scale_and_clip, output_sample_rate)
+        _ = class_(None, path, target, scale_and_clip, output_sample_rate)
         
 if __name__ == "__main__":
     main() 

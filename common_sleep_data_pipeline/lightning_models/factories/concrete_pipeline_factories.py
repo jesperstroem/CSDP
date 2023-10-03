@@ -39,6 +39,7 @@ class USleep_Pipeline_Factory(Pipeline_Factory):
                                     train_args["datasplit_path"],
                                     split_type="val",
                                     num_epochs=35,
+                                    single_channels = True,
                                     subject_percentage = train_args["subject_percentage"])]
         
         return val_pipes
