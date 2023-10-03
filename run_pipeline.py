@@ -19,20 +19,18 @@ from pathlib import Path
 
 def main():
     file_path = Path(__file__).parent.absolute()
-    args_path = f"{file_path}/pipeline_args.yaml"
+    args_path = f"{file_path}/config_files/training_args.yaml"
 
     with open(args_path) as f:
         data = yaml.load(f, Loader=SafeLoader)
-        model = data['model']
-        model_parameters = data['model_parameters']
-        training = data['training']
-        neptune = data['neptune']
-        datasets = data['datasets']
+        training = data["training"]
+        neptune = data["neptune"]
     
     torch.set_float32_matmul_precision('high')
+
     accelerator = "gpu" if training["use_gpu"] == True else "cpu"
 
-    profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
+    #profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
 
     # CREATE SOMETHING HERE LIKE:
 

@@ -9,6 +9,7 @@ setup(
     author_email="js@ece.au.dk",
     packages=[
         "common_sleep_data_pipeline.preprocessing",
+        "common_sleep_data_pipeline.factories.pipeline_dataloader"
     ],
     install_requires=["numpy", "scipy"],
 )

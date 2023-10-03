@@ -6,7 +6,7 @@ from shared.pipeline.spectrogram import Spectrogram
 from shared.pipeline.determ_sampler import Determ_sampler
 
 class USleep_Pipeline_Factory(Pipeline_Factory):
-    def create_training_pipeline(self, train_args, dataset_args):
+    def create_training_pipeline(self):
         aug = train_args["augmentation"]
 
         if aug["use"] == True:
@@ -33,7 +33,7 @@ class USleep_Pipeline_Factory(Pipeline_Factory):
                                    subject_percentage = train_args["subject_percentage"])]
         return train_pipes
 
-    def create_validation_pipeline(self, train_args, dataset_args):
+    def create_validation_pipeline(self):
         val_pipes = [Determ_sampler(dataset_args["base_path"],
                                     dataset_args["val"],
                                     train_args["datasplit_path"],
@@ -44,7 +44,7 @@ class USleep_Pipeline_Factory(Pipeline_Factory):
         
         return val_pipes
 
-    def create_test_pipeline(self, train_args, dataset_args):
+    def create_test_pipeline(self):
         test_pipes = [Determ_sampler(dataset_args["base_path"],
                         dataset_args["test"],
                         train_args["datasplit_path"],
@@ -54,7 +54,7 @@ class USleep_Pipeline_Factory(Pipeline_Factory):
         return test_pipes
 
 class LSeqSleepNet_Pipeline_Factory(Pipeline_Factory):
-    def create_training_pipeline(self, train_args, dataset_args):
+    def create_training_pipeline(self):
         aug = train_args["augmentation"]
         
         if aug["use"] == True:
@@ -84,7 +84,7 @@ class LSeqSleepNet_Pipeline_Factory(Pipeline_Factory):
                            Spectrogram()]
         return train_pipes
 
-    def create_validation_pipeline(self, train_args, dataset_args):
+    def create_validation_pipeline(self):
         val_pipes = [Determ_sampler(dataset_args["base_path"],
                                     dataset_args["val"],
                                     train_args["datasplit_path"],
@@ -95,7 +95,7 @@ class LSeqSleepNet_Pipeline_Factory(Pipeline_Factory):
                     Spectrogram()]
         return val_pipes
     
-    def create_test_pipeline(self, train_args, dataset_args):
+    def create_test_pipeline(self):
         test_pipes = [Determ_sampler(dataset_args["base_path"],
                                      dataset_args["test"],
                                      train_args["datasplit_path"],
