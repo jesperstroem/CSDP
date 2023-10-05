@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from common_sleep_data_pipeline.shared.pipeline.pipeline_dataset import PipelineDataset
+from common_sleep_data_pipeline.pipeline_elements.pipeline_dataset import PipelineDataset
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -12,9 +12,8 @@ from lightning.pytorch.profilers import AdvancedProfiler
 import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
-from neptune.utils import stringify_unsupported
-from common_sleep_data_pipeline.lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
-from common_sleep_data_pipeline.lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
+from lightning_training.models.factory.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
+from lightning_training.models.factory.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
 from pathlib import Path
 
 def main():

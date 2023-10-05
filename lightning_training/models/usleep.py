@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from common_sleep_data_pipeline.shared.utility import kappa, acc, f1, log_test_step
+from lightning_training.utility import kappa, acc, f1, log_test_step
 
 class USleep_Lightning(LightningModule):
     def __init__(
@@ -12,7 +12,6 @@ class USleep_Lightning(LightningModule):
         usleep,
         lr,
         batch_size,
-        ensemble_window_size,
         lr_scheduler_factor,
         lr_scheduler_patience,
         monitor_metric,
