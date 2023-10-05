@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from shared.pipeline.pipeline_dataset import PipelineDataset
+from common_sleep_data_pipeline.shared.pipeline.pipeline_dataset import PipelineDataset
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -13,44 +13,41 @@ import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
 from neptune.utils import stringify_unsupported
-from lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
-from lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
+from common_sleep_data_pipeline.lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
+from common_sleep_data_pipeline.lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
 from pathlib import Path
 
 def main():
     file_path = Path(__file__).parent.absolute()
-    args_path = f"{file_path}/config_files/training_args.yaml"
+    args_path = f"{file_path}/pipeline_args.yaml"
 
     with open(args_path) as f:
         data = yaml.load(f, Loader=SafeLoader)
-        training = data["training"]
-        neptune = data["neptune"]
+        model = data['model']
+        model_parameters = data['model_parameters']
+        training = data['training']
+        neptune = data['neptune']
+        datasets = data['datasets']
     
     torch.set_float32_matmul_precision('high')
-
     accelerator = "gpu" if training["use_gpu"] == True else "cpu"
 
-    #profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
+    profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
 
-    # CREATE SOMETHING HERE LIKE:
-
-    # model_fac = Model_Factory()
-    # pipeline_fac = Pipeline_Factory()
-
-    #if model == "lseq":
-    #    model_fac = LSeqSleepNet_Factory()
-    #    pipeline_fac = LSeqSleepNet_Pipeline_Factory()
-    #elif model == "usleep":
-    #    model_fac = USleep_Factory()
-    #    pipeline_fac = USleep_Pipeline_Factory()
-    #else:
-    #    print("No valid model specified")
-    #    exit()
+    if model == "lseq":
+        model_fac = LSeqSleepNet_Factory()
+        pipeline_fac = LSeqSleepNet_Pipeline_Factory()
+    elif model == "usleep":
+        model_fac = USleep_Factory()
+        pipeline_fac = USleep_Pipeline_Factory()
+    else:
+        print("No valid model specified")
+        exit()
 
     if training["use_pretrained"] == True:
-        net = model_fac.create_pretrained_net()
+        net = model_fac.create_pretrained_net(model_parameters, training, training["pretrained_path"])
     else:
-        net = model_fac.create_new_net()    
+        net = model_fac.create_new_net(model_parameters, training)    
     
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",
@@ -106,9 +103,6 @@ def main():
     valset = PipelineDataset(pipes=val_pipes,
                              iterations=len(val_pipes[0].records))
     
-    testset = PipelineDataset(pipes=test_pipes,
-                              iterations=100000)
-    
     if training["test"]==False:
         trainloader = DataLoader(trainset,
                                  batch_size=training["batch_size"],
@@ -123,10 +117,13 @@ def main():
 
         trainer.fit(net, trainloader, valloader)
     else:
+        testset = PipelineDataset(pipes=test_pipes,
+                                  iterations=len(test_pipes[0].records))
+        
         testloader = DataLoader(testset,
                                 batch_size=1,
                                 shuffle=False,
-                                num_workers=training["num_workers"])
+                                num_workers=1)
         
         with torch.no_grad():
             net.eval()

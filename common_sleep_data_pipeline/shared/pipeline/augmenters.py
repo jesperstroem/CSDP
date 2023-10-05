@@ -4,13 +4,9 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import torch
-import os
-import sys
 import random
-sys.path.append(os.path.abspath('..'))
-from shared.pipeline.pipe import IPipe # This only works from usleep folder or equivalent
-from shared.pipeline import pipe # TODO: Delete
 
+from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
 
 # TODO: aug_weight!
 
@@ -170,20 +166,3 @@ class LSeq_Augmenter(Augmenter):
         eeg = torch.unsqueeze(eeg, 0)
         eog = torch.unsqueeze(eog, 0)
         return (eeg, eog, y, tags)
-    
-if __name__ == "__main__":
-    print("Hello world aug")
-    x_batch = torch.rand(2, 16)
-    #print(x_batch)
-    batch = (x_batch, None, None)
-
-    pipes = [
-        Augmenter(min_frac=0.001, max_frac=0.3, apply_prob=0.1, sigma=1, mean=0)
-    ]
-
-    p = pipe.Pipeline(pipes, batch)
-    
-    out_batch = p.get_batch()
-
-    #print(out_batch[0])
-

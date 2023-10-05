@@ -6,16 +6,13 @@ Created on Fri Feb 17 10:25:31 2023
 """
 
 import torch
-import os
-import sys
+
 import numpy as np
 import h5py
 import math
 import json
-import time
 
-sys.path.append(os.path.abspath('../..'))
-from shared.pipeline.pipe import IPipe
+from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
 
 class Determ_sampler(IPipe):
     def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, single_channels = False, subject_percentage = 1, sample_rate = 128):
