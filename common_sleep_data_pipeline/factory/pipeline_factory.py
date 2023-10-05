@@ -18,20 +18,6 @@ class IPipeline_Factory(ABC):
     def create_test_pipeline(self):
         pass
 
-class Pipeline_Factory(IPipeline_Factory):
-    def __init__(self, data):
-        if data["model"] == "usleep":
-            self.inner_fac = USleep_Pipeline_Factory(data["pipeline_configuration"])
-
-    def create_training_pipeline(self):
-        return self.inner_fac.create_training_pipeline()
-    
-    def create_validation_pipeline(self):
-        return self.inner_fac.create_validation_pipeline()
-
-    def create_test_pipeline(self):
-        return self.inner_fac.create_test_pipeline()
-
 class USleep_Pipeline_Factory(IPipeline_Factory):
     def __init__(self,
                  hdf5_base_path,

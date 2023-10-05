@@ -8,7 +8,7 @@ Created on Fri Feb 17 10:25:31 2023
 import torch
 import numpy as np
 
-from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
+from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
 from common_sleep_data_pipeline.preprocessing.spectrogram import create_spectrogram_images
 
 class Spectrogram(IPipe):

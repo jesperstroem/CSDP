@@ -4,7 +4,7 @@
 import torch
 import torch.nn as nn
 from pytorch_lightning import LightningModule
-from lightning_training.utility import kappa, acc, f1, log_test_step
+from training.utility import kappa, acc, f1, log_test_step
 
 class USleep_Lightning(LightningModule):
     def __init__(
@@ -12,8 +12,6 @@ class USleep_Lightning(LightningModule):
         usleep,
         lr,
         batch_size,
-        lr_scheduler_factor,
-        lr_scheduler_patience,
         monitor_metric,
         monitor_mode,
     ):
@@ -22,8 +20,6 @@ class USleep_Lightning(LightningModule):
         self.usleep = usleep
         self.lr = lr
         self.batch_size = batch_size
-        self.lr_scheduler_factor = lr_scheduler_factor
-        self.lr_scheduler_patience = lr_scheduler_patience
         self.monitor_metric = monitor_metric
         self.monitor_mode = monitor_mode
         self.training_step_outputs = []
@@ -41,11 +37,11 @@ class USleep_Lightning(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                             mode=self.monitor_mode,
-                                                             factor=self.lr_scheduler_factor,
-                                                             patience=self.lr_scheduler_patience,
-                                                             verbose=True)
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+        #                                                      mode=self.monitor_mode,
+        #                                                      factor=self.lr_scheduler_factor,
+        #                                                      patience=self.lr_scheduler_patience,
+        #                                                      verbose=True)
         return {
             'optimizer': optimizer,
             'monitor': self.monitor_metric

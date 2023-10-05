@@ -8,8 +8,10 @@ setup(
     author="Jesper Strøm",
     author_email="js@ece.au.dk",
     packages=[
+        "common_sleep_data_pipeline",
         "common_sleep_data_pipeline.preprocessing",
-        "common_sleep_data_pipeline.factories.pipeline_dataloader"
+        "common_sleep_data_pipeline.factory",
+        "common_sleep_data_pipeline.pipeline_elements"
     ],
-    install_requires=["numpy", "scipy"],
+    install_requires=["numpy", "scipy", "torch"],
 )

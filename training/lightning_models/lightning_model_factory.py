@@ -6,11 +6,7 @@ from ml_architectures.lseqsleepnet.epoch_encoder import MultipleEpochEncoder
 from ml_architectures.lseqsleepnet.classifier import Classifier
 from ml_architectures.usleep.usleep import USleep
 import pytorch_lightning as pl
-from lightning_training.models.usleep import USleep_Lightning
-from lightning_training.models.lseqsleepnet import LSeqSleepNet_Lightning
-from pathlib import Path
-import yaml
-from yaml.loader import SafeLoader
+from training.lightning_models.usleep import USleep_Lightning
 
 class IModel_Factory(ABC):
     @abstractmethod
@@ -21,44 +17,27 @@ class IModel_Factory(ABC):
     def create_pretrained_net(self) -> pl.LightningModule:
         pass
 
-class Model_Factory(IModel_Factory):
-    def create_new_net(self) -> pl.LightningModule:
-        file_path = Path(__file__).parent.absolute()
-        args_path = f"{file_path}/config_files/training_args.yaml"
-
-        with open(args_path) as f:
-            data = yaml.load(f, Loader=SafeLoader)
-            self.model_parameters = data['model_parameters']
-    
-    def create_pretrained_net(self, model_args, train_args, pretrained_path) -> pl.LightningModule:
-        return super().create_pretrained_net(model_args, train_args, pretrained_path)
-
 class USleep_Factory(IModel_Factory):
+    def __init__(self,
+                 lr,
+                 batch_size
+                 ):
+        self.lr = lr
+        self.batch_size = batch_size
+
     def create_new_net(self) -> pl.LightningModule:
-        model_args = model_args["usleep"]
-
-        lr = model_args["lr"]
-        batch_size = train_args["batch_size"]
-        window_size = model_args["epochs"]
-        lr_reduction = train_args["lr_reduction"]
-        lr_patience = train_args["lr_patience"]
-
         inner = USleep()
 
         net = USleep_Lightning(inner,
-                               lr,
-                               batch_size,
-                               window_size,
-                               lr_reduction,
-                               lr_patience,
+                               self.lr,
+                               self.batch_size,
                                "valKap",
                                "max")
         
         return net
 
-    def create_pretrained_net(self, model_args, train_args, pretrained_path) -> pl.LightningModule:
-        inner = USleep()
-        return USleep_Lightning.load_from_checkpoint(pretrained_path, inner)
+    def create_pretrained_net(self) -> pl.LightningModule:
+        pass
 
 # class LSeqSleepNet_Factory(Model_Factory):
 #     def create_new_net(self) -> pl.LightningModule:
