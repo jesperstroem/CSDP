@@ -1,6 +1,6 @@
 import torch
 from torch.utils.data import DataLoader
-from shared.pipeline.pipeline_dataset import PipelineDataset
+from common_sleep_data_pipeline.shared.pipeline.pipeline_dataset import PipelineDataset
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
@@ -13,8 +13,8 @@ import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
 from neptune.utils import stringify_unsupported
-from lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
-from lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
+from common_sleep_data_pipeline.lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
+from common_sleep_data_pipeline.lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
 from pathlib import Path
 
 def main():
@@ -103,11 +103,6 @@ def main():
     valset = PipelineDataset(pipes=val_pipes,
                              iterations=len(val_pipes[0].records))
     
-    testset = PipelineDataset(pipes=test_pipes,
-                              iterations=100000,
-                              global_rank=trainer.global_rank,
-                              world_size=trainer.world_size)
-    
     if training["test"]==False:
         trainloader = DataLoader(trainset,
                                  batch_size=training["batch_size"],
@@ -122,6 +117,9 @@ def main():
 
         trainer.fit(net, trainloader, valloader)
     else:
+        testset = PipelineDataset(pipes=test_pipes,
+                                  iterations=len(test_pipes[0].records))
+        
         testloader = DataLoader(testset,
                                 batch_size=1,
                                 shuffle=False,
@@ -130,9 +128,6 @@ def main():
         with torch.no_grad():
             net.eval()
             _ = trainer.test(net, testloader)
-    
-    print(timer.time_elapsed("train"))
-    print(timer.time_elapsed("validate"))
         
 if __name__ == '__main__':
     main()

@@ -6,13 +6,10 @@ Created on Fri Feb 17 10:25:31 2023
 """
 
 import torch
-import os
 import numpy as np
-import sys
-sys.path.append(os.path.abspath('../..'))
-from shared.pipeline.pipe import IPipe # This only works from usleep folder or 
 
-from lightning_models.preprocessing.utils import create_spectrogram_images
+from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
+from common_sleep_data_pipeline.preprocessing.spectrogram import create_spectrogram_images
 
 class Spectrogram(IPipe):
     def __init__(self, 

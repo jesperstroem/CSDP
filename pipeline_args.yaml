@@ -2,20 +2,20 @@
 model: "usleep"
 
 training:
- iterations: 64
+ iterations: 128
  batch_size: 64
  use_gpu: False
  use_pretrained: False
  test: False
  pretrained_path: ".neptune/lseq/BIG-300/checkpoints/latest.ckpt"
- max_epochs: 1
+ max_epochs: 10
  early_stop_patience: 100000
  lr_patience: 100000
  lr_reduction: 0.5
  subject_percentage: 1.0
  devices: 1
  num_nodes: 1
- datasplit_path: "C:/Users/au588953/Git Repos/CSDP/shared/splits/usleep_split.json"
+ datasplit_path: "C:/Users/au588953/Git Repos/CSDP/common_sleep_data_pipeline/shared/splits/usleep_split.json"
  num_workers: 1
  augmentation:
   use: False

@@ -9,10 +9,9 @@ import torch
 import os
 import numpy as np
 import sys
-sys.path.append(os.path.abspath('../..'))
-from shared.pipeline.pipe import IPipe # This only works from usleep folder or 
-from shared.pipeline.sampler import Sampler
-from shared.pipeline.determ_sampler import Determ_sampler
+
+from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
+from common_sleep_data_pipeline.shared.pipeline.determ_sampler import Determ_sampler
 
 from scipy.signal import resample_poly
 

@@ -14,9 +14,7 @@ import math
 import json
 import time
 
-sys.path.append(os.path.abspath('../..'))
-from shared.pipeline.pipe import IPipe
-
+from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
 
 class Sampler(IPipe):
     def __init__(self, base_file_path, datasets, split_file_path, split_type, num_epochs, subject_percentage = 1):

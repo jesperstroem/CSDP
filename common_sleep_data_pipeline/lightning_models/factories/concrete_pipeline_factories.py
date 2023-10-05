@@ -1,9 +1,9 @@
-from lightning_models.factories.pipeline_factory import Pipeline_Factory
-from shared.pipeline.sampler import Sampler
-from shared.pipeline.augmenters import Augmenter
-from shared.pipeline.resampler import Resampler
-from shared.pipeline.spectrogram import Spectrogram
-from shared.pipeline.determ_sampler import Determ_sampler
+from common_sleep_data_pipeline.lightning_models.factories.pipeline_factory import Pipeline_Factory
+from common_sleep_data_pipeline.shared.pipeline.sampler import Sampler
+from common_sleep_data_pipeline.shared.pipeline.augmenters import Augmenter
+from common_sleep_data_pipeline.shared.pipeline.resampler import Resampler
+from common_sleep_data_pipeline.shared.pipeline.spectrogram import Spectrogram
+from common_sleep_data_pipeline.shared.pipeline.determ_sampler import Determ_sampler
 
 class USleep_Pipeline_Factory(Pipeline_Factory):
     def create_training_pipeline(self, train_args, dataset_args):

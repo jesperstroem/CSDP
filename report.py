@@ -11,7 +11,7 @@ import pickle
 import torch
 import io
 sys.path.append(os.path.abspath('../..'))
-from shared.utility import acc, kappa, f1
+from common_sleep_data_pipeline.shared.utility import acc, kappa, f1
 
 class CPU_Unpickler(pickle.Unpickler):
     def find_class(self, module, name):
