@@ -42,9 +42,20 @@ datasets:
   - "mesa"
   - "mros"
   - "shhs"
+  - "phys"
   - "sof"
  val:
   - "abc"
+  - "ccshs"
+  - "cfs"
+  - "chat"
+  - "dcsm"
+  - "homepap"
+  - "mesa"
+  - "mros"
+  - "shhs"
+  - "phys"
+  - "sof"
  test:
   - "abc"
 
