@@ -1,3 +1,31 @@
+model: "usleep"
+
+pipeline_configuration:
+ gradient_steps_per_epoch: 443
+ batch_size: 64
+ subject_sample_percentage: 1.0
+ dataloader_num_workers: 1
+
+ data:
+  data_split_path: "C:/Users/au588953/Git Repos/CSDP/shared/splits/usleep_split.json"
+  hdf5_base_path: "C:/Users/au588953/hdf5"
+  train:
+   - "dcsm"
+  val:
+   - "abc"
+   - "dcsm"
+   - "cfs"
+  test:
+   - "abc"
+
+ augmentation:
+  use: False
+  min_frac: 0.001
+  max_frac: 0.3
+  apply_prob: 0.1
+  sigma: 1.0
+  mean: 0.0
+
 training:
  batch_size: 64
  lr: 1.0E-06

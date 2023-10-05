@@ -1,6 +1,11 @@
 from abc import ABC, abstractmethod
+from common_sleep_data_pipeline.pipeline_elements.sampler import Sampler
+from common_sleep_data_pipeline.pipeline_elements.augmenters import Augmenter
+from common_sleep_data_pipeline.pipeline_elements.resampler import Resampler
+from common_sleep_data_pipeline.pipeline_elements.spectrogram import Spectrogram
+from common_sleep_data_pipeline.pipeline_elements.determ_sampler import Determ_sampler
 
-class Pipeline_Factory(ABC):
+class IPipeline_Factory(ABC):
     @abstractmethod
     def create_training_pipeline(self):
         pass
@@ -13,102 +18,58 @@ class Pipeline_Factory(ABC):
     def create_test_pipeline(self):
         pass
 
-class USleep_Pipeline_Factory(Pipeline_Factory):
+class Pipeline_Factory(IPipeline_Factory):
+    def __init__(self, data):
+        if data["model"] == "usleep":
+            self.inner_fac = USleep_Pipeline_Factory(data["pipeline_configuration"])
+
     def create_training_pipeline(self):
-        aug = train_args["augmentation"]
-
-        if aug["use"] == True:
-            print("Running with augmentation")
-            train_pipes = [Sampler(dataset_args["base_path"],
-                                   dataset_args["train"],
-                                   dataset_args["datasplit_path"],
-                                   split_type="train",
-                                   num_epochs=35,
-                                   subject_percentage = train_args["subject_percentage"]),
-                           Augmenter(
-                               min_frac=aug["min_frac"], 
-                               max_frac=aug["max_frac"], 
-                               apply_prob=aug["apply_prob"], 
-                               sigma=aug["sigma"],
-                               mean=aug["mean"]
-                           )]
-        else:
-            train_pipes = [Sampler(dataset_args["base_path"],
-                                   dataset_args["train"],
-                                   train_args["datasplit_path"],
-                                   split_type="train",
-                                   num_epochs=35,
-                                   subject_percentage = train_args["subject_percentage"])]
-        return train_pipes
-
-    def create_validation_pipeline(self):
-        val_pipes = [Determ_sampler(dataset_args["base_path"],
-                                    dataset_args["val"],
-                                    train_args["datasplit_path"],
-                                    split_type="val",
-                                    num_epochs=35,
-                                    single_channels = True,
-                                    subject_percentage = train_args["subject_percentage"])]
-        
-        return val_pipes
-
-    def create_test_pipeline(self):
-        test_pipes = [Determ_sampler(dataset_args["base_path"],
-                        dataset_args["test"],
-                        train_args["datasplit_path"],
-                        split_type="test",
-                        num_epochs=35)]
-        
-        return test_pipes
-
-class LSeqSleepNet_Pipeline_Factory(Pipeline_Factory):
-    def create_training_pipeline(self):
-        aug = train_args["augmentation"]
-        
-        if aug["use"] == True:
-            train_pipes = [Sampler(dataset_args["base_path"],
-                                   dataset_args["train"],
-                                   train_args["datasplit_path"],
-                                   split_type="train",
-                                   num_epochs=200,
-                                   subject_percentage = train_args["subject_percentage"]),
-                           Augmenter(
-                               min_frac=aug["min_frac"], 
-                               max_frac=aug["max_frac"], 
-                               apply_prob=aug["apply_prob"], 
-                               sigma=aug["sigma"],
-                               mean=aug["mean"]
-                           ),
-                           Resampler(128, 100),
-                           Spectrogram()]
-        else:
-            train_pipes = [Sampler(dataset_args["base_path"],
-                                   dataset_args["train"],
-                                   train_args["datasplit_path"],
-                                   split_type="train",
-                                   num_epochs=200,
-                                   subject_percentage = train_args["subject_percentage"]),
-                           Resampler(128, 100),
-                           Spectrogram()]
-        return train_pipes
-
-    def create_validation_pipeline(self):
-        val_pipes = [Determ_sampler(dataset_args["base_path"],
-                                    dataset_args["val"],
-                                    train_args["datasplit_path"],
-                                    split_type="val",
-                                    num_epochs=200,
-                                    subject_percentage = train_args["subject_percentage"]),
-                    Resampler(128, 100),
-                    Spectrogram()]
-        return val_pipes
+        return self.inner_fac.create_training_pipeline()
     
+    def create_validation_pipeline(self):
+        return self.inner_fac.create_validation_pipeline()
+
     def create_test_pipeline(self):
-        test_pipes = [Determ_sampler(dataset_args["base_path"],
-                                     dataset_args["test"],
-                                     train_args["datasplit_path"],
+        return self.inner_fac.create_test_pipeline()
+
+class USleep_Pipeline_Factory(IPipeline_Factory):
+    def __init__(self,
+                 hdf5_base_path,
+                 split_path,
+                 trainsets,
+                 valsets,
+                 testsets):
+        self.split_path = split_path
+        self.hdf5_base_path = hdf5_base_path
+        self.trainsets = trainsets
+        self.valsets = valsets
+        self.testsets = testsets
+
+    def create_training_pipeline(self):
+        train_pipes = [Sampler(self.hdf5_base_path,
+                                self.trainsets,
+                                self.split_path,
+                                split_type="train",
+                                num_epochs=35,
+                                subject_percentage = 1.0)]
+        return train_pipes
+
+    def create_validation_pipeline(self):
+        val_pipes = [Determ_sampler(self.hdf5_base_path,
+                            self.valsets,
+                            self.split_path,
+                            split_type="val",
+                            num_epochs=35,
+                            single_channels = True,
+                            subject_percentage = 1.0)]
+        
+        return val_pipes
+
+    def create_test_pipeline(self):
+        test_pipes = [Determ_sampler(self.hdf5_base_path,
+                                     self.testsets,
+                                     self.split_path,
                                      split_type="test",
-                                     num_epochs=200),
-                    Resampler(128, 100),
-                    Spectrogram()]
+                                     num_epochs=35)]
+        
         return test_pipes
