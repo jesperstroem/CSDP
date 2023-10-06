@@ -24,8 +24,7 @@ def main():
                                     testsets=["dcsm"])
     
     mfac = USleep_Factory(lr = 0.0000001,
-                          batch_size = 64,
-                          num_channels = 2)
+                          batch_size = 64)
     
     net = mfac.create_new_net()
     train_loader = fac.create_training_loader()
