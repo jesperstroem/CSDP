@@ -14,26 +14,23 @@ class USleep_Factory(Model_Factory):
 
         lr = model_args["lr"]
         batch_size = train_args["batch_size"]
-        window_size = model_args["epochs"]
-        lr_reduction = train_args["lr_reduction"]
-        lr_patience = train_args["lr_patience"]
 
         inner = USleep()
 
         net = USleep_Lightning(inner,
                                lr,
                                batch_size,
-                               window_size,
-                               lr_reduction,
-                               lr_patience,
                                "valKap",
                                "max")
         
         return net
 
-    def create_pretrained_net(self, model_args, train_args, pretrained_path) -> pl.LightningModule:
+    def create_pretrained_net(self, pretrained_path) -> pl.LightningModule:
         inner = USleep()
-        return USleep_Lightning.load_from_checkpoint(pretrained_path, inner)
+        return USleep_Lightning.load_from_checkpoint(pretrained_path,
+                                                     usleep=inner,
+                                                     lr=0.0000001,
+                                                     batch_size=64)
 
 class LSeqSleepNet_Factory(Model_Factory):
     def create_new_net(self, model_args, train_args) -> pl.LightningModule:

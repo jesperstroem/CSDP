@@ -45,7 +45,7 @@ def main():
         exit()
 
     if training["use_pretrained"] == True:
-        net = model_fac.create_pretrained_net(model_parameters, training, training["pretrained_path"])
+        net = model_fac.create_pretrained_net(training["pretrained_path"])
     else:
         net = model_fac.create_new_net(model_parameters, training)    
     

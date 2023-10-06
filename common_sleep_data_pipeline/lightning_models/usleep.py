@@ -11,22 +11,15 @@ class USleep_Lightning(LightningModule):
         self,
         usleep,
         lr,
-        batch_size,
-        ensemble_window_size,
-        lr_scheduler_factor,
-        lr_scheduler_patience,
-        monitor_metric,
-        monitor_mode,
+        batch_size
     ):
         super().__init__()
 
         self.usleep = usleep
         self.lr = lr
         self.batch_size = batch_size
-        self.lr_scheduler_factor = lr_scheduler_factor
-        self.lr_scheduler_patience = lr_scheduler_patience
-        self.monitor_metric = monitor_metric
-        self.monitor_mode = monitor_mode
+        self.monitor_metric = "valKap"
+        self.monitor_mode = "max"
         self.training_step_outputs = []
         self.validation_step_loss = []
         self.validation_step_acc = []
@@ -42,11 +35,11 @@ class USleep_Lightning(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                             mode=self.monitor_mode,
-                                                             factor=self.lr_scheduler_factor,
-                                                             patience=self.lr_scheduler_patience,
-                                                             verbose=True)
+        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
+        #                                                      mode=self.monitor_mode,
+        #                                                      factor=self.lr_scheduler_factor,
+        #                                                      patience=self.lr_scheduler_patience,
+        #                                                      verbose=True)
         return {
             'optimizer': optimizer,
             'monitor': self.monitor_metric
