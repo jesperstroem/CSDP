@@ -106,10 +106,13 @@ class Determ_sampler(IPipe):
             else:
                 eeg = psg.visit(self.__find_eeg)
                 eog = psg.visit(self.__find_eog)
-                
-                #start = time.time()
+
                 eeg1 = psg[eeg][:]
-                eog1 = psg[eog][:]
+
+                if eog == None:
+                    eog1 = eeg1
+                else:
+                    eog1 = psg[eog][:]
 
                 eeg3 = torch.Tensor(eeg1)
                 eog3 = torch.Tensor(eog1)
