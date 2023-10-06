@@ -17,7 +17,7 @@ import time
 from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
 
 class Sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file_path, split_type, num_epochs, subject_percentage = 1):
+    def __init__(self, base_file_path, datasets, split_file_path, split_type, num_epochs, subject_percentage = 1, channel_picker_func = None):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -26,7 +26,11 @@ class Sampler(IPipe):
         self.subjects, self.num_records = self.__list_files()
         self.probs = self.calc_probs()
         self.epoch_length = num_epochs
-        self.acum_time = 0
+
+        if channel_picker_func == None:
+            self.channel_picker_func = self.__pick_random_channel_pair
+        else:
+            self.channel_picker_func = channel_picker_func
         
     def process(self, index):
         success = False
@@ -71,15 +75,11 @@ class Sampler(IPipe):
 
         if len(subjects) == 0:
             raise ValueError(f"No subjects in split type: {self.split_type} for dataset {r_dataset}")
-        
-        start = time.time()
 
         with h5py.File(f"{self.base_file_path}/{r_dataset}.hdf5", "r") as hdf5:
 
             # Choose random subject
             records = list(hdf5[r_subject].keys())
-            
-      #      print(f"time1: {time.time() - start}")
 
             #choose Random record
             r_record = np.random.choice(records, 1)[0]
@@ -87,21 +87,9 @@ class Sampler(IPipe):
             hyp = hdf5[r_subject][r_record]["hypnogram"][()]
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
-      #      print(f"time2: {time.time() - start}")
-
-            #Choose random eeg and eog
-            eegs = [x for x in psg if x.startswith("EEG")]
-            eogs = [x for x in psg if x.startswith("EOG")]
-
-   ##         print(f"time3: {time.time() - start}")
-            # Eog not always available, skip if so
-            try:
-                r_eog = np.random.choice(eogs, 1)[0]
-                r_eeg = np.random.choice(eegs, 1)[0]
-            except ValueError:
-                return None
+            r = self.channel_picker_func(psg)
             
-   #         print(f"time4: {time.time() - start}")
+            eeg, eog = r
 
             # Choose random index of a random label
             label_set = np.unique(hyp)
@@ -129,25 +117,41 @@ class Sampler(IPipe):
             
             x_start_index = start_index*128*30
 
-            r_eeg_segment = hdf5[r_subject][r_record]["psg"][r_eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
-            r_eog_segment = hdf5[r_subject][r_record]["psg"][r_eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
-
-       #     print(f"time5: {time.time() - start}")
-        #    self.acum_time += time.time() - start
+            if eeg != None:
+                eeg_segment = hdf5[r_subject][r_record]["psg"][eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
+            else:
+                eeg_segment = []
+                
+            if eog != None:
+                eog_segment = hdf5[r_subject][r_record]["psg"][eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
+            else:
+                eog_segment = []
         
-    #    print(f"Time spent: {self.acum_time}")
-        
-        x_eeg = torch.tensor(r_eeg_segment)
-        x_eog = torch.tensor(r_eog_segment)
+        x_eeg = torch.tensor(eeg_segment)
+        x_eog = torch.tensor(eog_segment)
         
         x_eeg = x_eeg.unsqueeze(0)
         x_eog = x_eog.unsqueeze(0)
         
         # Create a tag for debugging purposes
-        tag = f"{r_dataset}/{r_subject}/{r_record}/{r_eeg}, {r_eog}/{x_start_index}-{x_start_index+(self.epoch_length*30*128)}"
+        tag = f"{r_dataset}/{r_subject}/{r_record}/{eeg}, {eog}/{x_start_index}-{x_start_index+(self.epoch_length*30*128)}"
 
         return x_eeg, x_eog, y, tag
     
+    def __pick_random_channel_pair(self, channel_list):
+        #Choose random eeg and eog
+        eegs = [x for x in channel_list if x.startswith("EEG")]
+        eogs = [x for x in channel_list if x.startswith("EOG")]
+
+        # Eog not always available, skip if so
+        try:
+            r_eog = np.random.choice(eogs, 1)[0]
+            r_eeg = np.random.choice(eegs, 1)[0]
+        except ValueError:
+            return None
+        
+        return r_eeg, r_eog
+
     def __list_files(self):
         subjects = []
         num_records = []
