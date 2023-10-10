@@ -16,12 +16,16 @@ train_sets = ["dcsm"]
 val_sets = ["dcsm"]
 test_sets = ["dcsm"]
 
+pretrained = False
+pretrained_path = ""
+
 gradient_steps = 5
 batch_size = 64
 num_workers = 8
 
 lr = 0.0000001
 max_epochs = 100
+early_stop_patience = 50
 
 logging_enabled = False
 
@@ -41,7 +45,6 @@ elif environment == "PRIME":
     accelerator = "gpu"
 
 def main():
-
     torch.set_float32_matmul_precision('high')
 
     fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
@@ -56,14 +59,18 @@ def main():
     mfac = USleep_Factory(lr = lr,
                           batch_size = batch_size)
     
-    net = mfac.create_new_net()
+    if pretrained == False:
+        net = mfac.create_new_net()
+    else:
+        net = mfac.create_pretrained_net(pretrained_path)
+
     train_loader = fac.create_training_loader()
     val_loader = fac.create_validation_loader()
 
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",
         min_delta=0.00,
-        patience=100,
+        patience=early_stop_patience,
         verbose=True,
         mode="max"
     )

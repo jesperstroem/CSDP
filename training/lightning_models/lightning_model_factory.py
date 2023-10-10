@@ -14,13 +14,13 @@ class IModel_Factory(ABC):
         pass
 
     @abstractmethod
-    def create_pretrained_net(self) -> pl.LightningModule:
+    def create_pretrained_net(self, pretrained_path) -> pl.LightningModule:
         pass
 
 class USleep_Factory(IModel_Factory):
     def __init__(self,
                  lr,
-                 batch_size
+                 batch_size,
                  ):
         self.lr = lr
         self.batch_size = batch_size
@@ -30,13 +30,11 @@ class USleep_Factory(IModel_Factory):
 
         net = USleep_Lightning(inner,
                                self.lr,
-                               self.batch_size,
-                               "valKap",
-                               "max")
+                               self.batch_size)
         
         return net
 
-    def create_pretrained_net(self) -> pl.LightningModule:
+    def create_pretrained_net(self, pretrained_path) -> pl.LightningModule:
         pass
 
 # class LSeqSleepNet_Factory(Model_Factory):

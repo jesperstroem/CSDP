@@ -11,17 +11,15 @@ class USleep_Lightning(LightningModule):
         self,
         usleep,
         lr,
-        batch_size,
-        monitor_metric,
-        monitor_mode,
+        batch_size
     ):
         super().__init__()
 
         self.usleep = usleep
         self.lr = lr
         self.batch_size = batch_size
-        self.monitor_metric = monitor_metric
-        self.monitor_mode = monitor_mode
+        self.monitor_metric = "valKap"
+        self.monitor_mode = "max"
         self.training_step_outputs = []
         self.validation_step_loss = []
         self.validation_step_acc = []
@@ -37,7 +35,7 @@ class USleep_Lightning(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-
+        
         return {
             'optimizer': optimizer,
             'monitor': self.monitor_metric
