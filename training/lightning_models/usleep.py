@@ -37,11 +37,7 @@ class USleep_Lightning(LightningModule):
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        # scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-        #                                                      mode=self.monitor_mode,
-        #                                                      factor=self.lr_scheduler_factor,
-        #                                                      patience=self.lr_scheduler_patience,
-        #                                                      verbose=True)
+
         return {
             'optimizer': optimizer,
             'monitor': self.monitor_metric
@@ -185,21 +181,6 @@ class USleep_Lightning(LightningModule):
         self.validation_step_kap.append(step_kap)
         self.validation_step_f1.append(step_f1)
 
-        #print(f"Step loss: {step_loss} from {self.global_rank}")
-        #print(pred.shape)
-        #print(step_loss)
-        #sync_dist = True
-        #batch_size = 1
-
-        #self.log('valLoss', step_loss, batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('valAcc', step_acc, batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('valKap', step_kap, batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('val_f1_c0', step_f1[0], batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('val_f1_c1', step_f1[1], batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('val_f1_c2', step_f1[2], batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('val_f1_c3', step_f1[3], batch_size=batch_size, sync_dist=sync_dist)
-        #self.log('val_f1_c4', step_f1[4], batch_size=batch_size, sync_dist=sync_dist)
-
     def on_validation_epoch_end(self):
 
         all_losses = self.validation_step_loss
@@ -207,9 +188,6 @@ class USleep_Lightning(LightningModule):
         all_kap = self.validation_step_kap    
         all_f1 = self.validation_step_f1
 
-        #print(all_f1)
-        #print(torch.stack(all_f1, dim=0))
-        #print(torch.stack(all_f1, dim=1))
         mean_loss = torch.mean(torch.stack(all_losses, dim=0))
         mean_acc = torch.mean(torch.stack(all_acc, dim=0))
         mean_kap = torch.mean(torch.stack(all_kap, dim=0))
@@ -221,7 +199,6 @@ class USleep_Lightning(LightningModule):
         mean_f1c4 = torch.mean(torch.stack(all_f1, dim=1)[4])
         
         batch_size=1
-        sync_dist=True
 
         print(mean_acc)
         print(mean_kap)
