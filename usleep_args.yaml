@@ -1,0 +1,25 @@
+environment: "LOCAL"
+
+train_sets:
+  - dcsm
+val_sets:
+  - dcsm
+test_sets:
+  - dcsm
+
+pretrained: False
+pretrained_path: ""
+
+gradient_steps: 5
+batch_size: 64
+num_workers: 8
+
+lr: 0.000001
+max_epochs: 100
+early_stop_patience: 50
+
+neptune:
+  logging: False
+  api_key: ""
+  project: ""
+  name: ""
