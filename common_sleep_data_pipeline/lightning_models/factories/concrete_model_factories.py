@@ -18,10 +18,8 @@ class USleep_Factory(Model_Factory):
         inner = USleep()
 
         net = USleep_Lightning(inner,
-                               lr,
-                               batch_size,
-                               "valKap",
-                               "max")
+                               lr=0.0000001,
+                               batch_size=64)
         
         return net
 
@@ -29,7 +27,7 @@ class USleep_Factory(Model_Factory):
         inner = USleep()
         return USleep_Lightning.load_from_checkpoint(pretrained_path,
                                                      usleep=inner,
-                                                     lr=0.0000001,
+                                                     lr=0.000001,
                                                      batch_size=64)
 
 class LSeqSleepNet_Factory(Model_Factory):
