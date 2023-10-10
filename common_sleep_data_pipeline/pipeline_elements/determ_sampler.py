@@ -25,15 +25,8 @@ class Determ_sampler(IPipe):
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
 
-        if eeg_picker_func == None:
-            self.eeg_picker = self.__find_eeg()
-        else:
-            self.eeg_picker = eeg_picker_func
-
-        if eog_picker_func == None:
-            self.eog_picker = self.__find_eog()
-        else:
-            self.eog_picker = eog_picker_func
+        self.eeg_picker = eeg_picker_func
+        self.eog_picker = eog_picker_func
         
     def process(self, index):
         #if index >= len(self.records):
@@ -100,8 +93,11 @@ class Determ_sampler(IPipe):
 
             psg = hdf5[subject][rec]["psg"]
 
-            eeg = psg.visit(self.eeg_picker)
-            eog = psg.visit(self.eog_picker)
+            eeg_picker = self.eeg_picker if self.eeg_picker != None else self.__find_eeg
+            eog_picker = self.eog_picker if self.eog_picker != None else self.__find_eog
+
+            eeg = psg.visit(eeg_picker)
+            eog = psg.visit(eog_picker)
 
             if eeg != None: 
                 eeg1 = psg[eeg][:]
