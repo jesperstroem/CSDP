@@ -12,10 +12,10 @@ import h5py
 import math
 import json
 
-from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
+from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
 
 class Determ_sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, single_channels = False, subject_percentage = 1, sample_rate = 128):
+    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, subject_percentage = 1, sample_rate = 128, eeg_picker_func = None, eog_picker_func = None):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -24,7 +24,9 @@ class Determ_sampler(IPipe):
         self.records = self.list_records()
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
-        self.single_channels = single_channels
+
+        self.eeg_picker = eeg_picker_func
+        self.eog_picker = eog_picker_func
         
     def process(self, index):
         #if index >= len(self.records):
@@ -86,41 +88,34 @@ class Determ_sampler(IPipe):
         eogs = []
         eegs = []
 
-        #start = time.time()
-
         with h5py.File(f"{self.base_file_path}/{dataset}.hdf5", "r") as hdf5:
             y = hdf5[subject][rec]["hypnogram"][()]
 
             psg = hdf5[subject][rec]["psg"]
 
-            if self.single_channels == False:
-                for k in psg.keys():
-                    if "EEG" in k:
-                        eegs.append(psg[k][()])
-                    if "EOG" in k:
-                        eogs.append(psg[k][()])
-                
-                eegs = torch.tensor(np.array(eegs))
-                eogs = torch.tensor(np.array(eogs))
+            eeg_picker = self.eeg_picker if self.eeg_picker != None else self.__find_eeg
+            eog_picker = self.eog_picker if self.eog_picker != None else self.__find_eog
 
-            else:
-                eeg = psg.visit(self.__find_eeg)
-                eog = psg.visit(self.__find_eog)
+            eeg = psg.visit(eeg_picker)
+            eog = psg.visit(eog_picker)
 
+            if eeg != None: 
                 eeg1 = psg[eeg][:]
+            else:
+                eeg1 = []
 
-                if eog == None:
-                    eog1 = eeg1
-                else:
-                    eog1 = psg[eog][:]
+            if eog != None:
+                eog1 = psg[eog][:]
+            else:
+                eog1 = []
 
-                eeg3 = torch.Tensor(eeg1)
-                eog3 = torch.Tensor(eog1)
+        eeg3 = torch.Tensor(eeg1)
+        eog3 = torch.Tensor(eog1)
 
-                eegs = eeg3.unsqueeze(0)
-                eogs = eog3.unsqueeze(0)
+        eegs = eeg3.unsqueeze(0)
+        eogs = eog3.unsqueeze(0)
 
-        tag = f"{dataset}/{subject}/{rec}"
+        tag = f"{dataset}/{subject}/{rec}/{eeg}, {eog}"
         y = torch.tensor(y)
         
         return eegs, eogs, y, tag

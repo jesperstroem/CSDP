@@ -6,15 +6,11 @@ Created on Fri Feb 17 10:25:31 2023
 """
 
 import torch
-import os
-import numpy as np
-import sys
 
-from common_sleep_data_pipeline.shared.pipeline.pipe import IPipe
-from common_sleep_data_pipeline.shared.pipeline.determ_sampler import Determ_sampler
+from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
+from common_sleep_data_pipeline.pipeline_elements.determ_sampler import Determ_sampler
 
 from scipy.signal import resample_poly
-
 
 class Resampler(IPipe):
     def __init__(self,

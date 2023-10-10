@@ -1,69 +1,81 @@
 import torch
-from torch.utils.data import DataLoader
-from common_sleep_data_pipeline.shared.pipeline.pipeline_dataset import PipelineDataset
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
 from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
-from lightning.pytorch.profilers import AdvancedProfiler
+from common_sleep_data_pipeline.factory.dataloader_factory import USleep_Dataloader_Factory
+from training.lightning_models.lightning_model_factory import USleep_Factory
 
 import neptune as neptune
-import yaml
-from yaml.loader import SafeLoader
-from neptune.utils import stringify_unsupported
-from common_sleep_data_pipeline.lightning_models.factories.concrete_model_factories import LSeqSleepNet_Factory, USleep_Factory
-from common_sleep_data_pipeline.lightning_models.factories.concrete_pipeline_factories import LSeqSleepNet_Pipeline_Factory, USleep_Pipeline_Factory
-from pathlib import Path
+
+environment = "LOCAL"
+
+train_sets = ["dcsm"]
+val_sets = ["dcsm"]
+test_sets = ["dcsm"]
+
+pretrained = False
+pretrained_path = ""
+
+gradient_steps = 5
+batch_size = 64
+num_workers = 8
+
+lr = 0.0000001
+max_epochs = 100
+early_stop_patience = 50
+
+logging_enabled = False
+
+if environment == "LOCAL":
+    hdf5_data_path = "C:/Users/au588953/hdf5"
+    hdf5_split_path = "C:/Users/au588953/Git Repos/CSDP/common_sleep_data_pipeline/splits/usleep_split.json"
+    accelerator = "cpu"
+
+elif environment == "LUMI":
+    hdf5_data_path = "/users/strmjesp/mnt"
+    hdf5_split_path = ""
+    accelerator = "gpu"
+
+elif environment == "PRIME":
+    hdf5_data_path = "/com/ecent/NOBACKUP/HDF5/usleep_data_small"
+    hdf5_split_path = "/home/js/repos/common-sleep-data-pipeline/common_sleep_data_pipeline/shared/splits/usleep_split.json"
+    accelerator = "gpu"
 
 def main():
-    file_path = Path(__file__).parent.absolute()
-    args_path = f"{file_path}/pipeline_args.yaml"
-
-    with open(args_path) as f:
-        data = yaml.load(f, Loader=SafeLoader)
-        model = data['model']
-        model_parameters = data['model_parameters']
-        training = data['training']
-        neptune = data['neptune']
-        datasets = data['datasets']
-    
     torch.set_float32_matmul_precision('high')
-    accelerator = "gpu" if training["use_gpu"] == True else "cpu"
 
-    profiler = AdvancedProfiler(dirpath=".", filename="perf_logs")
-
-    if model == "lseq":
-        model_fac = LSeqSleepNet_Factory()
-        pipeline_fac = LSeqSleepNet_Pipeline_Factory()
-    elif model == "usleep":
-        model_fac = USleep_Factory()
-        pipeline_fac = USleep_Pipeline_Factory()
-    else:
-        print("No valid model specified")
-        exit()
-
-    if training["use_pretrained"] == True:
-        net = model_fac.create_pretrained_net(training["pretrained_path"])
-    else:
-        net = model_fac.create_new_net(model_parameters, training)    
+    fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
+                                    batch_size=batch_size,
+                                    num_workers=num_workers,
+                                    data_split_path=hdf5_split_path,
+                                    hdf5_base_path=hdf5_data_path,
+                                    trainsets=train_sets,
+                                    valsets=val_sets,
+                                    testsets=test_sets)
     
+    mfac = USleep_Factory(lr = lr,
+                          batch_size = batch_size)
+    
+    if pretrained == False:
+        net = mfac.create_new_net()
+    else:
+        net = mfac.create_pretrained_net(pretrained_path)
+
+    train_loader = fac.create_training_loader()
+    val_loader = fac.create_validation_loader()
+
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",
         min_delta=0.00,
-        patience=training["early_stop_patience"],
+        patience=early_stop_patience,
         verbose=True,
         mode="max"
     )
     
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
-    
-    train_pipes = pipeline_fac.create_training_pipeline(training, datasets)
-    val_pipes = pipeline_fac.create_validation_pipeline(training, datasets)
-    test_pipes = pipeline_fac.create_test_pipeline(training, datasets)
-    
-    iterations=training["iterations"]
     richbar = RichProgressBar()
     checkpoint_callback = ModelCheckpoint(monitor="valKap", mode="max")
     timer = Timer()
@@ -74,15 +86,14 @@ def main():
                  richbar,
                  checkpoint_callback]
     
-    if neptune["log"] == True:
+    if logging_enabled == True:
         try:
             logger = NeptuneLogger(
-                api_key=neptune["api_key"],
-                project=neptune["project"],
-                name=model,
+                api_key="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ==",
+                project="NTLAB/bigsleep",
+                name="usleep",
                 source_files=["pipeline_args.yaml", "run_pipeline.py"],
             )
-
         except:
             print("Error: No valid neptune logging credentials configured.")
             exit()
@@ -90,44 +101,14 @@ def main():
         logger = True
 
     trainer = pl.Trainer(logger=logger,
-                         profiler=profiler,
-                         max_epochs=training["max_epochs"],
+                         max_epochs=max_epochs,
                          callbacks= callbacks,
                          accelerator=accelerator,
-                         devices=training["devices"],
-                         num_nodes=training["num_nodes"])
+                         devices=1,
+                         num_nodes=1)
 
-    trainset = PipelineDataset(pipes=train_pipes,
-                               iterations=iterations)
+    trainer.fit(net, train_loader, val_loader)
 
-    valset = PipelineDataset(pipes=val_pipes,
-                             iterations=len(val_pipes[0].records))
-    
-    if training["test"]==False:
-        trainloader = DataLoader(trainset,
-                                 batch_size=training["batch_size"],
-                                 shuffle=False,
-                                num_workers=training["num_workers"],
-                                pin_memory=True)
-        
-        valloader = DataLoader(valset,
-                               batch_size=1,
-                               shuffle=False,
-                               num_workers=training["num_workers"])
-
-        trainer.fit(net, trainloader, valloader)
-    else:
-        testset = PipelineDataset(pipes=test_pipes,
-                                  iterations=len(test_pipes[0].records))
-        
-        testloader = DataLoader(testset,
-                                batch_size=1,
-                                shuffle=False,
-                                num_workers=1)
-        
-        with torch.no_grad():
-            net.eval()
-            _ = trainer.test(net, testloader)
         
 if __name__ == '__main__':
     main()
