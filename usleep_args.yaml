@@ -1,11 +1,11 @@
 environment: "LOCAL"
 
 train_sets:
-  - dcsm
+  - cfs
 val_sets:
-  - dcsm
+  - cfs
 test_sets:
-  - dcsm
+  - cfs
 
 pretrained: False
 pretrained_path: ""
@@ -20,6 +20,6 @@ early_stop_patience: 50
 
 neptune:
   logging: False
-  api_key: ""
-  project: ""
-  name: ""
+  api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
+  project: "NTLAB/bigsleep"
+  name: "usleep"
