@@ -11,7 +11,8 @@ setup(
         "common_sleep_data_pipeline",
         "common_sleep_data_pipeline.preprocessing",
         "common_sleep_data_pipeline.factory",
-        "common_sleep_data_pipeline.pipeline_elements"
+        "common_sleep_data_pipeline.pipeline_elements",
+        "training"
     ],
     install_requires=["numpy", "scipy", "torch"],
 )
