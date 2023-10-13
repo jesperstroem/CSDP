@@ -1,5 +1,4 @@
 import torch
-
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
@@ -7,27 +6,36 @@ from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
 from common_sleep_data_pipeline.factory.dataloader_factory import USleep_Dataloader_Factory
 from training.lightning_models.lightning_model_factory import USleep_Factory
-
+from pathlib import Path
 import neptune as neptune
+import yaml
+from yaml.loader import SafeLoader
 
-environment = "LOCAL"
+file_path = Path(__file__).parent.absolute()
+args_path = f"{file_path}/usleep_args.yaml"
 
-train_sets = ["dcsm"]
-val_sets = ["dcsm"]
-test_sets = ["dcsm"]
+with open(args_path) as f:
+    data = yaml.load(f, Loader=SafeLoader)
+    neptune_info = data["neptune"]
 
-pretrained = False
-pretrained_path = ""
+environment = data["environment"]
+train_sets = data["train_sets"]
+val_sets = data["val_sets"]
+pretrained = data["pretrained"]
+pretrained_path = data["pretrained_path"]
 
-gradient_steps = 5
-batch_size = 64
-num_workers = 8
+gradient_steps = data["gradient_steps"]
+batch_size = data["batch_size"]
+num_workers = data["num_workers"]
 
-lr = 0.0000001
-max_epochs = 100
-early_stop_patience = 50
+lr = data["lr"]
+max_epochs = data["max_epochs"]
+early_stop_patience = data["early_stop_patience"]
 
-logging_enabled = False
+logging_enabled = neptune_info["logging"]
+neptune_api_key = neptune_info["api_key"]
+neptune_project = neptune_info["project"]
+neptune_name = neptune_info["name"]
 
 if environment == "LOCAL":
     hdf5_data_path = "C:/Users/au588953/hdf5"
@@ -40,7 +48,7 @@ elif environment == "LUMI":
     accelerator = "gpu"
 
 elif environment == "PRIME":
-    hdf5_data_path = "/com/ecent/NOBACKUP/HDF5/usleep_data_small"
+    hdf5_data_path = "/com/ecent/NOBACKUP/HDF5/usleep_data_big"
     hdf5_split_path = "/home/js/repos/common-sleep-data-pipeline/common_sleep_data_pipeline/shared/splits/usleep_split.json"
     accelerator = "gpu"
 
@@ -54,7 +62,7 @@ def main():
                                     hdf5_base_path=hdf5_data_path,
                                     trainsets=train_sets,
                                     valsets=val_sets,
-                                    testsets=test_sets)
+                                    testsets=[])
     
     mfac = USleep_Factory(lr = lr,
                           batch_size = batch_size)
@@ -89,10 +97,10 @@ def main():
     if logging_enabled == True:
         try:
             logger = NeptuneLogger(
-                api_key="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ==",
-                project="NTLAB/bigsleep",
-                name="usleep",
-                source_files=["pipeline_args.yaml", "run_pipeline.py"],
+                api_key=neptune_api_key,
+                project=neptune_project,
+                name=neptune_name,
+                source_files=["usleep_args.yaml", "run_usleep.py"],
             )
         except:
             print("Error: No valid neptune logging credentials configured.")
