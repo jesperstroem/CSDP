@@ -15,8 +15,4 @@ class PipelineDataset(torch.utils.data.Dataset):
         return self.iterations
 
     def __getitem__(self, idx):
-        batch = self.pipeline.get_batch(idx)
-
-        x_eegs, x_eogs, ybatch, tags = batch
-        
-        return (x_eegs, x_eogs, ybatch, tags)
+        return self.pipeline.get_batch(idx)
