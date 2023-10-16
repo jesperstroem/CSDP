@@ -4,19 +4,20 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from pytorch_lightning.callbacks import RichProgressBar
 from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
-from common_sleep_data_pipeline.factory.dataloader_factory import USleep_Dataloader_Factory
-from training.lightning_models.factories.lightning_model_factory import USleep_Factory
+from csdp_pipeline.factories.dataloader_factory import USleep_Dataloader_Factory, LSeqSleepNet_Dataloader_Factory
+from csdp_training.lightning_models.factories.lightning_model_factory import USleep_Factory, LSeqSleepNet_Factory
 from pathlib import Path
 import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
 
 file_path = Path(__file__).parent.absolute()
-args_path = f"{file_path}/usleep_args.yaml"
+args_path = f"{file_path}/training_args.yaml"
 
 with open(args_path) as f:
     data = yaml.load(f, Loader=SafeLoader)
 
+model_type = data["model"]
 neptune_info = data["neptune"]
 environment = data["environment"]
 train_sets = data["train_sets"]
@@ -55,17 +56,24 @@ elif environment == "PRIME":
 def main():
     torch.set_float32_matmul_precision('high')
 
-    fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
-                                    batch_size=batch_size,
-                                    num_workers=num_workers,
-                                    hdf5_base_path=hdf5_data_path,
-                                    trainsets=train_sets,
-                                    valsets=val_sets,
-                                    testsets=[],
-                                    data_split_path=hdf5_split_path)
-    
-    mfac = USleep_Factory(lr = lr,
-                          batch_size = batch_size)
+    if model_type == "usleep":
+        fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
+                                        batch_size=batch_size,
+                                        num_workers=num_workers,
+                                        hdf5_base_path=hdf5_data_path,
+                                        trainsets=train_sets,
+                                        valsets=val_sets,
+                                        testsets=[],
+                                        data_split_path=hdf5_split_path)
+        
+        mfac = USleep_Factory(lr = lr,
+                              batch_size = batch_size)
+    elif model_type == "lseqsleepnet":
+        fac = LSeqSleepNet_Dataloader_Factory()
+        mfac = LSeqSleepNet_Factory()
+    else:
+        print("No valid model configuration")
+        exit()
     
     if pretrained == False:
         net = mfac.create_new_net()
@@ -100,7 +108,8 @@ def main():
                 api_key=neptune_api_key,
                 project=neptune_project,
                 name=neptune_name,
-                source_files=["usleep_args.yaml", "run_usleep.py"],
+                source_files=[f"{file_path}/training_args.yaml", f"{file_path}/run_training.py"],
+                mode = "sync"
             )
         except:
             print("Error: No valid neptune logging credentials configured.")

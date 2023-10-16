@@ -1,9 +1,9 @@
 from abc import ABC, abstractmethod
-from common_sleep_data_pipeline.pipeline_elements.sampler import Sampler
-from common_sleep_data_pipeline.pipeline_elements.augmenters import Augmenter
-from common_sleep_data_pipeline.pipeline_elements.resampler import Resampler
-from common_sleep_data_pipeline.pipeline_elements.spectrogram import Spectrogram
-from common_sleep_data_pipeline.pipeline_elements.determ_sampler import Determ_sampler
+from csdp_pipeline.pipeline_elements.sampler import Sampler
+from csdp_pipeline.pipeline_elements.augmenters import Augmenter
+from csdp_pipeline.pipeline_elements.resampler import Resampler
+from csdp_pipeline.pipeline_elements.spectrogram import Spectrogram
+from csdp_pipeline.pipeline_elements.determ_sampler import Determ_sampler
 
 class IPipeline_Factory(ABC):
     @abstractmethod
@@ -59,3 +59,16 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                                      num_epochs=35)]
         
         return test_pipes
+    
+class LSeqSleepNet_Pipeline_Factory(IPipeline_Factory):
+    def __init__(self):
+        pass
+
+    def create_training_pipeline(self):
+        return super().create_training_pipeline()
+    
+    def create_validation_pipeline(self):
+        return super().create_validation_pipeline()
+    
+    def create_test_pipeline(self):
+        return super().create_test_pipeline()

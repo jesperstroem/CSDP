@@ -7,8 +7,8 @@ Created on Fri Feb 17 10:25:31 2023
 
 import torch
 
-from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
-from common_sleep_data_pipeline.pipeline_elements.determ_sampler import Determ_sampler
+from csdp_pipeline.pipeline_elements.pipe import IPipe
+from csdp_pipeline.pipeline_elements.determ_sampler import Determ_sampler
 
 from scipy.signal import resample_poly
 

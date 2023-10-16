@@ -11,7 +11,7 @@ import h5py
 import math
 import json
 
-from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
+from csdp_pipeline.pipeline_elements.pipe import IPipe
 
 class Sampler(IPipe):
     def __init__(self, base_file_path, datasets, split_file_path, split_type, num_epochs, subject_percentage = 1, channel_picker_func = None):

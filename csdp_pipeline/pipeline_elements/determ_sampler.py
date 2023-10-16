@@ -12,7 +12,7 @@ import h5py
 import math
 import json
 
-from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
+from csdp_pipeline.pipeline_elements.pipe import IPipe
 
 class Determ_sampler(IPipe):
     def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, subject_percentage = 1, sample_rate = 128, channel_picker_func = None):

@@ -2,45 +2,19 @@
 # and https://github.com/neergaard/utime-pytorch
 
 import torch
-import torch.nn as nn
-from pytorch_lightning import LightningModule
-from training.utility import kappa, acc, f1, log_test_step
+from usleep import Base_Lightning
+from csdp_training.utility import kappa, acc, f1, log_test_step
 
-class USleep_Lightning(LightningModule):
+class USleep_Lightning(Base_Lightning):
     def __init__(
         self,
         usleep,
         lr,
         batch_size
     ):
-        super().__init__()
-
-        self.usleep = usleep
-        self.lr = lr
-        self.batch_size = batch_size
-        self.monitor_metric = "valKap"
-        self.monitor_mode = "max"
-        self.training_step_outputs = []
-        self.validation_step_loss = []
-        self.validation_step_acc = []
-        self.validation_step_kap = []
-        self.validation_step_f1 = []
+        super().__init__(usleep, lr, batch_size)
 
         self.save_hyperparameters(ignore=['usleep'])
-
-        self.loss = nn.CrossEntropyLoss(ignore_index=5)
-
-    def forward(self, x):
-        return self.usleep(x)
-
-    def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
-        
-        return {
-            'optimizer': optimizer,
-            'monitor': self.monitor_metric
-        }
-    
     
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
@@ -127,39 +101,20 @@ class USleep_Lightning(LightningModule):
         
         return votes
 
-    def training_step(self, batch, idx):
+    def training_step(self, batch, _):
         x_eeg, x_eog, ybatch, _ = batch
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
 
-        #print(f"Batch shape: {xbatch.shape}, batch index: {idx}")
-
         xbatch = xbatch.float()
-        
-        #print("First: %s seconds ---" % (time.time() - start_time))
+
         pred = self.forward(xbatch)
-        #print("Second: %s seconds ---" % (time.time() - start_time))
 
         step_loss, _, _, _ = self.compute_train_metrics(pred, ybatch)
-        #print("Third: %s seconds ---" % (time.time() - start_time))
 
         self.training_step_outputs.append(step_loss)
 
-        #print(f"Step loss: {step_loss} from {self.global_rank}")
-
-        return step_loss # We need to return loss as lightning does loss.backward() under the hood
-
-
-    def on_train_epoch_end(self):
-        all_outputs = self.training_step_outputs
-        
-        mean_loss = torch.mean(torch.stack(all_outputs, dim=0))
-        
-        self.log('trainLoss', mean_loss, batch_size=self.batch_size, rank_zero_only=True)    
-        
-        self.trainer.save_checkpoint(f"{self.logger.save_dir}/usleep/{self.logger.version}/checkpoints/latest.ckpt")
-
-        self.training_step_outputs.clear()
+        return step_loss
 
 
     def validation_step(self, batch, _):
@@ -178,43 +133,6 @@ class USleep_Lightning(LightningModule):
         self.validation_step_acc.append(step_acc)
         self.validation_step_kap.append(step_kap)
         self.validation_step_f1.append(step_f1)
-
-    def on_validation_epoch_end(self):
-
-        all_losses = self.validation_step_loss
-        all_acc = self.validation_step_acc
-        all_kap = self.validation_step_kap    
-        all_f1 = self.validation_step_f1
-
-        mean_loss = torch.mean(torch.stack(all_losses, dim=0))
-        mean_acc = torch.mean(torch.stack(all_acc, dim=0))
-        mean_kap = torch.mean(torch.stack(all_kap, dim=0))
-        
-        mean_f1c0 = torch.mean(torch.stack(all_f1, dim=1)[0])
-        mean_f1c1 = torch.mean(torch.stack(all_f1, dim=1)[1])
-        mean_f1c2 = torch.mean(torch.stack(all_f1, dim=1)[2])
-        mean_f1c3 = torch.mean(torch.stack(all_f1, dim=1)[3])
-        mean_f1c4 = torch.mean(torch.stack(all_f1, dim=1)[4])
-        
-        batch_size=1
-
-        print(mean_acc)
-        print(mean_kap)
-        
-        self.log('valLoss', mean_loss, batch_size=batch_size, rank_zero_only=True)
-        self.log('valAcc', mean_acc, batch_size=batch_size, rank_zero_only=True)
-        self.log('valKap', mean_kap, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c0', mean_f1c0, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c1', mean_f1c1, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c2', mean_f1c2, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c3', mean_f1c3, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c4', mean_f1c4, batch_size=batch_size, rank_zero_only=True)
-        
-        self.validation_step_loss.clear()
-        self.validation_step_acc.clear()
-        self.validation_step_kap.clear()
-        self.validation_step_f1.clear()
-
                 
     def test_step(self, batch, _):
         # Step per record

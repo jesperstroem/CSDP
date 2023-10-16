@@ -1,9 +1,16 @@
 from abc import ABC, abstractmethod
 from torch.utils.data import DataLoader
-from common_sleep_data_pipeline.pipeline_elements.pipeline_dataset import PipelineDataset
-from common_sleep_data_pipeline.factory.pipeline_factory import USleep_Pipeline_Factory
+from csdp_pipeline.pipeline_elements.pipeline_dataset import PipelineDataset
+from csdp_pipeline.factories.pipeline_factory import USleep_Pipeline_Factory
+from csdp_training.utility import create_split_file
 
 class IDataloader_Factory(ABC):
+    def __init__(self, data_split_path, hdf5_base_path):        
+        if data_split_path == None:
+            self.data_split_path = create_split_file(hdf5_basepath=hdf5_base_path)
+        else:
+            self.data_split_path = data_split_path
+
     @abstractmethod
     def create_training_loader(self, num_workers):
         pass
@@ -18,13 +25,15 @@ class IDataloader_Factory(ABC):
 
 class USleep_Dataloader_Factory(IDataloader_Factory):
     def __init__(self,
+                 data_split_path,
                  gradient_steps,
                  batch_size,
                  hdf5_base_path,
                  trainsets,
                  valsets,
-                 testsets,
-                 data_split_path = None):
+                 testsets):
+        super.__init__(data_split_path, hdf5_base_path)
+
         self.gradient_steps = gradient_steps
         self.batch_size = batch_size
 
@@ -63,3 +72,16 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
                                  shuffle=False,
                                  num_workers=num_workers)
         return testloader
+    
+class LSeqSleepNet_Dataloader_Factory(IDataloader_Factory):
+    def __init__():
+        pass
+
+    def create_training_loader(self, num_workers):
+        return super().create_training_loader(num_workers)
+    
+    def create_validation_loader(self, num_workers):
+        return super().create_validation_loader(num_workers)
+    
+    def create_testing_loader(self, num_workers):
+        return super().create_testing_loader(num_workers)

@@ -8,11 +8,11 @@ setup(
     author="Jesper Strøm",
     author_email="js@ece.au.dk",
     packages=[
-        "common_sleep_data_pipeline",
-        "common_sleep_data_pipeline.preprocessing",
-        "common_sleep_data_pipeline.factory",
-        "common_sleep_data_pipeline.pipeline_elements",
-        "training"
+        "csdp_pipeline",
+        "csdp_pipeline.preprocessing",
+        "csdp_pipeline.factory",
+        "csdp_pipeline.pipeline_elements",
+        "csdp_training"
     ],
     install_requires=["numpy", "scipy", "torch"],
 )
