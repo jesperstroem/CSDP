@@ -5,7 +5,7 @@ from pytorch_lightning.callbacks import RichProgressBar
 from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
 from common_sleep_data_pipeline.factory.dataloader_factory import USleep_Dataloader_Factory
-from training.lightning_models.lightning_model_factory import USleep_Factory
+from training.lightning_models.factories.lightning_model_factory import USleep_Factory
 from pathlib import Path
 import neptune as neptune
 import yaml

@@ -6,13 +6,10 @@ Created on Fri Feb 17 10:25:31 2023
 """
 
 import torch
-import os
-import sys
 import numpy as np
 import h5py
 import math
 import json
-import time
 
 from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
 
@@ -48,9 +45,8 @@ class Sampler(IPipe):
         total_num_records = sum(self.num_records)
         
         probs = []
-        s = []
         
-        for i, f in enumerate(self.datasets):
+        for i, _ in enumerate(self.datasets):
             num_records = self.num_records[i]
             
             strat_prob = num_records/total_num_records

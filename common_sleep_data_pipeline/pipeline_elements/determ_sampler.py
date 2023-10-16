@@ -15,7 +15,7 @@ import json
 from common_sleep_data_pipeline.pipeline_elements.pipe import IPipe
 
 class Determ_sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, subject_percentage = 1, sample_rate = 128, eeg_picker_func = None, eog_picker_func = None):
+    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, subject_percentage = 1, sample_rate = 128, channel_picker_func = None):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -25,13 +25,12 @@ class Determ_sampler(IPipe):
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
 
-        self.eeg_picker = eeg_picker_func
-        self.eog_picker = eog_picker_func
+        if channel_picker_func == None:
+            self.channel_picker_func = self.__pick_first_available_channel_pair()
+        else:
+            self.channel_picker_func = channel_picker_func
         
     def process(self, index):
-        #if index >= len(self.records):
-        #    return -2
-        
         sample = self.__get_sample(index)
   
         return sample
@@ -70,13 +69,11 @@ class Determ_sampler(IPipe):
 
         return list_of_records
     
-    def __find_eog(self, phrase):
-        if 'EOG' in phrase:
-            return phrase
-    
-    def __find_eeg(self, phrase):
-        if 'EEG' in phrase:
-            return phrase
+    def __pick_first_available_channel_pair(self, channels):
+        eegs = [x for x in channels if x.startswith("EEG")]
+        eogs = [x for x in channels if x.startswith("EOG")]
+
+        return eegs[0], eogs[0]
 
     def __get_sample(self, index):
         r = self.records[index]
@@ -91,21 +88,17 @@ class Determ_sampler(IPipe):
         with h5py.File(f"{self.base_file_path}/{dataset}.hdf5", "r") as hdf5:
             y = hdf5[subject][rec]["hypnogram"][()]
 
-            psg = hdf5[subject][rec]["psg"]
+            psg_channels = hdf5[subject][rec]["psg"].keys()
 
-            eeg_picker = self.eeg_picker if self.eeg_picker != None else self.__find_eeg
-            eog_picker = self.eog_picker if self.eog_picker != None else self.__find_eog
-
-            eeg = psg.visit(eeg_picker)
-            eog = psg.visit(eog_picker)
+            eeg, eog = self.channel_picker_func(psg_channels)
 
             if eeg != None: 
-                eeg1 = psg[eeg][:]
+                eeg1 = hdf5[subject][rec]["psg"][eeg][:]
             else:
                 eeg1 = []
 
             if eog != None:
-                eog1 = psg[eog][:]
+                eog1 = hdf5[subject][rec]["psg"][eog][:]
             else:
                 eog1 = []
 
@@ -119,16 +112,3 @@ class Determ_sampler(IPipe):
         y = torch.tensor(y)
         
         return eegs, eogs, y, tag
-                
-if __name__ == '__main__':
-    s = Determ_sampler("/home/alec/repos/data/hdf5",
-                ["dod-h"],
-                "/home/jose/repo/Speciale2023/shared/usleep_split.json",
-                split_type="val",
-                num_epochs=200,
-                subject_percentage=1.0)
-    i=0
-    while True:
-        x_eeg, x_eog ,y,tag = s.process(i)
-        print(tag)
-        i+=1
