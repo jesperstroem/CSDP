@@ -16,8 +16,8 @@ args_path = f"{file_path}/usleep_args.yaml"
 
 with open(args_path) as f:
     data = yaml.load(f, Loader=SafeLoader)
-    neptune_info = data["neptune"]
 
+neptune_info = data["neptune"]
 environment = data["environment"]
 train_sets = data["train_sets"]
 val_sets = data["val_sets"]
@@ -58,11 +58,11 @@ def main():
     fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
                                     batch_size=batch_size,
                                     num_workers=num_workers,
-                                    data_split_path=hdf5_split_path,
                                     hdf5_base_path=hdf5_data_path,
                                     trainsets=train_sets,
                                     valsets=val_sets,
-                                    testsets=[])
+                                    testsets=[],
+                                    data_split_path=hdf5_split_path)
     
     mfac = USleep_Factory(lr = lr,
                           batch_size = batch_size)
@@ -72,8 +72,8 @@ def main():
     else:
         net = mfac.create_pretrained_net(pretrained_path)
 
-    train_loader = fac.create_training_loader()
-    val_loader = fac.create_validation_loader()
+    train_loader = fac.create_training_loader(num_workers=num_workers)
+    val_loader = fac.create_validation_loader(num_workers=num_workers)
 
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",
