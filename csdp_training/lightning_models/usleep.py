@@ -2,7 +2,7 @@
 # and https://github.com/neergaard/utime-pytorch
 
 import torch
-from usleep import Base_Lightning
+from csdp_training.lightning_models.lseqsleepnet import Base_Lightning
 from csdp_training.utility import kappa, acc, f1, log_test_step
 
 class USleep_Lightning(Base_Lightning):
