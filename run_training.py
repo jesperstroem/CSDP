@@ -40,7 +40,7 @@ neptune_name = neptune_info["name"]
 
 if environment == "LOCAL":
     hdf5_data_path = "C:/Users/au588953/hdf5"
-    hdf5_split_path = "C:/Users/au588953/Git Repos/CSDP/common_sleep_data_pipeline/splits/usleep_split.json"
+    hdf5_split_path = "C:/Users/au588953/Git Repos/CSDP/csdp_pipeline/splits/usleep_split.json"
     accelerator = "cpu"
 
 elif environment == "LUMI":
@@ -50,16 +50,16 @@ elif environment == "LUMI":
 
 elif environment == "PRIME":
     hdf5_data_path = "/com/ecent/NOBACKUP/HDF5/usleep_data_big"
-    hdf5_split_path = "/home/js/repos/common-sleep-data-pipeline/common_sleep_data_pipeline/shared/splits/usleep_split.json"
+    hdf5_split_path = "/home/js/repos/common-sleep-data-pipeline/csdp_pipeline/splits/usleep_split.json"
     accelerator = "gpu"
 
 def main():
     torch.set_float32_matmul_precision('high')
 
     if model_type == "usleep":
+        parameters = data["usleep_parameters"]
         fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
                                         batch_size=batch_size,
-                                        num_workers=num_workers,
                                         hdf5_base_path=hdf5_data_path,
                                         trainsets=train_sets,
                                         valsets=val_sets,
@@ -67,7 +67,11 @@ def main():
                                         data_split_path=hdf5_split_path)
         
         mfac = USleep_Factory(lr = lr,
-                              batch_size = batch_size)
+                              batch_size = batch_size,
+                              initial_filters=parameters["initial_filters"],
+                              complexity_factor=parameters["complexity_factor"],
+                              progression_factor=parameters["progression_factor"])
+        
     elif model_type == "lseqsleepnet":
         fac = LSeqSleepNet_Dataloader_Factory()
         mfac = LSeqSleepNet_Factory()

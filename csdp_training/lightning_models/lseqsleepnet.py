@@ -6,7 +6,6 @@ Created on Thu Feb  2 13:40:59 2023
 """
 
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
 from csdp_training.utility import acc, kappa, f1, log_test_step
 import math

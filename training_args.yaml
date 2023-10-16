@@ -22,6 +22,7 @@ early_stop_patience: 50
 usleep_parameters:
   initial_filters: 5
   complexity_factor: 1.67
+  progression_factor: 2
 
 lseq_parameters:
   coming_soon: 0

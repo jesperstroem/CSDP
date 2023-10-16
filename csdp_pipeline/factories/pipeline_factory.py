@@ -45,9 +45,7 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                             self.valsets,
                             self.split_path,
                             split_type="val",
-                            num_epochs=35,
-                            single_channels = True,
-                            subject_percentage = 1.0)]
+                            num_epochs=35)]
         
         return val_pipes
 

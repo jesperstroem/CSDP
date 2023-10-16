@@ -23,33 +23,37 @@ class USleep_Factory(IModel_Factory):
                  lr,
                  batch_size,
                  initial_filters,
-                 complexity_factor
+                 complexity_factor,
+                 progression_factor
                  ):
         self.lr = lr
         self.batch_size = batch_size
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
+        self.progression_factor = progression_factor
 
     def create_new_net(self) -> pl.LightningModule:
-        inner = USleep()
+        inner = USleep(num_channels=2,
+                       initial_filters=self.initial_filters,
+                       complexity_factor=self.complexity_factor,
+                       progression_factor=self.progression_factor)
 
         net = USleep_Lightning(inner,
                                self.lr,
-                               self.batch_size,
-                               self.initial_filters,
-                               self.complexity_factor)
+                               self.batch_size)
         
         return net
 
     def create_pretrained_net(self, pretrained_path) -> pl.LightningModule:
-        inner = USleep()
+        inner = USleep(num_channels=2,
+                       initial_filters=self.initial_filters,
+                       complexity_factor=self.complexity_factor,
+                       progression_factor=self.progression_factor)
 
         net =  USleep_Lightning.load_from_checkpoint(pretrained_path,
                                                      usleep=inner,
                                                      lr=self.lr,
-                                                     batch_size=self.batch_size,
-                                                     initial_filters = self.initial_filters,
-                                                     complexity_factor = self.complexity_factor)
+                                                     batch_size = self.batch_size)
         return net
 
 

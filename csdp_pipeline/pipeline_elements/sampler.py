@@ -24,10 +24,7 @@ class Sampler(IPipe):
         self.probs = self.calc_probs()
         self.epoch_length = num_epochs
 
-        if channel_picker_func == None:
-            self.channel_picker_func = self.__pick_random_channel_pair
-        else:
-            self.channel_picker_func = channel_picker_func
+        self.channel_picker_func = channel_picker_func
         
     def process(self, index):
         success = False
@@ -83,7 +80,7 @@ class Sampler(IPipe):
             hyp = hdf5[r_subject][r_record]["hypnogram"][()]
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
-            r = self.channel_picker_func(psg)
+            r = self.channel_picker_func(psg) if self.channel_picker_func != None else self.__pick_random_channel_pair(psg)
             
             eeg, eog = r
 

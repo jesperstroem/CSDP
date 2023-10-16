@@ -32,13 +32,13 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
                  trainsets,
                  valsets,
                  testsets):
-        super.__init__(data_split_path, hdf5_base_path)
+        super().__init__(data_split_path, hdf5_base_path)
 
         self.gradient_steps = gradient_steps
         self.batch_size = batch_size
 
         self.fac = USleep_Pipeline_Factory(hdf5_base_path,
-                                            data_split_path,
+                                            self.data_split_path,
                                             trainsets,
                                             valsets,
                                             testsets)
