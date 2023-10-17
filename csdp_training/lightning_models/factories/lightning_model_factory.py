@@ -40,7 +40,10 @@ class USleep_Factory(IModel_Factory):
 
         net = USleep_Lightning(inner,
                                self.lr,
-                               self.batch_size)
+                               self.batch_size,
+                               self.initial_filters,
+                               self.complexity_factor,
+                               self.progression_factor)
         
         return net
 

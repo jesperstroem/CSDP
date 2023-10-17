@@ -10,10 +10,17 @@ class USleep_Lightning(Base_Lightning):
         self,
         usleep,
         lr,
-        batch_size
+        batch_size,
+        initial_filters,
+        complexity_factor,
+        progression_factor
     ):
         super().__init__(usleep, lr, batch_size)
 
+        self.initial_filters = initial_filters
+        self.complexity_factor = complexity_factor
+        self.progression_factor = progression_factor
+                
         self.save_hyperparameters(ignore=['usleep'])
     
     def compute_train_metrics(self, y_pred, y_true):
