@@ -14,11 +14,15 @@ class USleep_Factory(Model_Factory):
 
         lr = model_args["lr"]
         batch_size = train_args["batch_size"]
+        progression_factor = model_args["progression_factor"]
+        complexity_factor = model_args["complexity_factor"]
 
-        inner = USleep()
+        inner = USleep(num_channels=2,
+                       complexity_factor=complexity_factor,
+                       progression_factor=progression_factor)
 
         net = USleep_Lightning(inner,
-                               lr=0.0000001,
+                               lr=0.0001,
                                batch_size=64)
         
         return net

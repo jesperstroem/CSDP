@@ -80,7 +80,8 @@ def main():
                 api_key=neptune["api_key"],
                 project=neptune["project"],
                 name=model,
-                source_files=["pipeline_args.yaml", "run_pipeline.py"],
+                source_files=["common-sleep-data-pipeline/pipeline_args.yaml", "common-sleep-data-pipeline/run_pipeline.py"],
+                mode="sync"
             )
 
         except:
