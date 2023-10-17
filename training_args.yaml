@@ -33,7 +33,8 @@ lseq_parameters:
   coming_soon: 0
 
 neptune:
-  logging: False
+  logging: True
+  logging_folder: "C:/Users/au588953"
   api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
   project: "NTLAB/bigsleep"
   name: "usleep"

@@ -10,6 +10,7 @@ from pathlib import Path
 import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
+import os
 
 file_path = Path(__file__).parent.absolute()
 args_path = f"{file_path}/training_args.yaml"
@@ -94,6 +95,10 @@ def main():
                  richbar,
                  checkpoint_callback]
     
+    # I hate this, but Lightning has no better way to change logging directory :(
+    org = os.getcwd()
+    os.chdir(neptune_info["logging_folder"])
+
     if logging_enabled == True:
         try:
             logger = NeptuneLogger(
@@ -108,15 +113,16 @@ def main():
             exit()
     else:
         logger = True
-
+    
     trainer = pl.Trainer(logger=logger,
                          max_epochs=max_epochs,
                          callbacks= callbacks,
                          accelerator=accelerator,
                          devices=1,
                          num_nodes=1)
-
+    
     trainer.fit(net, train_loader, val_loader)
+    os.chdir(org)
 
         
 if __name__ == '__main__':
