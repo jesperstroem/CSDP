@@ -101,12 +101,28 @@ def main():
 
     if logging_enabled == True:
         try:
-            logger = NeptuneLogger(
-                api_key=neptune_api_key,
-                project=neptune_project,
-                name=neptune_name,
-                source_files=[f"{file_path}/training_args.yaml", f"{file_path}/run_training.py"],
-                mode = "sync"
+            existing_run_id = neptune_info["existing_run_id"]
+            source_files = [f"{file_path}/training_args.yaml", f"{file_path}/run_training.py"]
+            mode = "sync"
+
+            if existing_run_id != None:
+                existing_run = neptune.init_run(project=neptune_project,
+                                                api_token=neptune_api_key,
+                                                with_id=existing_run_id,
+                                                name=neptune_name,
+                                                source_files=source_files,
+                                                mode=mode,)
+                
+                logger = NeptuneLogger(
+                    run=existing_run
+                )
+            else:
+                logger = NeptuneLogger(
+                    api_key=neptune_api_key,
+                    project=neptune_project,
+                    name=neptune_name,
+                    source_files=source_files,
+                    mode = mode
             )
         except:
             print("Error: No valid neptune logging credentials configured.")

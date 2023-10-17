@@ -14,14 +14,11 @@ val_sets:
 test_sets:
   - cfs
 
-pretrained: False
-pretrained_path: ""
-
-gradient_steps: 5
+gradient_steps: 1
 batch_size: 64
 num_workers: 8
 lr: 0.000001
-max_epochs: 5
+max_epochs: 2
 early_stop_patience: 50
 
 usleep_parameters:
@@ -32,8 +29,12 @@ usleep_parameters:
 lseq_parameters:
   coming_soon: 0
 
+pretrained: False
+pretrained_path: "C:/Users/au588953/.neptune/usleep/BIG-584/checkpoints/latest.ckpt"
+
 neptune:
   logging: True
+  existing_run_id: null
   logging_folder: "C:/Users/au588953"
   api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
   project: "NTLAB/bigsleep"
