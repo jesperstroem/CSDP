@@ -80,9 +80,12 @@ class Sampler(IPipe):
             hyp = hdf5[r_subject][r_record]["hypnogram"][()]
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
-            r = self.channel_picker_func(psg) if self.channel_picker_func != None else self.__pick_random_channel_pair(psg)
-            
-            eeg, eog = r
+            try:
+                r = self.channel_picker_func(psg) if self.channel_picker_func != None else self.__pick_random_channel_pair(psg)
+                eeg, eog = r
+            except:
+                print("Not possible to get channels")
+                return None
 
             # Choose random index of a random label
             label_set = np.unique(hyp)
@@ -110,15 +113,10 @@ class Sampler(IPipe):
             
             x_start_index = start_index*128*30
 
-            if eeg != None:
-                eeg_segment = hdf5[r_subject][r_record]["psg"][eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
-            else:
-                eeg_segment = []
-                
-            if eog != None:
-                eog_segment = hdf5[r_subject][r_record]["psg"][eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
-            else:
-                eog_segment = []
+            eeg_segment = hdf5[r_subject][r_record]["psg"][eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
+
+            eog_segment = hdf5[r_subject][r_record]["psg"][eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
+
         
         x_eeg = torch.tensor(eeg_segment)
         x_eog = torch.tensor(eog_segment)
@@ -136,13 +134,9 @@ class Sampler(IPipe):
         eegs = [x for x in channel_list if x.startswith("EEG")]
         eogs = [x for x in channel_list if x.startswith("EOG")]
 
-        # Eog not always available, skip if so
-        try:
-            r_eog = np.random.choice(eogs, 1)[0]
-            r_eeg = np.random.choice(eegs, 1)[0]
-        except ValueError:
-            return None
-        
+        r_eog = np.random.choice(eogs, 1)[0]
+        r_eeg = np.random.choice(eegs, 1)[0]
+                
         return r_eeg, r_eog
 
     def __list_files(self):
