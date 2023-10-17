@@ -19,7 +19,6 @@ with open(args_path) as f:
 
 model_type = data["model"]
 neptune_info = data["neptune"]
-environment = data["environment"]
 train_sets = data["train_sets"]
 val_sets = data["val_sets"]
 pretrained = data["pretrained"]
@@ -38,20 +37,9 @@ neptune_api_key = neptune_info["api_key"]
 neptune_project = neptune_info["project"]
 neptune_name = neptune_info["name"]
 
-if environment == "LOCAL":
-    hdf5_data_path = "C:/Users/au588953/hdf5"
-    hdf5_split_path = "C:/Users/au588953/Git Repos/CSDP/csdp_pipeline/splits/usleep_split.json"
-    accelerator = "cpu"
-
-elif environment == "LUMI":
-    hdf5_data_path = "/users/strmjesp/mnt"
-    hdf5_split_path = ""
-    accelerator = "gpu"
-
-elif environment == "PRIME":
-    hdf5_data_path = "/com/ecent/NOBACKUP/HDF5/usleep_data_big"
-    hdf5_split_path = "/home/js/repos/common-sleep-data-pipeline/csdp_pipeline/splits/usleep_split.json"
-    accelerator = "gpu"
+hdf5_data_path = data["hdf5_base_path"]
+hdf5_split_path = data["hdf5_split_path"]
+accelerator = data["accelerator"]
 
 def main():
     torch.set_float32_matmul_precision('high')

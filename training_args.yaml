@@ -1,6 +1,11 @@
-environment: "LOCAL"
 # Model can be "usleep" or "lseqsleepnet"
 model: "usleep"
+
+hdf5_base_path: "C:/Users/au588953/hdf5"
+
+# Set to None for random generation of split
+hdf5_split_path: "C:/Users/au588953/Git Repos/CSDP/csdp_pipeline/splits/usleep_split.json"
+accelerator: "cpu"
 
 train_sets:
   - cfs
