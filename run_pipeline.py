@@ -9,6 +9,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, Timer
 from lightning.pytorch.loggers.neptune import NeptuneLogger
 from lightning.pytorch.profilers import AdvancedProfiler
 
+import os
 import neptune as neptune
 import yaml
 from yaml.loader import SafeLoader
@@ -73,14 +74,17 @@ def main():
                  lr_monitor,
                  richbar,
                  checkpoint_callback]
-    
+
+    org = os.getcwd()
+    os.chdir("/users/strmjesp/mnt")    
+
     if neptune["log"] == True:
         try:
             logger = NeptuneLogger(
                 api_key=neptune["api_key"],
                 project=neptune["project"],
                 name=model,
-                source_files=["common-sleep-data-pipeline/pipeline_args.yaml", "common-sleep-data-pipeline/run_pipeline.py"],
+                source_files=["/users/strmjesp/common-sleep-data-pipeline/pipeline_args.yaml", "/users/strmjesp/common-sleep-data-pipeline/run_pipeline.py"],
                 mode="sync"
             )
 
@@ -117,6 +121,8 @@ def main():
                                num_workers=training["num_workers"])
 
         trainer.fit(net, trainloader, valloader)
+
+        os.chdir(org)
     else:
         testset = PipelineDataset(pipes=test_pipes,
                                   iterations=len(test_pipes[0].records))

@@ -2,13 +2,13 @@
 model: "usleep"
 
 training:
- iterations: 3200
+ iterations: 28352
  batch_size: 64
  use_gpu: True
  use_pretrained: False
  test: False
- pretrained_path: "/users/strmjesp/.neptune/usleep/BIG-555/checkpoints/latest.ckpt"
- max_epochs: 5000
+ pretrained_path: "/users/strmjesp/mnt/.neptune/usleep/BIG-559/checkpoints/epoch=336-step=149291.ckpt"
+ max_epochs: 300
  early_stop_patience: 100000
  lr_patience: 100000
  lr_reduction: 0.5
@@ -88,6 +88,6 @@ model_parameters:
 
   usleep:
     epochs: 35
-    lr: 1.0E-07
-    complexity_factor: 1.67
+    lr: 0.0001
+    complexity_factor: 1.0
     progression_factor: 2

@@ -133,7 +133,7 @@ class USleep_Lightning(LightningModule):
 
     def training_step(self, batch, idx):
         x_eeg, x_eog, ybatch, _ = batch
-
+        #print(idx)
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
 
         #print(f"Batch shape: {xbatch.shape}, batch index: {idx}")
@@ -166,10 +166,10 @@ class USleep_Lightning(LightningModule):
         self.training_step_outputs.clear()
 
 
-    def validation_step(self, batch, _):
+    def validation_step(self, batch, idx):
         # Step per record
         x_eeg, x_eog, ybatch, _ = batch
-
+        #print(idx)
         if x_eog.shape[1] == 0:
             print("Found no EOG channel, duplicating EEG instead")
             x_eog = x_eeg
@@ -204,6 +204,8 @@ class USleep_Lightning(LightningModule):
         all_acc = self.validation_step_acc
         all_kap = self.validation_step_kap    
         all_f1 = self.validation_step_f1
+
+        print(len(all_losses))
 
         #print(all_f1)
         #print(torch.stack(all_f1, dim=0))

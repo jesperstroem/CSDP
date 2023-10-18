@@ -22,16 +22,17 @@ class USleep_Factory(Model_Factory):
                        progression_factor=progression_factor)
 
         net = USleep_Lightning(inner,
-                               lr=0.0001,
+                               lr=lr,
                                batch_size=64)
         
         return net
 
     def create_pretrained_net(self, pretrained_path) -> pl.LightningModule:
         inner = USleep()
+        lr = 0.0000001
         return USleep_Lightning.load_from_checkpoint(pretrained_path,
                                                      usleep=inner,
-                                                     lr=0.000001,
+                                                     lr=lr,
                                                      batch_size=64)
 
 class LSeqSleepNet_Factory(Model_Factory):
