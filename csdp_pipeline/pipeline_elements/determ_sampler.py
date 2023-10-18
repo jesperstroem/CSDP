@@ -82,16 +82,12 @@ class Determ_sampler(IPipe):
 
             psg_channels = list(hdf5[subject][rec]["psg"].keys())
 
-            eeg, eog = self.channel_picker_func(psg_channels) if self.channel_picker_func != None else self.__pick_first_available_channel_pair(psg_channels)
-
-            if eeg != None: 
-                eeg_data = hdf5[subject][rec]["psg"][eeg][:]
-            else:
+            try:
+                eeg, eog = self.channel_picker_func(psg_channels) if self.channel_picker_func != None else self.__pick_first_available_channel_pair(psg_channels)
+                eeg_data = hdf5[subject][rec]["psg"][eeg][:]    
+                eog_data = hdf5[subject][rec]["psg"][eog][:]        
+            except:
                 eeg_data = []
-
-            if eog != None:
-                eog_data = hdf5[subject][rec]["psg"][eog][:]
-            else:
                 eog_data = []
 
         eeg_data = torch.Tensor(eeg_data)
