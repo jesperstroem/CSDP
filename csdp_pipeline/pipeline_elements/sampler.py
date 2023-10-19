@@ -89,12 +89,8 @@ class Sampler(IPipe):
             hyp = hdf5[r_subject][r_record]["hypnogram"][()]
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
-            try:
-                eeg = self.eeg_picker_func(psg) if self.eeg_picker_func != None else self.__pick_random_channel(psg, "EEG")
-                eog = self.eog_picker_func(psg) if self.eog_picker_func != None else self.__pick_random_channel(psg, "EOG")
-            except:
-                print(f"Not possible to get channels for dataset {r_dataset}, subject {r_subject}, session {r_record}")
-                return None
+            eeg = self.eeg_picker_func(psg) if self.eeg_picker_func != None else self.__pick_random_channel(psg, "EEG")
+            eog = self.eog_picker_func(psg) if self.eog_picker_func != None else self.__pick_random_channel(psg, "EOG")
 
             # Choose random index of a random label
             label_set = np.unique(hyp)
@@ -122,11 +118,16 @@ class Sampler(IPipe):
             
             x_start_index = start_index*128*30
 
-            eeg_segment = hdf5[r_subject][r_record]["psg"][eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
+            try:
+                eeg_segment = hdf5[r_subject][r_record]["psg"][eeg][x_start_index:x_start_index+(self.epoch_length*30*128)]
+            except:
+                eeg_segment = []
 
-            eog_segment = hdf5[r_subject][r_record]["psg"][eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
+            try:
+                eog_segment = hdf5[r_subject][r_record]["psg"][eog][x_start_index:x_start_index+(self.epoch_length*30*128)]
+            except:
+                eog_segment = []
 
-        
         x_eeg = torch.tensor(eeg_segment)
         x_eog = torch.tensor(eog_segment)
         
