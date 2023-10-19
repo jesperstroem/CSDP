@@ -14,7 +14,16 @@ import json
 from csdp_pipeline.pipeline_elements.pipe import IPipe
 
 class Determ_sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file, split_type, num_epochs, subject_percentage = 1, sample_rate = 128, channel_picker_func = None):
+    def __init__(self,
+                 base_file_path, 
+                 datasets, 
+                 split_file, 
+                 split_type, 
+                 num_epochs, 
+                 subject_percentage = 1, 
+                 sample_rate = 128, 
+                 eeg_picker_func = None,
+                 eog_picker_func = None):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -24,7 +33,8 @@ class Determ_sampler(IPipe):
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
 
-        self.channel_picker_func = channel_picker_func           
+        self.eeg_picker_func = eeg_picker_func        
+        self.eog_picker_func = eog_picker_func
 
     def process(self, index):
         sample = self.__get_sample(index)
@@ -64,11 +74,10 @@ class Determ_sampler(IPipe):
 
         return list_of_records
 
-    def __pick_first_available_channel_pair(self, channels):
-        eegs = [x for x in channels if x.startswith("EEG")]
-        eogs = [x for x in channels if x.startswith("EOG")]
+    def __pick_first_available_channel(self, channels, type):
+        channels = [x for x in channels if x.startswith(type)]
 
-        return eegs[0], eogs[0]
+        return channels[0]
 
     def __get_sample(self, index):
         r = self.records[index]
@@ -83,12 +92,18 @@ class Determ_sampler(IPipe):
             psg_channels = list(hdf5[subject][rec]["psg"].keys())
 
             try:
-                eeg, eog = self.channel_picker_func(psg_channels) if self.channel_picker_func != None else self.__pick_first_available_channel_pair(psg_channels)
-                eeg_data = hdf5[subject][rec]["psg"][eeg][:]    
-                eog_data = hdf5[subject][rec]["psg"][eog][:]        
+                eeg = self.eeg_picker_func(psg_channels) if self.eeg_picker_func != None else self.__pick_first_available_channel(psg_channels, "EEG")
+                
+                eeg_data = hdf5[subject][rec]["psg"][eeg][:]   
             except:
                 eeg_data = []
-                eog_data = []
+
+            try:
+                eog = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
+
+                eog_data = hdf5[subject][rec]["psg"][eog][:] 
+            except:
+                eog_data = [] 
 
         eeg_data = torch.Tensor(eeg_data)
         eog_data = torch.Tensor(eog_data)

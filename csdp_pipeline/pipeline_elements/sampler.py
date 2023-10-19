@@ -14,7 +14,15 @@ import json
 from csdp_pipeline.pipeline_elements.pipe import IPipe
 
 class Sampler(IPipe):
-    def __init__(self, base_file_path, datasets, split_file_path, split_type, num_epochs, subject_percentage = 1, channel_picker_func = None):
+    def __init__(self,
+                 base_file_path, 
+                 datasets, 
+                 split_file_path, 
+                 split_type, 
+                 num_epochs, 
+                 subject_percentage = 1,
+                 eeg_picker_func = None, 
+                 eog_picker_func = None):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -24,7 +32,8 @@ class Sampler(IPipe):
         self.probs = self.calc_probs()
         self.epoch_length = num_epochs
 
-        self.channel_picker_func = channel_picker_func
+        self.eeg_picker_func = eeg_picker_func
+        self.eog_picker_func = eog_picker_func
         
     def process(self, index):
         success = False
@@ -81,10 +90,10 @@ class Sampler(IPipe):
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
             try:
-                r = self.channel_picker_func(psg) if self.channel_picker_func != None else self.__pick_random_channel_pair(psg)
-                eeg, eog = r
+                eeg = self.eeg_picker_func(psg) if self.eeg_picker_func != None else self.__pick_random_channel(psg, "EEG")
+                eog = self.eog_picker_func(psg) if self.eog_picker_func != None else self.__pick_random_channel(psg, "EOG")
             except:
-                print("Not possible to get channels")
+                print(f"Not possible to get channels for dataset {r_dataset}, subject {r_subject}, session {r_record}")
                 return None
 
             # Choose random index of a random label
@@ -128,16 +137,14 @@ class Sampler(IPipe):
         tag = f"{r_dataset}/{r_subject}/{r_record}/{eeg}, {eog}/{x_start_index}-{x_start_index+(self.epoch_length*30*128)}"
 
         return x_eeg, x_eog, y, tag
-    
-    def __pick_random_channel_pair(self, channel_list):
-        #Choose random eeg and eog
-        eegs = [x for x in channel_list if x.startswith("EEG")]
-        eogs = [x for x in channel_list if x.startswith("EOG")]
 
-        r_eog = np.random.choice(eogs, 1)[0]
-        r_eeg = np.random.choice(eegs, 1)[0]
+    def __pick_random_channel(self, channel_list, type):
+        #Choose random eeg and eog
+        channels = [x for x in channel_list if x.startswith(type)]
+
+        r_channel = np.random.choice(channels, 1)[0]
                 
-        return r_eeg, r_eog
+        return r_channel
 
     def __list_files(self):
         subjects = []
