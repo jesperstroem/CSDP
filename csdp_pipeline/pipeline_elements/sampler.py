@@ -89,8 +89,12 @@ class Sampler(IPipe):
             hyp = hdf5[r_subject][r_record]["hypnogram"][()]
             psg = list(hdf5[r_subject][r_record]["psg"].keys())
 
-            eeg = self.eeg_picker_func(psg) if self.eeg_picker_func != None else self.__pick_random_channel(psg, "EEG")
-            eog = self.eog_picker_func(psg) if self.eog_picker_func != None else self.__pick_random_channel(psg, "EOG")
+            try:
+                eeg = self.eeg_picker_func(psg) if self.eeg_picker_func != None else self.__pick_random_channel(psg, "EEG")
+                eog = self.eog_picker_func(psg) if self.eog_picker_func != None else self.__pick_random_channel(psg, "EOG")
+            except:
+                print(f"Could not pick eeg or eog from dataset {r_dataset}, subject: {r_subject}, record: {r_record}")
+                return None
 
             # Choose random index of a random label
             label_set = np.unique(hyp)
