@@ -8,6 +8,7 @@ from ml_architectures.usleep.usleep import USleep
 import pytorch_lightning as pl
 from csdp_training.lightning_models.usleep import USleep_Lightning
 from csdp_training.lightning_models.lseqsleepnet import LSeqSleepNet_Lightning
+import torch
 
 class IModel_Factory(ABC):
     @abstractmethod
@@ -52,11 +53,16 @@ class USleep_Factory(IModel_Factory):
                        initial_filters=self.initial_filters,
                        complexity_factor=self.complexity_factor,
                        progression_factor=self.progression_factor)
-
+        
+        
         net =  USleep_Lightning.load_from_checkpoint(pretrained_path,
                                                      usleep=inner,
                                                      lr=self.lr,
-                                                     batch_size = self.batch_size)
+                                                     batch_size = self.batch_size,
+                                                     initial_filters = self.initial_filters,
+                                                     complexity_factor = self.complexity_factor,
+                                                     progression_factor = self.progression_factor,
+                                                     map_location=torch.device('gpu') if torch.cuda.is_available() else torch.device('cpu'))
         return net
 
 

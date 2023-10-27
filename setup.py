@@ -12,6 +12,7 @@ setup(
         "csdp_pipeline.factories",
         "csdp_pipeline.pipeline_elements",
         "csdp_training",
+        "csdp_training.lightning_models",
         "csdp_training.lightning_models.factories"
     ],
     install_requires=["numpy", "scipy", "torch"],

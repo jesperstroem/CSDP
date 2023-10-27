@@ -14,13 +14,13 @@ import pytorch_lightning as pl
 class Base_Lightning(pl.LightningModule):
     def __init__(
         self,
-        net,
+        usleep,
         lr,
         batch_size
     ):
         super().__init__()
 
-        self.net = net
+        self.usleep = usleep
         self.lr = lr
         self.batch_size = batch_size
         self.training_step_outputs = []
@@ -31,7 +31,7 @@ class Base_Lightning(pl.LightningModule):
         self.loss = nn.CrossEntropyLoss(ignore_index=5)
 
     def forward(self, x):
-        return self.net(x)
+        return self.usleep(x)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)

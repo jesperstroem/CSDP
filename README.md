@@ -2,63 +2,64 @@
 
 This repository contains a pipeline for training neural networks to perform automatic sleep staging.
 
-It is two part and consists of: data preprocessing/standardization and data serving.
+This is the dataserving part, which you can use to train, validate and test on data created with the common data store:
+https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-store
 
-The preprocessing can be used to transform most available PSG datasets to a standardized HDF5 file.
-
-The data serving can be used for two neural networks with different training setups.
-
-## Preparation
-
-First of all, Git needs to be installed on your machine: https://git-scm.com/book/en/v2/Getting-Started-Installing-Git
-Then you need a distribution of Anaconda, check here: https://www.anaconda.com/download/ 
-
-Then run the following commands in shell:
-
-git clone https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline.git
-cd common-sleep-data-pipeline
-conda env create --file env.yml
-conda activate csdp
-
-The conda environment file assumes you run your code on a CUDA compatible system.
-
-## How to preprocess and standardize your data
-
-A lot of public PSG datasets are available for preprocessing.
-
-The code does not download the data, so this is assumed to be performed in advance by users.
-
-Configuration is specified in conf.yaml - the below example transforms ABC.
-Use sample rate 100 for L-SeqSleepNet and 128 for U-Sleep.
-
-```yaml
-parameters:
- scale_and_clip: True
- output_sample_rate: 128
-target_path:
- "/my/target/output/path/"
-datasets:
- - name: ABC
-   path: "/path/to/abc/data/basepath/"
-```
-
-Datasets is a list, so multiple datasets can be transformed in the same execution.
-Datasets-"path" is the path to the downloaded raw data.
-
-Read the following sections for download sources and exactly which paths to specify when transforming.
-
-When the configuration is done, run the python script "transform.py" to transform the data to HDF5.
 
 ## Install repo as a package
-If you are looking to use the pipeline for your own personal project with your own training loop, you can install this repo as a package.
+If you are looking to use the pipeline for your own personal project, you can install this repo as a package.
 
 Run the following command to install:
 
 pip install git+https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline.git
 
-## Run demonstration of the pipeline
-If you are looking to just see the pipeline in action and training your own model, follow these steps:
+## Use the dataloaders
 
-1. Edit the "usleep_args.yaml" or "lseq_args.yaml" file to the desired configuration.
+To use the implemented pytorch dataloaders, look at the following example
 
-2. Run "python run_usleep.py" or "python run_lseq.py" to run the configuration from the yaml file. This can either be training a new network from scratch, finetuning an existing one or testing an existing one. Test results are saved to a results folder.
+"hdf5_base_path" is the root path to your preprocessed HDF5 files from the common datastore.
+train/val/test-sets is a list of datasets in the root path, that you want to use in the dataloading. It should be the name of the file without the hdf5 extension.
+"data_split_path" is a json file containing the configuration of train/validation/test subjects. Look in the csdp_pipeline/splits if you want examples. If you leave it as "None", a random split will be made for you.
+
+
+```python
+
+from csdp_pipeline.factories.dataloader_factory import USleep_Dataloader_Factory
+
+dataloader_factory = USleep_Dataloader_Factory(gradient_steps=100,
+                                               batch_size=64,
+                                               hdf5_base_path="C:/Users/au588953/hdf5/",
+                                               trainsets=["abc"],
+                                               valsets=["abc"],
+                                               testsets=["abc"],
+                                               data_split_path="C:/Users/au588953/Git Repos/usleep-eareeg/splits/usleep_split.json")
+
+train_loader = dataloader_factory.create_training_loader(num_workers=1)
+val_loader = dataloader_factory.create_validation_loader(num_workers=1)
+test_loader = dataloader_factory.create_testing_loader(num_workers=1)
+
+```
+
+## Use the lightning models
+
+To also use the implemented pytorch lightning versions of U-Sleep, see the following example.
+
+If you want a pretrained model, you need to specify a checkpoint. A checkpoint for u-sleep is available in the checkpoints folder.
+
+Note: To use these you need lightning installed, and the model package from https://gitlab.au.dk/tech_ear-eeg/ml_architectures
+
+```python
+
+from csdp_training.lightning_models.factories.lightning_model_factory import USleep_Factory
+
+model_factory = USleep_Factory(lr = 0.0001,
+                               batch_size = 64,
+                               initial_filters = 5,
+                               complexity_factor = 1.67,
+                               progression_factor = 2)
+
+usleep = model_factory.create_new_net()
+usleep_pretrained = model_factory.create_pretrained_net("C:/Users/au588953/Git Repos/CSDP/checkpoints/best_usleep.ckpt")
+
+
+```
