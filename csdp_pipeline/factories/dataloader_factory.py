@@ -120,12 +120,12 @@ class LSeqSleepNet_Dataloader_Factory(IDataloader_Factory):
         pipes = self.factory.create_validation_pipeline()
         dataset = PipelineDataset(pipes, len(pipes[0].records))
         return DataLoader(
-            dataset, batch_size=self.batch_size, shuffle=False, num_workers=num_workers
+            dataset, batch_size=1, shuffle=False, num_workers=num_workers
         )
 
     def create_testing_loader(self, num_workers=1):
         pipes = self.factory.create_test_pipeline()
         dataset = PipelineDataset(pipes, len(pipes[0].records))
         return DataLoader(
-            dataset, batch_size=self.batch_size, shuffle=False, num_workers=num_workers
+            dataset, batch_size=1, shuffle=False, num_workers=num_workers
         )
