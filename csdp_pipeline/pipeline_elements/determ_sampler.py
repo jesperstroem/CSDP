@@ -10,6 +10,7 @@ import torch
 import h5py
 import math
 import json
+import numpy as np
 
 from csdp_pipeline.pipeline_elements.pipe import IPipe
 
@@ -21,7 +22,8 @@ class Determ_sampler(IPipe):
                  split_type, 
                  num_epochs, 
                  subject_percentage = 1, 
-                 sample_rate = 128, 
+                 sample_rate = 128,
+                 get_all_channels = False, 
                  eeg_picker_func = None,
                  eog_picker_func = None):
         self.base_file_path = base_file_path
@@ -32,6 +34,7 @@ class Determ_sampler(IPipe):
         self.records = self.list_records()
         self.epoch_length = num_epochs
         self.sample_rate = sample_rate
+        self.get_all_channels = get_all_channels
 
         self.eeg_picker_func = eeg_picker_func        
         self.eog_picker_func = eog_picker_func
@@ -91,27 +94,62 @@ class Determ_sampler(IPipe):
 
             psg_channels = list(hdf5[subject][rec]["psg"].keys())
 
-            try:
-                eeg = self.eeg_picker_func(psg_channels) if self.eeg_picker_func != None else self.__pick_first_available_channel(psg_channels, "EEG")
-                
-                eeg_data = hdf5[subject][rec]["psg"][eeg][:]   
-            except:
-                eeg_data = []
+            if self.get_all_channels:
+                eeg_data, eog_data, eeg_tag, eog_tag = self.__load_all_channels(hdf5, subject, rec, psg_channels)
+            else:
+                eeg_data, eog_data, eeg_tag, eog_tag = self.__load_single_channel(hdf5, subject, rec, psg_channels)
 
-            try:
-                eog = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
-
-                eog_data = hdf5[subject][rec]["psg"][eog][:] 
-            except:
-                eog_data = [] 
-
-        eeg_data = torch.Tensor(eeg_data)
-        eog_data = torch.Tensor(eog_data)
-
-        eeg_data = eeg_data.unsqueeze(0)
-        eog_data = eog_data.unsqueeze(0)
-
-        tag = f"{dataset}/{subject}/{rec}/{eeg}, {eog}"
+        tag = f"{dataset}/{subject}/{rec}/{eeg_tag}, {eog_tag}"
         y = torch.tensor(y)
 
         return eeg_data, eog_data, y, tag
+    
+    def __load_all_channels(self, hdf5, subject, rec, psg_channels):
+        eeg_data = []
+        eog_data = []
+
+        eeg_keys = [x for x in psg_channels if x.startswith("EEG")]
+        eog_keys = [x for x in psg_channels if x.startswith("EOG")]
+
+        for ch in eeg_keys:
+            data = hdf5[subject][rec]["psg"][ch][:]
+            eeg_data.append(data)
+            eeg_tag = "all"
+
+        for ch in eog_keys:
+            data = hdf5[subject][rec]["psg"][ch][:]
+            eog_data.append(data)
+            eog_tag = "all"
+        
+        eeg_data = np.array(eeg_data)
+        eog_data = np.array(eog_data)
+        eeg_data = torch.Tensor(eeg_data)
+        eog_data = torch.Tensor(eog_data)
+
+        return eeg_data, eog_data, eeg_tag, eog_tag
+
+    def __load_single_channel(self, hdf5, subject, rec, psg_channels):
+        try:
+            eeg = self.eeg_picker_func(psg_channels) if self.eeg_picker_func != None else self.__pick_first_available_channel(psg_channels, "EEG")
+            
+            eeg_data = hdf5[subject][rec]["psg"][eeg][:]
+            eeg_tag = eeg   
+        except:
+            eeg_data = []
+            eeg_tag = "none"
+
+        try:
+            eog = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
+
+            eog_data = hdf5[subject][rec]["psg"][eog][:]
+            eog_tag = eog
+        except:
+            eog_data = []
+            eog_tag = "none" 
+
+        eeg_data = torch.Tensor(eeg_data)
+        eog_data = torch.Tensor(eog_data)
+        eeg_data = eeg_data.unsqueeze(0)
+        eog_data = eog_data.unsqueeze(0)
+
+        return eeg_data, eog_data, eeg_tag, eog_tag

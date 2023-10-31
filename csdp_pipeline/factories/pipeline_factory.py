@@ -62,6 +62,7 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                 self.split_path,
                 split_type="test",
                 num_epochs=35,
+                get_all_channels=True
             )
         ]
 
