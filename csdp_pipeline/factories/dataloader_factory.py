@@ -10,7 +10,7 @@ from csdp_training.utility import create_split_file
 
 class IDataloader_Factory(ABC):
     def __init__(self, data_split_path, hdf5_base_path, create_random_split):
-        
+
         if create_random_split == True:
             self.data_split_path = create_split_file(hdf5_basepath=hdf5_base_path)
         else:
@@ -32,13 +32,13 @@ class IDataloader_Factory(ABC):
 class USleep_Dataloader_Factory(IDataloader_Factory):
     def __init__(
         self,
-        data_split_path,
         gradient_steps,
         batch_size,
         hdf5_base_path,
         trainsets,
         valsets,
         testsets,
+        data_split_path = None,
         create_random_split = False,
     ):
         super().__init__(data_split_path, hdf5_base_path, create_random_split)
