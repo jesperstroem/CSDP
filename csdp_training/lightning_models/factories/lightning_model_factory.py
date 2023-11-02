@@ -62,7 +62,7 @@ class USleep_Factory(IModel_Factory):
                                                      initial_filters = self.initial_filters,
                                                      complexity_factor = self.complexity_factor,
                                                      progression_factor = self.progression_factor,
-                                                     map_location=torch.device('gpu') if torch.cuda.is_available() else torch.device('cpu'))
+                                                     map_location=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
         return net
 
 

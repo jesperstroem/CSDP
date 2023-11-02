@@ -127,8 +127,8 @@ class USleep_Lightning(Base_Lightning):
     def validation_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, _ = batch
-
-        if x_eog.shape[1] == 0:
+        
+        if any(dim == 0 for dim in x_eog.shape):
             print("Found no EOG channel, duplicating EEG instead")
             x_eog = x_eeg
         
