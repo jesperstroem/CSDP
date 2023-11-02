@@ -33,9 +33,9 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
             Sampler(
                 self.hdf5_base_path,
                 self.trainsets,
-                self.split_path,
                 split_type="train",
                 num_epochs=35,
+                split_file_path=self.split_path,
                 subject_percentage=1.0,
             )
         ]
@@ -46,9 +46,9 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
             Determ_sampler(
                 self.hdf5_base_path,
                 self.valsets,
-                self.split_path,
                 split_type="val",
                 num_epochs=35,
+                split_file=self.split_path,
             )
         ]
 
@@ -59,9 +59,9 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
             Determ_sampler(
                 self.hdf5_base_path,
                 self.testsets,
-                self.split_path,
                 split_type="test",
                 num_epochs=35,
+                split_file=self.split_path,
                 get_all_channels=True
             )
         ]

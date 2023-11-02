@@ -9,8 +9,9 @@ from csdp_training.utility import create_split_file
 
 
 class IDataloader_Factory(ABC):
-    def __init__(self, data_split_path, hdf5_base_path):
-        if data_split_path == None:
+    def __init__(self, data_split_path, hdf5_base_path, create_random_split):
+        
+        if create_random_split == True:
             self.data_split_path = create_split_file(hdf5_basepath=hdf5_base_path)
         else:
             self.data_split_path = data_split_path
@@ -38,8 +39,9 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
         trainsets,
         valsets,
         testsets,
+        create_random_split = False,
     ):
-        super().__init__(data_split_path, hdf5_base_path)
+        super().__init__(data_split_path, hdf5_base_path, create_random_split)
 
         self.gradient_steps = gradient_steps
         self.batch_size = batch_size

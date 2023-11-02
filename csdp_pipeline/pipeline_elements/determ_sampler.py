@@ -17,12 +17,11 @@ from csdp_pipeline.pipeline_elements.pipe import IPipe
 class Determ_sampler(IPipe):
     def __init__(self,
                  base_file_path, 
-                 datasets, 
-                 split_file, 
+                 datasets,
                  split_type, 
                  num_epochs, 
-                 subject_percentage = 1, 
-                 sample_rate = 128,
+                 split_file = None,
+                 subject_percentage = 1,
                  get_all_channels = False, 
                  eeg_picker_func = None,
                  eog_picker_func = None):
@@ -33,7 +32,6 @@ class Determ_sampler(IPipe):
         self.subject_percentage = subject_percentage
         self.records = self.list_records()
         self.epoch_length = num_epochs
-        self.sample_rate = sample_rate
         self.get_all_channels = get_all_channels
 
         self.eeg_picker_func = eeg_picker_func        
@@ -49,15 +47,20 @@ class Determ_sampler(IPipe):
 
         for f in self.datasets:
             with h5py.File(f"{self.base_file_path}/{f}.hdf5", "r") as hdf5:
-                with open(self.split_file, "r") as splitfile:
-                    splitdata = json.load(splitfile)
+                
+                if self.split_file != None:
+                    with open(self.split_file, "r") as splitfile:
+                        splitdata = json.load(splitfile)
 
-                    try:
-                        sets = splitdata[f]
-                        subjects = sets[self.split_type]
-                    except:
-                        subjects = list(hdf5.keys())
-
+                        try:
+                            sets = splitdata[f]
+                            subjects = sets[self.split_type]
+                        except:
+                            print("Could not find configured split")
+                            exit()
+                else:
+                    subjects = list(hdf5.keys())
+                
                 num_subjects = len(subjects)
                 num_subjects_to_use = math.ceil(num_subjects*self.subject_percentage)
                 subjects = subjects[0:num_subjects_to_use]

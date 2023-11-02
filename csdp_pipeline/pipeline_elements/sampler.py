@@ -16,10 +16,10 @@ from csdp_pipeline.pipeline_elements.pipe import IPipe
 class Sampler(IPipe):
     def __init__(self,
                  base_file_path, 
-                 datasets, 
-                 split_file_path, 
+                 datasets,
                  split_type, 
-                 num_epochs, 
+                 num_epochs,
+                 split_file_path = None, 
                  subject_percentage = 1,
                  eeg_picker_func = None, 
                  eog_picker_func = None):
@@ -159,15 +159,20 @@ class Sampler(IPipe):
         for f in self.datasets:
             with h5py.File(base_path+"/"+f"{f}.hdf5", "r") as hdf5:
                 
-                with open(self.split_file, "r") as splitfile:
-                    splitdata = json.load(splitfile)
-                    try:
-                        # Trý finding the correct split
-                        sets = splitdata[f]
-                        subs = sets[self.split_type]
-                    except:
-                        # If none is configured, take all subjects
-                        subs = list(hdf5.keys())
+                if self.split_file != None:
+                    with open(self.split_file, "r") as splitfile:
+                        splitdata = json.load(splitfile)
+                        
+                        try:
+                            # Trý finding the correct split
+                            sets = splitdata[f]
+                            subs = sets[self.split_type]
+                        except:
+                            # If none is configured, take all subjects
+                            print("Could not find configured split")
+                            exit()
+                else:
+                    subs = list(hdf5.keys())
                     
                 num_subjects = len(subs)
                 num_subjects_to_use = math.ceil(num_subjects*self.subject_percentage)
