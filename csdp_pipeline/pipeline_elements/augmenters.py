@@ -159,10 +159,3 @@ class Augmenter(IPipe):
         eeg = torch.unsqueeze(x[0], 0)
         eog = torch.unsqueeze(x[1], 0)
         return (eeg, eog, y, tags)
-
-class LSeq_Augmenter(Augmenter):
-    def adapt(self, x):
-        eeg, eog, y, tags = x
-        eeg = torch.unsqueeze(eeg, 0)
-        eog = torch.unsqueeze(eog, 0)
-        return (eeg, eog, y, tags)

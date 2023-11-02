@@ -126,6 +126,7 @@ class Determ_sampler(IPipe):
         
         eeg_data = np.array(eeg_data)
         eog_data = np.array(eog_data)
+
         eeg_data = torch.Tensor(eeg_data)
         eog_data = torch.Tensor(eog_data)
 
@@ -137,22 +138,22 @@ class Determ_sampler(IPipe):
             
             eeg_data = hdf5[subject][rec]["psg"][eeg][:]
             eeg_tag = eeg   
-        except:
-            eeg_data = []
-            eeg_tag = "none"
 
+            eeg_data = torch.Tensor(eeg_data)
+        except:
+            eeg_data = None
+            eeg_tag = "none"
+            
         try:
             eog = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
 
             eog_data = hdf5[subject][rec]["psg"][eog][:]
             eog_tag = eog
-        except:
-            eog_data = []
-            eog_tag = "none" 
 
-        eeg_data = torch.Tensor(eeg_data)
-        eog_data = torch.Tensor(eog_data)
-        eeg_data = eeg_data.unsqueeze(0)
-        eog_data = eog_data.unsqueeze(0)
+            eog_data = torch.Tensor(eog_data)
+            
+        except:
+            eog_data = None
+            eog_tag = "none" 
 
         return eeg_data, eog_data, eeg_tag, eog_tag
