@@ -19,7 +19,7 @@ To use the implemented pytorch dataloaders, look at the following example
 
 "hdf5_base_path" is the root path to your preprocessed HDF5 files from the common datastore.
 train/val/test-sets is a list of datasets in the root path, that you want to use in the dataloading. It should be the name of the file without the hdf5 extension.
-"data_split_path" is a json file containing the configuration of train/validation/test subjects. Look in the csdp_pipeline/splits if you want examples. If you leave it as "None", a random split will be made for you.
+"data_split_path" is a json file containing the configuration of train/validation/test subjects. Look in the csdp_pipeline/splits if you want examples. If you leave it as "None", all subjects will be used from the listed datasets. If you specify the parameter "create_random_split" as True, then a random split json file will be created and used.
 
 
 ```python
