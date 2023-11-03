@@ -22,8 +22,8 @@ class Full_Eval_Dataset_Sampler(IPipe):
             split_type (str, optional): Which split type the dataloader should be. Determines which subjects are sampled from the split_file_path. Defaults to "val".
             dataset_name (str, optional): The name of the dataset specified in the json split file. Only needed if a split file is specified. Defaults to None
         """
-        assert split_type == "val" | split_type == "test"
-        assert file_path is str
+        assert split_type == "val" or split_type == "test"
+        assert type(file_path) == str
 
         self.channels_to_pick = channels_to_pick
         self.dataset_name = dataset_name
