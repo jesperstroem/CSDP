@@ -47,6 +47,7 @@ def main():
 
     if model_type == "usleep":
         parameters = data["usleep_parameters"]
+
         fac = USleep_Dataloader_Factory(gradient_steps=gradient_steps,
                                         batch_size=batch_size,
                                         hdf5_base_path=hdf5_data_path,
@@ -97,7 +98,9 @@ def main():
     
     # I hate this, but Lightning has no better way to change logging directory :(
     org = os.getcwd()
-    os.chdir(neptune_info["logging_folder"])
+
+    if neptune_info["logging_folder"] != None:
+        os.chdir(neptune_info["logging_folder"])
 
     if logging_enabled == True:
         try:

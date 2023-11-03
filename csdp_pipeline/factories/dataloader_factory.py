@@ -29,18 +29,29 @@ class IDataloader_Factory(ABC):
         pass
 
 
-class USleep_Dataloader_Factory(IDataloader_Factory):
+class USleep_Dataloader_Factory(IDataloader_Factory):    
     def __init__(
         self,
-        gradient_steps,
-        batch_size,
-        hdf5_base_path,
-        trainsets,
-        valsets,
-        testsets,
-        data_split_path = None,
-        create_random_split = False,
+        gradient_steps: int,
+        batch_size: int,
+        hdf5_base_path: str,
+        trainsets: list[str],
+        valsets: list[str],
+        testsets: list[str],
+        data_split_path: str = None,
+        create_random_split: bool = False,
     ):
+        """_summary_
+        Args:
+            gradient_steps (int): How many gradient steps per epoch. Gradient_steps * batch_size determines how many samples are drawn each epoch
+            batch_size (int): The batch_size. Gradient_steps * batch_size determines how many samples are drawn each epoch
+            hdf5_base_path (str): Absolute path to the root containing HDF5 datasets
+            trainsets (list[str]): List of names of datasets used for training. For example, if the dataset "abc.hdf5" is in the hdf5_base_path, add "abc" to the list
+            valsets (list[str]): List of names of datasets used for validation. For example, if the dataset "abc.hdf5" is in the hdf5_base_path, add "abc" to the list
+            testsets (list[str]): List of names of datasets used for testing. For example, if the dataset "abc.hdf5" is in the hdf5_base_path, add "abc" to the list
+            data_split_path (str, optional): Specifies a path to a split json file. For examples, look in the folder "csdp_pipeline/splits" of this repository. Defaults to None, which means all subjects are used for both training, validation and test.
+            create_random_split (bool, optional): If set to True, a random split json file will be created and used for data-loading. Defaults to False.
+        """
         super().__init__(data_split_path, hdf5_base_path, create_random_split)
 
         self.gradient_steps = gradient_steps
@@ -50,7 +61,16 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
             hdf5_base_path, self.data_split_path, trainsets, valsets, testsets
         )
 
-    def create_training_loader(self, num_workers=1):
+    def create_training_loader(self, num_workers=1) -> DataLoader:
+        """_summary_
+
+        Args:
+            num_workers (int, optional): Number of workers in the PyTorch dataloader. Defaults to 1.
+
+        Returns:
+            DataLoader: The training dataloader. When drawing samples from this dataloader, the data will be served with 4 values - (eeg_data, eog_data, labels, tags).
+        """
+
         pipes = self.fac.create_training_pipeline()
         dataset = PipelineDataset(pipes, self.gradient_steps * self.batch_size)
         trainloader = DataLoader(
@@ -62,15 +82,32 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
         )
         return trainloader
 
-    def create_validation_loader(self, num_workers=1):
+    def create_validation_loader(self, num_workers=1) -> DataLoader:
+        """_summary_
+
+        Args:
+            num_workers (int, optional): Number of workers in the PyTorch dataloader. Defaults to 1.
+
+        Returns:
+            DataLoader: The validation dataloader. When drawing samples from this dataloader, the data will be served with 4 values - (eeg_data, eog_data, labels, tags).
+        """
         pipes = self.fac.create_validation_pipeline()
         dataset = PipelineDataset(pipes, len(pipes[0].records))
+        
         valloader = DataLoader(
             dataset, batch_size=1, shuffle=False, num_workers=num_workers
         )
         return valloader
 
-    def create_testing_loader(self, num_workers=1):
+    def create_testing_loader(self, num_workers=1) -> DataLoader:
+        """_summary_
+
+        Args:
+            num_workers (int, optional): Number of workers in the PyTorch dataloader. Defaults to 1.
+
+        Returns:
+            DataLoader: The testing dataloader. When drawing samples from this dataloader, the data will be served with 4 values - (eeg_data, eog_data, labels, tags).
+        """
         pipes = self.fac.create_test_pipeline()
         dataset = PipelineDataset(pipes=pipes, iterations=len(pipes[0].records))
 
@@ -83,16 +120,29 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
 class LSeqSleepNet_Dataloader_Factory(IDataloader_Factory):
     def __init__(
         self,
-        data_split_path,
-        gradient_steps,
-        batch_size,
-        num_epochs,
-        hdf5_base_path,
-        trainsets,
-        valsets,
-        testsets,
+        gradient_steps: int,
+        batch_size: int,
+        num_epochs: int,
+        hdf5_base_path: str,
+        trainsets: list[str],
+        valsets: list[str],
+        testsets: list[str],
+        data_split_path: str = None,
+        create_random_split: bool = False,
     ):
-        super().__init__(data_split_path, hdf5_base_path)
+        """_summary_
+        Args:
+            gradient_steps (int): How many gradient steps per epoch. Gradient_steps * batch_size determines how many samples are drawn each epoch
+            batch_size (int): The batch_size. Gradient_steps * batch_size determines how many samples are drawn each epoch
+            num_epochs (int): Number of sleep epochs to draw per sample. L-SeqSleepNet default is 200, but SeqSleepNet could use less.
+            hdf5_base_path (str): Absolute path to the root containing HDF5 datasets
+            trainsets (list[str]): List of names of datasets used for training. For example, if the dataset "abc.hdf5" is in the hdf5_base_path, add "abc" to the list
+            valsets (list[str]): List of names of datasets used for validation. For example, if the dataset "abc.hdf5" is in the hdf5_base_path, add "abc" to the list
+            testsets (list[str]): List of names of datasets used for testing. For example, if the dataset "abc.hdf5" is in the hdf5_base_path, add "abc" to the list
+            data_split_path (str, optional): Specifies a path to a split json file. For examples, look in the folder "csdp_pipeline/splits" of this repository. Defaults to None, which means all subjects are used for both training, validation and test.
+            create_random_split (bool, optional): If set to True, a random split json file will be created and used for data-loading. Defaults to False.
+        """
+        super().__init__(data_split_path, hdf5_base_path, create_random_split)
 
         self.gradient_steps = gradient_steps
         self.batch_size = batch_size

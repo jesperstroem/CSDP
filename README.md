@@ -32,7 +32,8 @@ dataloader_factory = USleep_Dataloader_Factory(gradient_steps=100,
                                                trainsets=["abc"],
                                                valsets=["abc"],
                                                testsets=["abc"],
-                                               data_split_path="C:/Users/au588953/Git Repos/usleep-eareeg/splits/usleep_split.json")
+                                               data_split_path="C:/Users/au588953/Git Repos/usleep-eareeg/splits/usleep_split.json",
+                                               create_random_split=False)
 
 train_loader = dataloader_factory.create_training_loader(num_workers=1)
 val_loader = dataloader_factory.create_validation_loader(num_workers=1)

@@ -1,10 +1,10 @@
 # Model can be "usleep" or "lseqsleepnet"
 model: "usleep"
 
-hdf5_base_path: "/com/ecent/NOBACKUP/Big_Sleep_Set/transformed"
+hdf5_base_path: "C:/Users/au588953/hdf5"
 
-hdf5_split_path: "/home/js/repos/common-sleep-data-pipeline/csdp_pipeline/splits/usleep_split.json"
-accelerator: "gpu"
+hdf5_split_path: "C:/Users/au588953/Git Repos/CSDP/csdp_pipeline/splits/usleep_split.json"
+accelerator: "cpu"
 
 train_sets:
   - "abc"
@@ -15,8 +15,6 @@ train_sets:
   - "homepap"
   - "mesa"
   - "mros"
-  - "sedf_st"
-  - "sedf_sc"
   - "shhs"
   - "phys"
   - "sof"
@@ -29,19 +27,17 @@ val_sets:
   - "homepap"
   - "mesa"
   - "mros"
-  - "sedf_st"
-  - "sedf_sc"
   - "shhs"
   - "phys"
   - "sof"
 test_sets:
   - "cfs"
 
-gradient_steps: 443
+gradient_steps: 10
 batch_size: 64
-num_workers: 8
-lr: 0.0000001
-max_epochs: 1000
+num_workers: 1
+lr: 0.00001
+max_epochs: 1
 early_stop_patience: 50
 
 usleep_parameters:
@@ -52,13 +48,13 @@ usleep_parameters:
 lseq_parameters:
   coming_soon: 0
 
-pretrained: True
+pretrained: False
 pretrained_path: "/home/js/repos/common-sleep-data-pipeline/checkpoints/best_usleep.ckpt"
 
 neptune:
-  logging: True
+  logging: False
   existing_run_id: null
-  logging_folder: "/com/ecent/NOBACKUP"
+  logging_folder: null
   api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
   project: "NTLAB/bigsleep"
   name: "usleep"

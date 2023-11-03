@@ -126,12 +126,14 @@ class Determ_sampler(IPipe):
         
         if len(eeg_data) == 0:
             eeg_data = None
+            eeg_tag = "none"
         else:
             eeg_data = np.array(eeg_data)
             eeg_data = torch.Tensor(eeg_data)
             
         if len(eog_data) == 0:
             eog_data = None
+            eog_tag = "none"
         else:
             eog_data = np.array(eog_data)
             eog_data = torch.Tensor(eog_data)
