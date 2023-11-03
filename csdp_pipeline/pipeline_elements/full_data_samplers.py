@@ -11,7 +11,8 @@ class Full_Eval_Dataset_Sampler(IPipe):
                 file_path: str,
                 channels_to_pick: list[str] = None,
                 split_file_path: str = None,
-                split_type: str = "val"):
+                split_type: str = "val",
+                dataset_name: str = None):
         """_summary_
 
         Args:
@@ -19,11 +20,13 @@ class Full_Eval_Dataset_Sampler(IPipe):
             channels_to_pick (list[str], optional): A list of channels to pick from the data. Defaults to None which means all channels are sampled.
             split_file_path (str, optional): A filepath to a json split file. Defaults to None which means all subjects are sampled from the data.
             split_type (str, optional): Which split type the dataloader should be. Determines which subjects are sampled from the split_file_path. Defaults to "val".
+            dataset_name (str, optional): The name of the dataset specified in the json split file. Only needed if a split file is specified. Defaults to None
         """
         assert split_type == "val" | split_type == "test"
         assert file_path is str
 
         self.channels_to_pick = channels_to_pick
+        self.dataset_name = dataset_name
         self.split_type = split_type
         self.file_path = file_path
         self.split_file = split_file_path
@@ -40,7 +43,7 @@ class Full_Eval_Dataset_Sampler(IPipe):
                     splitdata = json.load(splitfile)
                     try:
                         # Try finding the correct split
-                        sets = splitdata["eesm"]
+                        sets = splitdata[self.dataset_name]
                         subs = sets[self.split_type]
                     except:
                         exit()
@@ -95,7 +98,8 @@ class Full_Train_Dataset_Sampler(IPipe):
                  file_path: str,
                  window_size: int,
                  channels_to_pick: list[str] = None,
-                 split_file_path: str = None):
+                 split_file_path: str = None,
+                 dataset_name: str = None):
         """_summary_
 
         Args:
@@ -103,12 +107,14 @@ class Full_Train_Dataset_Sampler(IPipe):
             window_size (int): Size of the window to sample from the data.
             channels_to_pick (list[str]): A list of channels to pick from the data. Defaults to None which means all channels are sampled.
             split_file_path (str, optional): A filepath to a json split file. If specified, all the subjects under "train" will be sampled. Defaults to None which means all subjects are sampled from the data.
+            dataset_name (str, optional): The name of the dataset specified in the json split file. Only needed if a split file is specified. Defaults to None
         """
 
         self.window_length = window_size
         self.file_path = file_path
         self.channels_to_pick = channels_to_pick
         self.split_file = split_file_path
+        self.dataset_name = dataset_name
         self.data, self.hyp, self.window_counts, self.data_indexes = self.__get_data()
 
         self.num_windows = self.window_counts[-1]
@@ -154,7 +160,7 @@ class Full_Train_Dataset_Sampler(IPipe):
                     splitdata = json.load(splitfile)
                     try:
                         # Try finding the correct split
-                        sets = splitdata["eesm"]
+                        sets = splitdata[self.dataset_name]
                         subs = sets["train"]
                     except:
                         # If none is configured, take all subjects
