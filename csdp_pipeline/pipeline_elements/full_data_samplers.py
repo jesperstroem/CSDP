@@ -9,6 +9,7 @@ import numpy as np
 class Full_Eval_Dataset_Sampler(IPipe):
     def __init__(self,
                 file_path: str,
+                records_to_pick: list[str] = None,
                 channels_to_pick: list[str] = None,
                 split_file_path: str = None,
                 split_type: str = "val",
@@ -25,6 +26,7 @@ class Full_Eval_Dataset_Sampler(IPipe):
         assert split_type == "val" or split_type == "test"
         assert type(file_path) == str
 
+        self.records_to_pick = records_to_pick
         self.channels_to_pick = channels_to_pick
         self.dataset_name = dataset_name
         self.split_type = split_type
@@ -59,6 +61,10 @@ class Full_Eval_Dataset_Sampler(IPipe):
                     subj = hdf5[subj_key]
 
                     rec_keys = subj.keys()
+
+                    if self.records_to_pick != None:
+                        rec_keys = [k for k in rec_keys if k in self.records_to_pick]
+                        print(f"Sampling from records {rec_keys}")
 
                     for rec_key in rec_keys:
                         rec = subj[rec_key]
@@ -97,6 +103,7 @@ class Full_Train_Dataset_Sampler(IPipe):
     def __init__(self,
                  file_path: str,
                  window_size: int,
+                 records_to_pick: list[str] = None,
                  channels_to_pick: list[str] = None,
                  split_file_path: str = None,
                  dataset_name: str = None):
@@ -110,6 +117,7 @@ class Full_Train_Dataset_Sampler(IPipe):
             dataset_name (str, optional): The name of the dataset specified in the json split file. Only needed if a split file is specified. Defaults to None
         """
 
+        self.records_to_pick = records_to_pick
         self.window_length = window_size
         self.file_path = file_path
         self.channels_to_pick = channels_to_pick
@@ -180,6 +188,10 @@ class Full_Train_Dataset_Sampler(IPipe):
                     subj = hdf5[subj_key]
 
                     rec_keys = subj.keys()
+
+                    if self.records_to_pick != None:
+                        rec_keys = [k for k in rec_keys if k in self.records_to_pick]
+                        print(f"Sampling from records {rec_keys}")
 
                     for rec_key in rec_keys:
                         rec = subj[rec_key]
