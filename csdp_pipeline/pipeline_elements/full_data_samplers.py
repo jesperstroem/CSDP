@@ -158,7 +158,7 @@ class Full_Train_Dataset_Sampler(IPipe):
         x_sample = data[:,x_start_idx:x_end_idx]
         y_sample = hyp[y_start_idx:y_end_idx]
 
-        return x_sample, y_sample
+        return x_sample, y_sample, ""
     
     def __get_data(self):
         with h5py.File(self.file_path, "r") as hdf5:
