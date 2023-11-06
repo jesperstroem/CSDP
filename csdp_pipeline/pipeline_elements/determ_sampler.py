@@ -64,10 +64,10 @@ class Determ_sampler(IPipe):
                 num_subjects = len(subjects)
                 num_subjects_to_use = math.ceil(num_subjects*self.subject_percentage)
                 subjects = subjects[0:num_subjects_to_use]
-
+                
                 if len(subjects) == 0:
                     raise ValueError(f"No subjects in split type: {self.split_type}")
-
+                
                 for s in subjects:
                     try:
                         records = list(hdf5[s])

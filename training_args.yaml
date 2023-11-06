@@ -31,7 +31,7 @@ val_sets:
   - "phys"
   - "sof"
 test_sets:
-  - "cfs"
+  - "ccshs"
 
 gradient_steps: 10
 batch_size: 64
@@ -48,8 +48,8 @@ usleep_parameters:
 lseq_parameters:
   coming_soon: 0
 
-pretrained: False
-pretrained_path: "/home/js/repos/common-sleep-data-pipeline/checkpoints/best_usleep.ckpt"
+pretrained: True
+pretrained_path: "C:/Users/au588953/Git Repos/CSDP/checkpoints/best_usleep.ckpt"
 
 neptune:
   logging: False

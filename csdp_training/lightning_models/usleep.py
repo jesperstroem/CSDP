@@ -50,9 +50,6 @@ class USleep_Lightning(Base_Lightning):
     
             
     def single_prediction(self, x_eeg, x_eog):
-        assert x_eeg.shape[1] == 1
-        assert x_eog.shape[1] == 1
-        
         chan1 = x_eeg[:,0,...]
         chan2 = x_eog[:,0,...]
         
@@ -144,11 +141,16 @@ class USleep_Lightning(Base_Lightning):
     def test_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, tags = batch
-        
-        single_pred = self.single_prediction(x_eeg, x_eog)
+
+        ybatch = torch.flatten(ybatch)
+        #single_pred = self.single_prediction(x_eeg, x_eog)
         channels_pred = self.channels_prediction(x_eeg, x_eog)
         
         tag = tags[0]
         tags = tag.split("/")
 
-        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)
+        kap = kappa(channels_pred, ybatch, 5)
+        print(tag)
+        print(kap)
+        
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, labels=ybatch)

@@ -22,8 +22,11 @@ model_type = data["model"]
 neptune_info = data["neptune"]
 train_sets = data["train_sets"]
 val_sets = data["val_sets"]
+test_sets = data["test_sets"]
 pretrained = data["pretrained"]
 pretrained_path = data["pretrained_path"]
+
+test = True
 
 gradient_steps = data["gradient_steps"]
 batch_size = data["batch_size"]
@@ -53,7 +56,7 @@ def main():
                                         hdf5_base_path=hdf5_data_path,
                                         trainsets=train_sets,
                                         valsets=val_sets,
-                                        testsets=[],
+                                        testsets=test_sets,
                                         data_split_path=hdf5_split_path)
         
         mfac = USleep_Factory(lr = lr,
@@ -73,9 +76,6 @@ def main():
         net = mfac.create_new_net()
     else:
         net = mfac.create_pretrained_net(pretrained_path)
-
-    train_loader = fac.create_training_loader(num_workers=num_workers)
-    val_loader = fac.create_validation_loader(num_workers=num_workers)
 
     early_stopping = pl.callbacks.EarlyStopping(
         monitor="valKap",
@@ -140,7 +140,18 @@ def main():
                          devices=1,
                          num_nodes=1)
     
-    trainer.fit(net, train_loader, val_loader)
+    if test == True:
+        with torch.no_grad():
+            net.eval()
+
+            test_loader = fac.create_testing_loader(num_workers=1)
+            _ = trainer.test(net, test_loader)
+    else:
+        train_loader = fac.create_training_loader(num_workers=num_workers)
+        val_loader = fac.create_validation_loader(num_workers=num_workers)
+
+        trainer.fit(net, train_loader, val_loader)
+
     os.chdir(org)
 
         
