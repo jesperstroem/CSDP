@@ -56,8 +56,8 @@ class Determ_sampler(IPipe):
                             sets = splitdata[f]
                             subjects = sets[self.split_type]
                         except:
-                            print("Could not find configured split")
-                            exit()
+                            print(f"Could not find configured split for dataset {f} and splittype {self.split_type}. All subjects are sampled.")
+                            subjects = list(hdf5.keys())
                 else:
                     subjects = list(hdf5.keys())
                 
@@ -97,73 +97,48 @@ class Determ_sampler(IPipe):
 
             psg_channels = list(hdf5[subject][rec]["psg"].keys())
 
-            if self.get_all_channels:
-                eeg_data, eog_data, eeg_tag, eog_tag = self.__load_all_channels(hdf5, subject, rec, psg_channels)
-            else:
-                eeg_data, eog_data, eeg_tag, eog_tag = self.__load_single_channel(hdf5, subject, rec, psg_channels)
-
+            eeg_data, eog_data, eeg_tag, eog_tag = self.__load_data(hdf5, subject, rec, psg_channels)
+ 
         tag = f"{dataset}/{subject}/{rec}/{eeg_tag}, {eog_tag}"
         y = torch.tensor(y)
 
         return eeg_data, eog_data, y, tag
     
-    def __load_all_channels(self, hdf5, subject, rec, psg_channels):
+    def __load_data(self, hdf5, subject, rec, psg_channels):
         eeg_data = []
         eog_data = []
 
-        eeg_keys = [x for x in psg_channels if x.startswith("EEG")]
-        eog_keys = [x for x in psg_channels if x.startswith("EOG")]
+        if self.get_all_channels:
+            eeg_keys = [x for x in psg_channels if x.startswith("EEG")]
+            eog_keys = [x for x in psg_channels if x.startswith("EOG")]
+            eeg_tag = "all"
+            eog_tag = "all"
+        else:
+            eeg_key = self.eeg_picker_func(psg_channels) if self.eeg_picker_func != None else self.__pick_first_available_channel(psg_channels, "EEG")
+            eog_key = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
+            eeg_tag = eeg_key
+            eog_tag = eog_key
+            eeg_keys = [eeg_key]
+            eog_keys = [eog_key]
 
         for ch in eeg_keys:
             data = hdf5[subject][rec]["psg"][ch][:]
             eeg_data.append(data)
-            eeg_tag = "all"
-
+            
         for ch in eog_keys:
             data = hdf5[subject][rec]["psg"][ch][:]
             eog_data.append(data)
-            eog_tag = "all"
-        
+
         if len(eeg_data) == 0:
-            eeg_data = None
             eeg_tag = "none"
-        else:
-            eeg_data = np.array(eeg_data)
-            eeg_data = torch.Tensor(eeg_data)
-            
+
         if len(eog_data) == 0:
-            eog_data = None
             eog_tag = "none"
-        else:
-            eog_data = np.array(eog_data)
-            eog_data = torch.Tensor(eog_data)
 
-        return eeg_data, eog_data, eeg_tag, eog_tag
+        eog_data = np.array(eog_data)
+        eog_data = torch.Tensor(eog_data)
 
-    def __load_single_channel(self, hdf5, subject, rec, psg_channels):
-        try:
-            eeg = self.eeg_picker_func(psg_channels) if self.eeg_picker_func != None else self.__pick_first_available_channel(psg_channels, "EEG")
-            
-            eeg_data = hdf5[subject][rec]["psg"][eeg][:]
-            eeg_tag = eeg   
-            
-            eeg_data = torch.Tensor(eeg_data)
-            eeg_data = torch.unsqueeze(eeg_data, 0)
-        except:
-            eeg_data = None
-            eeg_tag = "none"
-            
-        try:
-            eog = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
-
-            eog_data = hdf5[subject][rec]["psg"][eog][:]
-            eog_tag = eog
-
-            eog_data = torch.Tensor(eog_data)
-            eog_data = torch.unsqueeze(eog_data, 0)
-            
-        except:
-            eog_data = None
-            eog_tag = "none" 
-
+        eeg_data = np.array(eeg_data)
+        eeg_data = torch.Tensor(eeg_data)
+        
         return eeg_data, eog_data, eeg_tag, eog_tag
