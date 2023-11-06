@@ -96,7 +96,7 @@ class USleep_Lightning(Base_Lightning):
                 pred = pred.cpu()
                 
                 votes = torch.add(votes, pred)
- 
+
         votes = torch.argmax(votes, axis=1)
 
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -141,6 +141,10 @@ class USleep_Lightning(Base_Lightning):
     def test_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, tags = batch
+        
+        if any(dim == 0 for dim in x_eog.shape):
+            print("Found no EOG channel, duplicating EEG instead")
+            x_eog = x_eeg
 
         ybatch = torch.flatten(ybatch)
         #single_pred = self.single_prediction(x_eeg, x_eog)
