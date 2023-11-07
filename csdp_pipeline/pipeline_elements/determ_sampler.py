@@ -13,6 +13,8 @@ import json
 import numpy as np
 
 from csdp_pipeline.pipeline_elements.pipe import IPipe
+from csdp_pipeline.pipeline_elements.pipeline_dataset import PipelineDataset
+from torch.utils.data import DataLoader
 
 class Determ_sampler(IPipe):
     def __init__(self,
@@ -21,10 +23,8 @@ class Determ_sampler(IPipe):
                  split_type, 
                  num_epochs, 
                  split_file = None,
-                 subject_percentage = 1,
-                 get_all_channels = False, 
-                 eeg_picker_func = None,
-                 eog_picker_func = None):
+                 subject_percentage: float = 1.0,
+                 get_all_channels = False):
         self.base_file_path = base_file_path
         self.datasets = datasets
         self.split_type = split_type
@@ -33,9 +33,6 @@ class Determ_sampler(IPipe):
         self.records = self.list_records()
         self.epoch_length = num_epochs
         self.get_all_channels = get_all_channels
-
-        self.eeg_picker_func = eeg_picker_func        
-        self.eog_picker_func = eog_picker_func
 
     def process(self, index):
         sample = self.__get_sample(index)
@@ -80,11 +77,6 @@ class Determ_sampler(IPipe):
 
         return list_of_records
 
-    def __pick_first_available_channel(self, channels, type):
-        channels = [x for x in channels if x.startswith(type)]
-
-        return channels[0]
-
     def __get_sample(self, index):
         r = self.records[index]
 
@@ -104,22 +96,31 @@ class Determ_sampler(IPipe):
 
         return eeg_data, eog_data, y, tag
     
+    def determine_single_key(self, keys):
+        if len(keys) > 0:
+            key = keys[0]
+            tag = key
+            keys = [key]
+        else:
+            tag = "none"
+        
+        return keys, tag
+
     def __load_data(self, hdf5, subject, rec, psg_channels):
         eeg_data = []
         eog_data = []
 
-        if self.get_all_channels:
-            eeg_keys = [x for x in psg_channels if x.startswith("EEG")]
-            eog_keys = [x for x in psg_channels if x.startswith("EOG")]
+        available_eeg_keys = [x for x in psg_channels if x.startswith("EEG")]
+        available_eog_keys = [x for x in psg_channels if x.startswith("EOG")]
+
+        if self.get_all_channels == False:
+            eeg_keys, eeg_tag = self.determine_single_key(available_eeg_keys)
+            eog_keys, eog_tag = self.determine_single_key(available_eog_keys)
+        else:
+            eeg_keys = available_eeg_keys
+            eog_keys = available_eog_keys
             eeg_tag = "all"
             eog_tag = "all"
-        else:
-            eeg_key = self.eeg_picker_func(psg_channels) if self.eeg_picker_func != None else self.__pick_first_available_channel(psg_channels, "EEG")
-            eog_key = self.eog_picker_func(psg_channels) if self.eog_picker_func != None else self.__pick_first_available_channel(psg_channels, "EOG")
-            eeg_tag = eeg_key
-            eog_tag = eog_key
-            eeg_keys = [eeg_key]
-            eog_keys = [eog_key]
 
         for ch in eeg_keys:
             data = hdf5[subject][rec]["psg"][ch][:]
@@ -129,12 +130,6 @@ class Determ_sampler(IPipe):
             data = hdf5[subject][rec]["psg"][ch][:]
             eog_data.append(data)
 
-        if len(eeg_data) == 0:
-            eeg_tag = "none"
-
-        if len(eog_data) == 0:
-            eog_tag = "none"
-
         eog_data = np.array(eog_data)
         eog_data = torch.Tensor(eog_data)
 
@@ -142,3 +137,25 @@ class Determ_sampler(IPipe):
         eeg_data = torch.Tensor(eeg_data)
         
         return eeg_data, eog_data, eeg_tag, eog_tag
+    
+            
+if __name__ == '__main__':
+    s = Determ_sampler("C:/Users/au588953/hdf5",
+                       ["abc"],
+                       "val",
+                       35,
+                       None,
+                       subject_percentage=1,
+                       get_all_channels=False)
+    
+    dataset = PipelineDataset([s], 10)
+    loader = DataLoader(
+        dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=1,
+        pin_memory=True,
+    )
+
+    dataiter = iter(loader)
+    
