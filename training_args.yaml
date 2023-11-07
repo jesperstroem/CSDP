@@ -1,0 +1,78 @@
+# Model can be "usleep" or "lseqsleepnet"
+model: "usleep"
+
+hdf5_base_path: "/com/ecent/NOBACKUP/Big_Sleep_Set/transformed"
+
+hdf5_split_path: "/home/js/repos/common-sleep-data-pipeline/csdp_pipeline/splits/usleep_split.json"
+accelerator: "gpu"
+
+train_sets:
+  - "abc"
+  - "ccshs"
+  - "cfs"
+  - "chat"
+  - "dcsm"
+  - "homepap"
+  - "mesa"
+  - "mros"
+  - "shhs"
+  - "phys"
+  - "sof"
+val_sets:
+  - "abc"
+  - "ccshs"
+  - "cfs"
+  - "chat"
+  - "dcsm"
+  - "homepap"
+  - "mesa"
+  - "mros"
+  - "shhs"
+  - "phys"
+  - "sof"
+test_sets:
+  - "abc"
+  - "ccshs"
+  - "cfs"
+  - "chat"
+  - "dcsm"
+  - "homepap"
+  - "mesa"
+  - "mros"
+  - "shhs"
+  - "phys"
+  - "sof"
+  - "isruc_sg1"
+  - "isruc_sg2"
+  - "isruc_sg3"
+  - "mass_c1"
+  - "mass_c3"
+  - "svuh"
+  - "dod-o"
+  - "dod-h"
+
+gradient_steps: 10
+batch_size: 64
+num_workers: 1
+lr: 0.00001
+max_epochs: 1
+early_stop_patience: 50
+
+usleep_parameters:
+  initial_filters: 5
+  complexity_factor: 1.67
+  progression_factor: 2
+
+lseq_parameters:
+  coming_soon: 0
+
+pretrained: True
+pretrained_path: "/home/js/repos/common-sleep-data-pipeline/checkpoints/best_usleep_second.ckpt"
+
+neptune:
+  logging: True
+  existing_run_id: null
+  logging_folder: "/com/ecent/NOBACKUP"
+  api_key: "eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzViZjJlYy00NDNhLTRhN2EtOGZmYy00NDEzODBmNTgxYzMifQ=="
+  project: "NTLAB/bigsleep"
+  name: "usleep"
