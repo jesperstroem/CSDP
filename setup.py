@@ -10,6 +10,7 @@ setup(
     packages=[
         "csdp_pipeline",
         "csdp_pipeline.factories",
+        "csdp_pipeline.pipeline_elements",
         "csdp_pipeline.preprocessing",
         "csdp_training",
         "csdp_training.lightning_models",
