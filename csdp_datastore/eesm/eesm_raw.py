@@ -1,7 +1,7 @@
 import pandas as pd
 import mne
 import numpy as np
-from common_sleep_data_store.datastore_classes import EESM_Cleaned
+from csdp_datastore import EESM_Cleaned
 
 class EESM_Raw(EESM_Cleaned):
     def dataset_name(self):

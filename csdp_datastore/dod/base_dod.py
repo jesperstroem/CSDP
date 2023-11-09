@@ -2,8 +2,7 @@ import os
 from h5py import File
 from abc import abstractmethod
 
-from common_sleep_data_store.datastore_classes.base import BaseDataset
-
+from csdp_datastore.base import BaseDataset
 
 class Base_DOD(BaseDataset):
     """

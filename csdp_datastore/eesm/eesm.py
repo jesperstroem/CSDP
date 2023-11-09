@@ -1,6 +1,6 @@
 import os
 
-from common_sleep_data_store.datastore_classes.base import BaseDataset
+from csdp_datastore.base import BaseDataset
 import pandas as pd
 import mne
 from scipy.interpolate import interp1d

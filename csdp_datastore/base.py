@@ -20,8 +20,7 @@ class BaseDataset(ABC):
         scale_and_clip: bool = True,
         output_sample_rate: int = 128,
         data_format: str ="hdf5",
-        logging_path: str = "./SleepDataPipeline/logs",
-        port_on_init: bool = True,
+        logging_path: str = "./SleepDataPipeline/logs"
     ):
         """_summary_
 
@@ -51,15 +50,6 @@ class BaseDataset(ABC):
             exit(1)
         
         assert os.path.exists(self.dataset_path), f"Path {self.dataset_path} does not exist"
-
-        paths_dict = self.list_records(basepath=self.dataset_path)
-
-        self.__check_paths(paths_dict)
-
-        if port_on_init == True:
-            self.port_data(write_function=self.write_function, paths_dict=paths_dict)
-            self.log_info('Successfully ported dataset')
-    
     
     class Mapping:
         def __init__(self, ref1, ref2):
@@ -388,10 +378,20 @@ class BaseDataset(ABC):
             
             subgrp_record.create_dataset("hypnogram", data=y)
             self.log_info('Successfully wrote record to hdf5 file', subject_number, record_number)
+    
+    @abstractmethod
+    def download(self):
+        pass
+
+    def port_data(self, download_first = False):
+
+        if download_first == True:
+            self.download()
         
-        
-    def port_data(self, write_function, paths_dict):
-        
+        paths_dict = self.list_records(basepath=self.dataset_path)
+
+        self.__check_paths(paths_dict)
+
         file_path = f"{self.output_path}/{self.dataset_name()}.hdf5"
         exists = os.path.exists(file_path)
         
@@ -399,10 +399,10 @@ class BaseDataset(ABC):
             self.log_warning("HDF5 file already exists. Removing it")
             os.remove(file_path)
         
-        for subject_number in list(paths_dict.keys())[:self.max_num_subjects]:
+        for subject_number in list(self.paths_dict.keys())[:self.max_num_subjects]:
             record_number = 0
             
-            for record in paths_dict[subject_number]:
+            for record in self.paths_dict[subject_number]:
                 psg = self.read_psg(record)
                 
                 if psg == None:
@@ -414,7 +414,7 @@ class BaseDataset(ABC):
                 x = self.__map_channels(x, len(y))
                 y = self.__map_labels(y)
                 
-                write_function(
+                self.write_function(
                     f"{self.output_path}/",
                     subject_number,
                     record_number,
@@ -423,4 +423,6 @@ class BaseDataset(ABC):
                 )
                 
                 record_number = record_number + 1
+        
+        self.log_info('Successfully ported dataset')
   

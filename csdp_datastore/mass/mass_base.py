@@ -4,7 +4,7 @@ import re
 
 from abc import abstractmethod
 
-from common_sleep_data_store.datastore_classes.base import BaseDataset
+from csdp_datastore.base import BaseDataset
 
 class Mass_base(BaseDataset):
     """

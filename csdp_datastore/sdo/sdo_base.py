@@ -2,14 +2,38 @@ import os
 import mne
 import xml.etree.ElementTree as ET
 from abc import abstractmethod
+import subprocess
 
-from common_sleep_data_store.datastore_classes.base import BaseDataset
+from csdp_datastore.base import BaseDataset
 
 class SleepdataOrg(BaseDataset):
+
+    def __init__(
+        self, 
+        dataset_path: str, 
+        output_path: str,
+        download_token: str = None,
+        max_num_subjects: int = None, 
+        scale_and_clip: bool = True,
+        output_sample_rate: int = 128,
+        data_format: str ="hdf5",
+        logging_path: str = "./SleepDataPipeline/logs"
+    ):
+        
+        super().__init__(dataset_path,
+                         output_path,
+                         max_num_subjects,
+                         scale_and_clip,
+                         output_sample_rate,
+                         data_format,
+                         logging_path)
+        
+        self.download_token = download_token
+
     """
     ABOUT THIS DATASET
     
-    When transforming, the root directory should be containing only the folder "Polysomnography" from SleepData.Org
+    Baseclass for a collection of datasets downloaded from https://sleepdata.org. When downloading, you need to have the NSRR gem installed, and you need a user account and token from their website.
     
     """
 
@@ -29,6 +53,24 @@ class SleepdataOrg(BaseDataset):
     @abstractmethod
     def channel_mapping(self):
         pass
+
+    def download(self):
+        args = ["nsrr", "download", f"{self.dataset_name()}/polysomnography/annotations-events-profusion", f"--token={self.download_token}"]
+        
+        p1 = subprocess.Popen(args,
+                           stdout=subprocess.PIPE,
+                           shell=True,
+                           cwd=self.dataset_path)
+        
+        args = ["nsrr", "download", f"{self.dataset_name()}/polysomnography/edfs", f"--token={self.download_token}"]
+        
+        p2 = subprocess.Popen(args,
+                           stdout=subprocess.PIPE,
+                           shell=True,
+                           cwd=self.dataset_path)
+        
+        _ = [p.wait() for p in [p1, p2]]
+        
     
     def dataset_name(self):
         return self.__class__.__name__.lower()
@@ -39,16 +81,15 @@ class SleepdataOrg(BaseDataset):
 
         paths_dict = {}
         
-        poly_path = f"{basepath}polysomnography/"
+        poly_path = f"{basepath}/{self.dataset_name}/polysomnography/"
         hyp = "annotations-events-profusion"
         psg = "edfs"
         
         psg_path = f"{poly_path}{psg}"
-        hyp_path = f"{poly_path}{hyp}"
         
         psg_files = []
         
-        for dir, subdir, filenames in os.walk(psg_path):
+        for dir, _, filenames in os.walk(psg_path):
             # On windows os.walk gives backslashes, so we need to replace them
             dir = dir.replace('\\','/')
 
