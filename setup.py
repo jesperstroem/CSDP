@@ -9,8 +9,18 @@ setup(
     author_email="js@ece.au.dk",
     packages=[
         "csdp_pipeline",
+        "csdp_pipeline.factories",
+        "csdp_pipeline.preprocessing",
         "csdp_training",
-        "csdp_datastore"
+        "csdp_training.lightning_models",
+        "csdp_training.lightning_models.factories",
+        "csdp_datastore",
+        "csdp_datastore.dod",
+        "csdp_datastore.isruc",
+        "csdp_datastore.mass",
+        "csdp_datastore.sdo",
+        "csdp_datastore.sedf",
+        "csdp_datastore.eesm"
     ],
     install_requires=["numpy", 
                       "scipy", 
