@@ -1,17 +1,22 @@
 # CSDP - Common Sleep Data pipeline
 
-This repository contains a pipeline for training neural networks to perform automatic sleep staging.
+This repository contains a pipeline for preprocessing and loading of PSG data to be used for the training of neural networks in automatic sleep staging.
 
-This is the dataserving part, which you can use to train, validate and test on data created with the common data store:
-https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-store
-
+The repository has three submodules:
+- datastore: Preprocessing
+- pipeline: Dataloading
+- training: Pytorch Lightning modules of L-SeqSleepNet and U-Sleep to be used for automatic sleep scoring
 
 ## Install repo as a package
 If you are looking to use the pipeline for your own personal project, you can install this repo as a package.
 
 Run the following command to install:
 
-pip install git+https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline.git
+pip install git+https://github.com/jesperstroem/CSDP.git
+
+## Downloading and preprocessing
+
+TODO
 
 ## Use the dataloaders
 

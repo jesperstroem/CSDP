@@ -8,12 +8,20 @@ setup(
     author="Jesper Strøm",
     author_email="js@ece.au.dk",
     packages=[
-        "csdp_pipeline.preprocessing",
-        "csdp_pipeline.factories",
-        "csdp_pipeline.pipeline_elements",
+        "csdp_pipeline",
         "csdp_training",
-        "csdp_training.lightning_models",
-        "csdp_training.lightning_models.factories"
+        "csdp_datastore"
     ],
-    install_requires=["numpy", "scipy", "torch"],
+    install_requires=["numpy", 
+                      "scipy", 
+                      "torch", 
+                      "h5py", 
+                      "mne==1.4.2", 
+                      "numpy", 
+                      "pandas", 
+                      "pyarrow", 
+                      "scikit_learn", 
+                      "scipy", 
+                      "setuptools", 
+                      "wfdb"],
 )
