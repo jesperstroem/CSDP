@@ -59,14 +59,12 @@ class SleepdataOrg(BaseDataset):
         
         p1 = subprocess.Popen(args,
                            stdout=subprocess.PIPE,
-                           shell=True,
                            cwd=self.dataset_path)
         
         args = ["nsrr", "download", f"{self.dataset_name()}/polysomnography/edfs", f"--token={self.download_token}"]
         
         p2 = subprocess.Popen(args,
                            stdout=subprocess.PIPE,
-                           shell=True,
                            cwd=self.dataset_path)
         
         codes = [p.wait() for p in [p1, p2]]
