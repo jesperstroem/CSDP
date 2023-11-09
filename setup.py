@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="commonsleepdatapipeline",
-    version="1.0.1",
+    version="1.0.0",
     description="Package for data serving neural networks in automatic sleep staging",
     url="https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline",
     author="Jesper Strøm",
