@@ -69,7 +69,9 @@ class SleepdataOrg(BaseDataset):
                            shell=True,
                            cwd=self.dataset_path)
         
-        _ = [p.wait() for p in [p1, p2]]
+        codes = [p.wait() for p in [p1, p2]]
+        
+        print(codes)
         
     
     def dataset_name(self):
