@@ -55,13 +55,13 @@ class SleepdataOrg(BaseDataset):
         pass
 
     def download(self):
-        args = ["nsrr", "download", f"{self.dataset_name()}/polysomnography/annotations-events-profusion", f"--token={self.download_token}"]
+        args = ["nsrr", "download", f"{self.download_name()}/polysomnography/annotations-events-profusion", f"--token={self.download_token}"]
         
         p1 = subprocess.Popen(args,
                            stdout=subprocess.PIPE,
                            cwd=self.dataset_path)
         
-        args = ["nsrr", "download", f"{self.dataset_name()}/polysomnography/edfs", f"--token={self.download_token}"]
+        args = ["nsrr", "download", f"{self.download_name()}/polysomnography/edfs", f"--token={self.download_token}"]
         
         p2 = subprocess.Popen(args,
                            stdout=subprocess.PIPE,
@@ -69,19 +69,22 @@ class SleepdataOrg(BaseDataset):
         
         codes = [p.wait() for p in [p1, p2]]
         
-        print(codes)
+        self.dataset_path = f"{self.dataset_path}/{self.download_name()}"
         
-    
+    @abstractmethod
+    def download_name(self):
+        pass
+
     def dataset_name(self):
         return self.__class__.__name__.lower()
     
     def list_records(self, basepath):
-        
+        print(basepath)
         assert os.path.exists(basepath), "Path does not exist"
 
         paths_dict = {}
         
-        poly_path = f"{basepath}/{self.dataset_name}/polysomnography/"
+        poly_path = f"{basepath}/polysomnography/"
         hyp = "annotations-events-profusion"
         psg = "edfs"
         

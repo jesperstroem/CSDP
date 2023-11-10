@@ -1,7 +1,9 @@
 from .sdo_base import SleepdataOrg
 
 class SHHS(SleepdataOrg):
-
+    def download_name(self):
+        return "shhs"
+    
     def channel_mapping(self):
         return {
             "EEG(sec)": self.Mapping(self.TTRef.C3, self.TTRef.RPA),

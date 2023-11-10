@@ -15,6 +15,9 @@ class CCSHS(SleepdataOrg):
     EEG and EOG signals were each sampled at 200Hz.
     """  
     
+    def download_name(self):
+        return "ccshs"
+
     def channel_mapping(self):
         r2 = self.TTRef.Fpz
         

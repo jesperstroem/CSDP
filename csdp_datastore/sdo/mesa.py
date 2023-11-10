@@ -2,6 +2,9 @@ from .sdo_base import SleepdataOrg
 
 class MESA(SleepdataOrg):    
 
+    def download_name(self):
+        return "mesa"
+    
     def channel_mapping(self):
         return {
             "EOG-L": self.Mapping(self.TTRef.EL, self.TTRef.Fpz),

@@ -15,6 +15,8 @@ class ABC(SleepdataOrg):
     EEG and EOG signals were each sampled at 256Hz.
     """
 
+    def download_name(self):
+        return "abc"
     
     def channel_mapping(self):
         r2 = self.TTRef.Fz

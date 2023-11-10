@@ -399,10 +399,10 @@ class BaseDataset(ABC):
             self.log_warning("HDF5 file already exists. Removing it")
             os.remove(file_path)
         
-        for subject_number in list(self.paths_dict.keys())[:self.max_num_subjects]:
+        for subject_number in list(paths_dict.keys())[:self.max_num_subjects]:
             record_number = 0
             
-            for record in self.paths_dict[subject_number]:
+            for record in paths_dict[subject_number]:
                 psg = self.read_psg(record)
                 
                 if psg == None:
