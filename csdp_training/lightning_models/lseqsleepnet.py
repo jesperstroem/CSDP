@@ -267,6 +267,6 @@ class LSeqSleepNet_Lightning(Base_Lightning):
         tag = tags[0]
         tags = tag.split("/")
 
-        log_test_step(self.result_basepath, self.logger.version, tags[0], tags[1], tags[2], channel_pred=y_pred_ensemble, single_pred=y_pred_single, labels=y_temp)
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=y_pred_ensemble, single_pred=y_pred_single, labels=y_temp)
 
 
