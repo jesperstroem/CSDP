@@ -150,7 +150,7 @@ class LSeqSleepNet_Dataloader_Factory(IDataloader_Factory):
 
         self.factory = LSeqSleepNet_Pipeline_Factory(
             hdf5_base_path=hdf5_base_path,
-            split_path=data_split_path,
+            split_path=self.data_split_path,
             trainsets=trainsets,
             valsets=valsets,
             testsets=testsets,
