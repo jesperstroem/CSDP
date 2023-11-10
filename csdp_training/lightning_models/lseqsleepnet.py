@@ -242,7 +242,9 @@ class LSeqSleepNet_Lightning(Base_Lightning):
                     votes[ii:ii+200] = torch.add(votes[ii:ii+200], pred)
 
         votes = torch.argmax(votes, axis=1)
-        votes = votes.cuda()
+
+        if torch.cuda.is_available():
+            votes = votes.cuda()
 
         return votes
     
