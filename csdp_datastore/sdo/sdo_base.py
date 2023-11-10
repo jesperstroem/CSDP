@@ -73,13 +73,12 @@ class SleepdataOrg(BaseDataset):
         
     @abstractmethod
     def download_name(self):
-        pass
+        return self.dataset_name()
 
     def dataset_name(self):
         return self.__class__.__name__.lower()
     
     def list_records(self, basepath):
-        print(basepath)
         assert os.path.exists(basepath), "Path does not exist"
 
         paths_dict = {}

@@ -381,13 +381,10 @@ class BaseDataset(ABC):
     
     @abstractmethod
     def download(self):
+        self.log_warning('Download function was called, but no download functionality has been implemented')
         pass
 
-    def port_data(self, download_first = False):
-
-        if download_first == True:
-            self.download()
-        
+    def port_data(self):
         paths_dict = self.list_records(basepath=self.dataset_path)
 
         self.__check_paths(paths_dict)
