@@ -81,8 +81,6 @@ To also use the implemented pytorch lightning versions of U-Sleep, see the follo
 
 If you want a pretrained model, you need to specify a checkpoint. A checkpoint for u-sleep is available in the checkpoints folder.
 
-Note: To use these you need lightning installed, and the model package from https://gitlab.au.dk/tech_ear-eeg/ml_architectures
-
 ```python
 
 from csdp_training.lightning_models.factories.lightning_model_factory import USleep_Factory
