@@ -143,13 +143,13 @@ class LSeqSleepNet_Lightning(Base_Lightning):
        
         y_pred = self(x_temp)
         y_pred = torch.reshape(y_pred, (-1, 5))
-        loss = self.loss(y_pred, y_temp, ignore_index=5)   
+        loss = self.loss(y_pred, y_temp.long())   
 
         self.training_step_outputs.append(loss)
 
         return loss
        
-    def predict_single_channel(self, x_eegs, x_eogs, y_temp):
+    def predict_single_channel(self, x_eegs, x_eogs, y_temp: torch.Tensor):
         # Assumes x_eegs, x_eogs to be: (Channels, Epochs, 29, 129)
         # Assumes y_temp to be 1D --> (Number of epochs)
 
@@ -167,7 +167,8 @@ class LSeqSleepNet_Lightning(Base_Lightning):
   
         y_pred = self(x_temp.float())
         y_pred = torch.reshape(y_pred, (-1, 5))
-        loss = self.loss(y_pred, y_temp, ignore_index=5) 
+
+        loss = self.loss(y_pred, y_temp.long()) 
         
         y_pred = torch.argmax(y_pred, dim=1)
         

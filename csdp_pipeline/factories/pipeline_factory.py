@@ -85,9 +85,9 @@ class LSeqSleepNet_Pipeline_Factory(IPipeline_Factory):
             Sampler(
                 self.hdf5_base_path,
                 self.trainsets,
-                self.split_path,
                 split_type="train",
                 num_epochs=self.num_epochs,
+                split_file_path=self.split_path,
                 subject_percentage=1.0,
             ),
             Resampler(source_sample=128, target_sample=100),
@@ -99,9 +99,10 @@ class LSeqSleepNet_Pipeline_Factory(IPipeline_Factory):
             Determ_sampler(
                 self.hdf5_base_path,
                 datasets,
-                self.split_path,
                 split_type=split_type,
                 num_epochs=self.num_epochs,
+                split_file=self.split_path,
+                get_all_channels= True if split_type == "test" else False,
             ),
             Resampler(source_sample=128, target_sample=100),
             Spectrogram(),
