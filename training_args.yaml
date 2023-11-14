@@ -53,6 +53,8 @@ test_sets:
 test_after_train: True
 test_only: False
 
+use_augmentation: True
+
 gradient_steps: 443
 batch_size: 64
 num_workers: 8

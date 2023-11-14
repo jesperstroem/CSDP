@@ -21,25 +21,50 @@ class IPipeline_Factory(ABC):
 
 
 class USleep_Pipeline_Factory(IPipeline_Factory):
-    def __init__(self, hdf5_base_path, split_path, trainsets, valsets, testsets, sub_percentage=1.0):
+    def __init__(self,
+                 hdf5_base_path, 
+                 split_path, 
+                 trainsets, 
+                 valsets, 
+                 testsets, 
+                 sub_percentage=1.0,
+                 use_augmentation=False):
         self.split_path = split_path
         self.hdf5_base_path = hdf5_base_path
         self.trainsets = trainsets
         self.valsets = valsets
         self.testsets = testsets
         self.sub_percentage = sub_percentage
+        self.use_augmentation = use_augmentation
 
     def create_training_pipeline(self):
-        train_pipes = [
-            Sampler(
-                self.hdf5_base_path,
-                self.trainsets,
-                split_type="train",
-                num_epochs=35,
-                split_file_path=self.split_path,
-                subject_percentage=self.sub_percentage,
-            )
-        ]
+        if self.use_augmentation == True:
+            train_pipes = [
+                Sampler(
+                    self.hdf5_base_path,
+                    self.trainsets,
+                    split_type="train",
+                    num_epochs=35,
+                    split_file_path=self.split_path,
+                    subject_percentage=self.sub_percentage,
+                ),
+                Augmenter(0.001,
+                          0.3,
+                          0.1,
+                          1.0,
+                          0.0)
+            ]
+        else:
+            train_pipes = [
+                Sampler(
+                    self.hdf5_base_path,
+                    self.trainsets,
+                    split_type="train",
+                    num_epochs=35,
+                    split_file_path=self.split_path,
+                    subject_percentage=self.sub_percentage,
+                )
+            ]
         return train_pipes
 
     def create_validation_pipeline(self):

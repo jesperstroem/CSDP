@@ -152,10 +152,12 @@ class Augmenter(IPipe):
         x = torch.cat((x_eeg, x_eog), dim=0)
         
         if random.random() < self.apply_prob:
-            self.global_gaussian_noise.augment(x)
-        else:
-            self.regional_gaussian_noise.augment(x)
+            if random.random() < self.apply_prob:
+                self.global_gaussian_noise.augment(x)
+            else:
+                self.regional_gaussian_noise.augment(x)
         
         eeg = torch.unsqueeze(x[0], 0)
         eog = torch.unsqueeze(x[1], 0)
+        
         return (eeg, eog, y, tags)

@@ -26,6 +26,8 @@ test_sets = data["test_sets"]
 pretrained = data["pretrained"]
 pretrained_path = data["pretrained_path"]
 
+use_augmentation = data["use_augmentation"]
+
 train_percentage = data["train_percentage"]
 
 test_after_train = data["test_after_train"]
