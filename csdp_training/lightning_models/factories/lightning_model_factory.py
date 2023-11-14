@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import pytorch_lightning as pl
 from ml_architectures.lseqsleepnet.lseqsleepnet import LSeqSleepNet
 from ml_architectures.lseqsleepnet.long_sequence_model import LongSequenceModel
-from ml_architectures.lseqsleepnet.epoch_encoder import MultipleEpochEncoder
 from ml_architectures.lseqsleepnet.classifier import Classifier
 from ml_architectures.usleep.usleep import USleep
 import pytorch_lightning as pl

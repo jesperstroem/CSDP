@@ -63,7 +63,8 @@ def main():
                                         valsets=val_sets,
                                         testsets=test_sets,
                                         data_split_path=hdf5_split_path,
-                                        sub_percentage=train_percentage)
+                                        sub_percentage=train_percentage,
+                                        use_augmentation=use_augmentation)
         
         mfac = USleep_Factory(lr = lr,
                               batch_size = batch_size,

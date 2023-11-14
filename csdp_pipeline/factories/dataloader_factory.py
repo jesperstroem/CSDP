@@ -58,6 +58,7 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
 
         self.gradient_steps = gradient_steps
         self.batch_size = batch_size
+        self.use_augmentation = use_augmentation
 
         self.fac = USleep_Pipeline_Factory(
             hdf5_base_path, self.data_split_path, trainsets, valsets, testsets, sub_percentage = sub_percentage, use_augmentation=use_augmentation
@@ -75,6 +76,8 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
 
         pipes = self.fac.create_training_pipeline()
         dataset = PipelineDataset(pipes, self.gradient_steps * self.batch_size)
+        print(self.use_augmentation)
+        print(pipes)
         trainloader = DataLoader(
             dataset,
             batch_size=self.batch_size,
