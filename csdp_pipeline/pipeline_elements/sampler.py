@@ -29,6 +29,8 @@ class Sampler(IPipe):
         self.split_file = split_file_path
         self.subject_percentage = subject_percentage
         self.subjects, self.num_records = self.__list_files()
+        print(f"Number of {split_type} subjects: {len(self.subjects)} records: {self.num_records} - subject percentage: {subject_percentage}")
+
         self.probs = self.calc_probs()
         self.epoch_length = num_epochs
 

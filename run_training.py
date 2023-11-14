@@ -26,7 +26,10 @@ test_sets = data["test_sets"]
 pretrained = data["pretrained"]
 pretrained_path = data["pretrained_path"]
 
-test = True
+train_percentage = data["train_percentage"]
+
+test_after_train = data["test_after_train"]
+test_only = data["test_only"]
 
 gradient_steps = data["gradient_steps"]
 batch_size = data["batch_size"]
@@ -57,7 +60,8 @@ def main():
                                         trainsets=train_sets,
                                         valsets=val_sets,
                                         testsets=test_sets,
-                                        data_split_path=hdf5_split_path)
+                                        data_split_path=hdf5_split_path,
+                                        sub_percentage=train_percentage)
         
         mfac = USleep_Factory(lr = lr,
                               batch_size = batch_size,
@@ -107,6 +111,7 @@ def main():
             existing_run_id = neptune_info["existing_run_id"]
             source_files = [f"{file_path}/training_args.yaml", f"{file_path}/run_training.py"]
             mode = "sync"
+            print(existing_run_id)
 
             if existing_run_id != None:
                 existing_run = neptune.init_run(project=neptune_project,
@@ -114,7 +119,7 @@ def main():
                                                 with_id=existing_run_id,
                                                 name=neptune_name,
                                                 source_files=source_files,
-                                                mode=mode,)
+                                                mode=mode)
                 
                 logger = NeptuneLogger(
                     run=existing_run
@@ -140,17 +145,25 @@ def main():
                          devices=1,
                          num_nodes=1)
     
-    if test == True:
+    if test_only == True:
         with torch.no_grad():
             net.eval()
 
-            test_loader = fac.create_testing_loader(num_workers=1)
+            test_loader = fac.create_testing_loader(num_workers=7)
             _ = trainer.test(net, test_loader)
     else:
         train_loader = fac.create_training_loader(num_workers=num_workers)
         val_loader = fac.create_validation_loader(num_workers=num_workers)
 
         trainer.fit(net, train_loader, val_loader)
+
+        if test_after_train == True:
+            with torch.no_grad():
+                net.eval()
+
+                test_loader = fac.create_testing_loader(num_workers=7)
+                
+                _ = trainer.test(net, test_loader, ckpt_path="best")
 
     os.chdir(org)
 

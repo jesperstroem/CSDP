@@ -21,12 +21,13 @@ class IPipeline_Factory(ABC):
 
 
 class USleep_Pipeline_Factory(IPipeline_Factory):
-    def __init__(self, hdf5_base_path, split_path, trainsets, valsets, testsets):
+    def __init__(self, hdf5_base_path, split_path, trainsets, valsets, testsets, sub_percentage=1.0):
         self.split_path = split_path
         self.hdf5_base_path = hdf5_base_path
         self.trainsets = trainsets
         self.valsets = valsets
         self.testsets = testsets
+        self.sub_percentage = sub_percentage
 
     def create_training_pipeline(self):
         train_pipes = [
@@ -36,7 +37,7 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                 split_type="train",
                 num_epochs=35,
                 split_file_path=self.split_path,
-                subject_percentage=1.0,
+                subject_percentage=self.sub_percentage,
             )
         ]
         return train_pipes
@@ -49,6 +50,7 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                 split_type="val",
                 num_epochs=35,
                 split_file=self.split_path,
+                subject_percentage=self.sub_percentage
             )
         ]
 

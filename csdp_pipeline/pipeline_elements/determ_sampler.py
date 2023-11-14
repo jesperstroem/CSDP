@@ -31,6 +31,7 @@ class Determ_sampler(IPipe):
         self.split_file = split_file
         self.subject_percentage = subject_percentage
         self.records = self.list_records()
+        print(f"Number of {split_type} records: {len(self.records)}")
         self.epoch_length = num_epochs
         self.get_all_channels = get_all_channels
 

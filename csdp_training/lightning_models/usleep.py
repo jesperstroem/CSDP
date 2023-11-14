@@ -105,7 +105,7 @@ class USleep_Lightning(Base_Lightning):
         
         return votes
 
-    def training_step(self, batch, _):
+    def training_step(self, batch, idx):
         x_eeg, x_eog, ybatch, _ = batch
 
         xbatch = torch.cat((x_eeg, x_eog), dim=1)
@@ -119,7 +119,6 @@ class USleep_Lightning(Base_Lightning):
         self.training_step_outputs.append(step_loss)
 
         return step_loss
-
 
     def validation_step(self, batch, _):
         # Step per record
@@ -141,13 +140,16 @@ class USleep_Lightning(Base_Lightning):
     def test_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, tags = batch
+
+        print(x_eeg.shape)
+        print(x_eog.shape)
         
         if any(dim == 0 for dim in x_eog.shape):
             print("Found no EOG channel, duplicating EEG instead")
             x_eog = x_eeg
 
         ybatch = torch.flatten(ybatch)
-        #single_pred = self.single_prediction(x_eeg, x_eog)
+        single_pred = self.single_prediction(x_eeg, x_eog)
         channels_pred = self.channels_prediction(x_eeg, x_eog)
         
         tag = tags[0]
@@ -157,4 +159,4 @@ class USleep_Lightning(Base_Lightning):
         print(tag)
         print(kap)
         
-        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, labels=ybatch)
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], single_pred=single_pred, channel_pred=channels_pred, labels=ybatch)
