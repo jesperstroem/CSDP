@@ -14,13 +14,13 @@ import lightning.pytorch as pl
 class Base_Lightning(pl.LightningModule):
     def __init__(
         self,
-        usleep,
+        model,
         lr,
         batch_size
     ):
         super().__init__()
 
-        self.usleep = usleep
+        self.model = model
         self.lr = lr
         self.batch_size = batch_size
         self.training_step_outputs = []
@@ -31,7 +31,7 @@ class Base_Lightning(pl.LightningModule):
         self.loss = nn.CrossEntropyLoss(ignore_index=5)
 
     def forward(self, x):
-        return self.usleep(x)
+        return self.model(x)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
@@ -48,7 +48,7 @@ class Base_Lightning(pl.LightningModule):
         
         self.log('trainLoss', mean_loss, batch_size=self.batch_size, rank_zero_only=True)    
         
-        self.trainer.save_checkpoint(f"{self.logger.save_dir}/usleep/{self.logger.version}/checkpoints/latest.ckpt")
+        self.trainer.save_checkpoint(f"{self.logger.save_dir}/{self.model}/{self.logger.version}/checkpoints/latest.ckpt")
 
         self.training_step_outputs.clear()
     

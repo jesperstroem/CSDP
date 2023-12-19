@@ -34,13 +34,7 @@ class USleep_Factory(IModel_Factory):
         self.progression_factor = progression_factor
 
     def create_new_net(self) -> pl.LightningModule:
-        inner = USleep(num_channels=2,
-                       initial_filters=self.initial_filters,
-                       complexity_factor=self.complexity_factor,
-                       progression_factor=self.progression_factor)
-
-        net = USleep_Lightning(inner,
-                               self.lr,
+        net = USleep_Lightning(self.lr,
                                self.batch_size,
                                self.initial_filters,
                                self.complexity_factor,
@@ -49,19 +43,9 @@ class USleep_Factory(IModel_Factory):
         return net
 
     def create_pretrained_net(self, pretrained_path) -> pl.LightningModule:
-        inner = USleep(num_channels=2,
-                       initial_filters=self.initial_filters,
-                       complexity_factor=self.complexity_factor,
-                       progression_factor=self.progression_factor)
-        
-        
         net =  USleep_Lightning.load_from_checkpoint(pretrained_path,
-                                                     usleep=inner,
                                                      lr=self.lr,
                                                      batch_size = self.batch_size,
-                                                     initial_filters = self.initial_filters,
-                                                     complexity_factor = self.complexity_factor,
-                                                     progression_factor = self.progression_factor,
                                                      map_location=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
         return net
 
