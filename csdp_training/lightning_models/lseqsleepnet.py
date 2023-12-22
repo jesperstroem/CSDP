@@ -9,7 +9,7 @@ import torch
 import torch.nn as nn
 from csdp_training.utility import acc, kappa, f1, log_test_step
 import math
-import lightning.pytorch as pl
+import pytorch_lightning as pl
 
 class Base_Lightning(pl.LightningModule):
     def __init__(

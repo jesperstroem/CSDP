@@ -17,9 +17,9 @@ class USleep_Lightning(Base_Lightning):
     ):
         
         inner = USleep(num_channels=2,
-                       initial_filters=self.initial_filters,
-                       complexity_factor=self.complexity_factor,
-                       progression_factor=self.progression_factor)
+                       initial_filters=initial_filters,
+                       complexity_factor=complexity_factor,
+                       progression_factor=progression_factor)
         
         super().__init__(inner, lr, batch_size)
 
@@ -27,7 +27,7 @@ class USleep_Lightning(Base_Lightning):
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
                 
-        self.save_hyperparameters(ignore=['usleep'])
+        self.save_hyperparameters(ignore=['model'])
     
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
@@ -153,14 +153,15 @@ class USleep_Lightning(Base_Lightning):
             x_eog = x_eeg
 
         ybatch = torch.flatten(ybatch)
-        #single_pred = self.single_prediction(x_eeg, x_eog)
+        single_pred = self.single_prediction(x_eeg, x_eog)
         channels_pred = self.channels_prediction(x_eeg, x_eog)
         
         tag = tags[0]
         tags = tag.split("/")
 
         kap = kappa(channels_pred, ybatch, 5)
+
         print(tag)
         print(kap)
         
-        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, labels=ybatch)
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)
