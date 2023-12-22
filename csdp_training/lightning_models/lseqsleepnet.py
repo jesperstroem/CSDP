@@ -48,7 +48,7 @@ class Base_Lightning(pl.LightningModule):
         
         self.log('trainLoss', mean_loss, batch_size=self.batch_size, rank_zero_only=True)    
         
-        self.trainer.save_checkpoint(f"{self.logger.save_dir}/{self.model}/{self.logger.version}/checkpoints/latest.ckpt")
+        self.trainer.save_checkpoint(f"{self.logger.save_dir}/{self.model.__class__.__name__}/{self.logger.version}/checkpoints/latest.ckpt")
 
         self.training_step_outputs.clear()
     
