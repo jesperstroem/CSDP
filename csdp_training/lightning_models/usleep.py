@@ -2,7 +2,7 @@
 # and https://github.com/neergaard/utime-pytorch
 
 import torch
-from csdp_training.lightning_models.lseqsleepnet import Base_Lightning
+from csdp_training.lightning_models.base import Base_Lightning
 from csdp_training.utility import kappa, acc, f1, log_test_step
 from ml_architectures.usleep.usleep import USleep
 
@@ -13,7 +13,10 @@ class USleep_Lightning(Base_Lightning):
         batch_size,
         initial_filters,
         complexity_factor,
-        progression_factor
+        progression_factor,
+        lr_patience,
+        lr_factor,
+        lr_minimum
     ):
         
         inner = USleep(num_channels=2,
@@ -21,7 +24,12 @@ class USleep_Lightning(Base_Lightning):
                        complexity_factor=complexity_factor,
                        progression_factor=progression_factor)
         
-        super().__init__(inner, lr, batch_size)
+        super().__init__(inner,
+                         lr, 
+                         batch_size,
+                         lr_patience,
+                         lr_factor,
+                         lr_minimum)
 
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor

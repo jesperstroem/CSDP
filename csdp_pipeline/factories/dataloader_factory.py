@@ -76,8 +76,7 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
 
         pipes = self.fac.create_training_pipeline()
         dataset = PipelineDataset(pipes, self.gradient_steps * self.batch_size)
-        print(self.use_augmentation)
-        print(pipes)
+
         trainloader = DataLoader(
             dataset,
             batch_size=self.batch_size,

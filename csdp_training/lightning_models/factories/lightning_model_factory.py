@@ -24,20 +24,30 @@ class USleep_Factory(IModel_Factory):
                  batch_size,
                  initial_filters,
                  complexity_factor,
-                 progression_factor
+                 progression_factor,
+                 lr_patience = 50,
+                 lr_factor = 0.5,
+                 lr_minimum = 1e-7
                  ):
         self.lr = lr
+        self.lr_patience = lr_patience
+        self.lr_factor = lr_factor
+        self.lr_minimum = lr_minimum
         self.batch_size = batch_size
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
+
 
     def create_new_net(self) -> pl.LightningModule:
         net = USleep_Lightning(self.lr,
                                self.batch_size,
                                self.initial_filters,
                                self.complexity_factor,
-                               self.progression_factor)
+                               self.progression_factor,
+                               self.lr_patience,
+                               self.lr_factor,
+                               self.lr_minimum)
         
         return net
 
@@ -45,6 +55,9 @@ class USleep_Factory(IModel_Factory):
         net =  USleep_Lightning.load_from_checkpoint(pretrained_path,
                                                      lr=self.lr,
                                                      batch_size = self.batch_size,
+                                                     lr_patience = self.lr_patience,
+                                                     lr_factor = self.lr_factor,
+                                                     lr_minimum = self.lr_minimum,
                                                      map_location=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
         return net
 
@@ -52,14 +65,25 @@ class USleep_Factory(IModel_Factory):
 class LSeqSleepNet_Factory(IModel_Factory):
     def __init__(self,
                  lr,
-                 batch_size):
+                 batch_size,
+                 lr_patience = 50,
+                 lr_factor = 0.5,
+                 lr_minimum = 1e-7):
         self.lr = lr
         self.batch_size = batch_size
+        self.lr_patience = lr_patience
+        self.lr_factor = lr_factor
+        self.lr_minimum = lr_minimum
 
     def create_new_net(self) -> pl.LightningModule:
         inner = self.__create_inner()
 
-        lightning = LSeqSleepNet_Lightning(inner, self.lr, self.batch_size)
+        lightning = LSeqSleepNet_Lightning(inner, 
+                                           self.lr, 
+                                           self.batch_size,
+                                           self.lr_patience,
+                                           self.lr_factor,
+                                           self.lr_minimum)
 
         return lightning
 
@@ -68,8 +92,11 @@ class LSeqSleepNet_Factory(IModel_Factory):
 
         lightning = LSeqSleepNet_Lightning.load_from_checkpoint(pretrained_path,
                                                                 inner,
-                                                                self.lr,
-                                                                self.batch_size,
+                                                                lr=self.lr,
+                                                                batch_size = self.batch_size,
+                                                                lr_patience = self.lr_patience,
+                                                                lr_factor = self.lr_factor,
+                                                                lr_minimum = self.lr_minimum,
                                                                 map_location=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
         
         return lightning
