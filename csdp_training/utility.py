@@ -24,7 +24,7 @@ def log_test_step(base, run_id, dataset, subject, record, **kwargs):
         
         print(f"kwargs: {kwargs}")
 
-        path = f"{base}/{run_id}"
+        path = f"{base}/{run_id}/{dataset}"
 
         if not os.path.exists(path):
             os.makedirs(path)

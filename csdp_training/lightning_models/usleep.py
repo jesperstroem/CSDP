@@ -4,24 +4,30 @@
 import torch
 from csdp_training.lightning_models.lseqsleepnet import Base_Lightning
 from csdp_training.utility import kappa, acc, f1, log_test_step
+from ml_architectures.usleep.usleep import USleep
 
 class USleep_Lightning(Base_Lightning):
     def __init__(
         self,
-        usleep,
         lr,
         batch_size,
         initial_filters,
         complexity_factor,
         progression_factor
     ):
-        super().__init__(usleep, lr, batch_size)
+        
+        inner = USleep(num_channels=2,
+                       initial_filters=initial_filters,
+                       complexity_factor=complexity_factor,
+                       progression_factor=progression_factor)
+        
+        super().__init__(inner, lr, batch_size)
 
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
                 
-        self.save_hyperparameters(ignore=['usleep'])
+        self.save_hyperparameters(ignore=['model'])
     
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
@@ -156,7 +162,8 @@ class USleep_Lightning(Base_Lightning):
         tags = tag.split("/")
 
         kap = kappa(channels_pred, ybatch, 5)
+
         print(tag)
         print(kap)
         
-        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], single_pred=single_pred, channel_pred=channels_pred, labels=ybatch)
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)

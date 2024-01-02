@@ -14,13 +14,13 @@ import pytorch_lightning as pl
 class Base_Lightning(pl.LightningModule):
     def __init__(
         self,
-        usleep,
+        model,
         lr,
         batch_size
     ):
         super().__init__()
 
-        self.usleep = usleep
+        self.model = model
         self.lr = lr
         self.batch_size = batch_size
         self.training_step_outputs = []
@@ -31,7 +31,7 @@ class Base_Lightning(pl.LightningModule):
         self.loss = nn.CrossEntropyLoss(ignore_index=5)
 
     def forward(self, x):
-        return self.usleep(x)
+        return self.model(x)
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
@@ -48,7 +48,7 @@ class Base_Lightning(pl.LightningModule):
         
         self.log('trainLoss', mean_loss, batch_size=self.batch_size, rank_zero_only=True)    
         
-        self.trainer.save_checkpoint(f"{self.logger.save_dir}/usleep/{self.logger.version}/checkpoints/latest.ckpt")
+        self.trainer.save_checkpoint(f"{self.logger.save_dir}/{self.logger.name}/{self.logger.version}/checkpoints/latest.ckpt")
 
         self.training_step_outputs.clear()
     
@@ -143,13 +143,13 @@ class LSeqSleepNet_Lightning(Base_Lightning):
        
         y_pred = self(x_temp)
         y_pred = torch.reshape(y_pred, (-1, 5))
-        loss = self.loss(y_pred, y_temp, ignore_index=5)   
+        loss = self.loss(y_pred, y_temp.long())   
 
         self.training_step_outputs.append(loss)
 
         return loss
        
-    def predict_single_channel(self, x_eegs, x_eogs, y_temp):
+    def predict_single_channel(self, x_eegs, x_eogs, y_temp: torch.Tensor):
         # Assumes x_eegs, x_eogs to be: (Channels, Epochs, 29, 129)
         # Assumes y_temp to be 1D --> (Number of epochs)
 
@@ -167,7 +167,8 @@ class LSeqSleepNet_Lightning(Base_Lightning):
   
         y_pred = self(x_temp.float())
         y_pred = torch.reshape(y_pred, (-1, 5))
-        loss = self.loss(y_pred, y_temp, ignore_index=5) 
+
+        loss = self.loss(y_pred, y_temp.long()) 
         
         y_pred = torch.argmax(y_pred, dim=1)
         
@@ -241,7 +242,9 @@ class LSeqSleepNet_Lightning(Base_Lightning):
                     votes[ii:ii+200] = torch.add(votes[ii:ii+200], pred)
 
         votes = torch.argmax(votes, axis=1)
-        votes = votes.cuda()
+
+        if torch.cuda.is_available():
+            votes = votes.cuda()
 
         return votes
     
@@ -264,6 +267,6 @@ class LSeqSleepNet_Lightning(Base_Lightning):
         tag = tags[0]
         tags = tag.split("/")
 
-        log_test_step(self.result_basepath, self.logger.version, tags[0], tags[1], tags[2], channel_pred=y_pred_ensemble, single_pred=y_pred_single, labels=y_temp)
+        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=y_pred_ensemble, single_pred=y_pred_single, labels=y_temp)
 
 
