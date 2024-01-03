@@ -14,12 +14,6 @@ Run the following command to install:
 pip install git+https://github.com/jesperstroem/CSDP.git
 ```
 
-If you also want to use the lightning modules from the csdp_training module, then you want to install Pytorch Lightning as well:
-
-```console
-pip install lightning
-```
-
 ## Downloading and preprocessing
 
 Before you can use the dataloaders and lightning modules, you need to download and preprocess the raw data. So far, automatic download is only implemented for the datasets from https://sleepdata.org/. Note that to download the data from https://sleepdata.org/, you need a personal download token from their website, and you need the NSRR ruby gem installed: https://github.com/nsrr/nsrr-gem.
