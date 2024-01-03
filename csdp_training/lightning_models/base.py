@@ -63,8 +63,6 @@ class Base_Lightning(pl.LightningModule):
         mean_loss = torch.mean(torch.stack(all_outputs, dim=0))
         
         self.log('trainLoss', mean_loss, batch_size=self.batch_size, rank_zero_only=True)    
-        
-        self.trainer.save_checkpoint(f"{self.logger.save_dir}/{self.logger.name}/{self.logger.version}/checkpoints/latest.ckpt")
 
         self.training_step_outputs.clear()
     
