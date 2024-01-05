@@ -16,9 +16,10 @@ class IDataloader_Factory(ABC):
         else:
             self.data_split_path = data_split_path
 
-        data = json.load(self.data_split_path)
 
-        self.split_data = data
+        with open(self.data_split_path, "r") as f:
+            data = json.load(f)
+            self.split_data = data
 
     @abstractmethod
     def create_training_loader(self, num_workers):
