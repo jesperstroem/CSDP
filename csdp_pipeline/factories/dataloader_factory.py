@@ -6,7 +6,7 @@ from csdp_pipeline.factories.pipeline_factory import (
     LSeqSleepNet_Pipeline_Factory,
 )
 from csdp_training.utility import create_split_file
-
+import json
 
 class IDataloader_Factory(ABC):
     def __init__(self, data_split_path, hdf5_base_path, create_random_split):
@@ -15,6 +15,10 @@ class IDataloader_Factory(ABC):
             self.data_split_path = create_split_file(hdf5_basepath=hdf5_base_path)
         else:
             self.data_split_path = data_split_path
+
+        data = json.load(self.data_split_path)
+
+        self.split_data = data
 
     @abstractmethod
     def create_training_loader(self, num_workers):
