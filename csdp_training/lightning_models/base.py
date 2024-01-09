@@ -34,6 +34,8 @@ class Base_Lightning(pl.LightningModule):
         self.validation_step_f1 = []
         self.loss = nn.CrossEntropyLoss(ignore_index=5)
 
+        self.save_hyperparameters(ignore=['model'])
+
     def forward(self, x):
         return self.model(x)
 
@@ -83,9 +85,6 @@ class Base_Lightning(pl.LightningModule):
         mean_f1c4 = torch.mean(torch.stack(all_f1, dim=1)[4])
         
         batch_size=1
-
-        print(mean_acc)
-        print(mean_kap)
         
         self.log('valLoss', mean_loss, batch_size=batch_size, rank_zero_only=True)
         self.log('valAcc', mean_acc, batch_size=batch_size, rank_zero_only=True)

@@ -27,7 +27,8 @@ class USleep_Factory(IModel_Factory):
                  progression_factor,
                  lr_patience = 50,
                  lr_factor = 0.5,
-                 lr_minimum = 1e-7
+                 lr_minimum = 1e-7,
+                 num_channels = 2,
                  ):
         self.lr = lr
         self.lr_patience = lr_patience
@@ -37,7 +38,7 @@ class USleep_Factory(IModel_Factory):
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
-
+        self.num_channels = num_channels
 
     def create_new_net(self) -> pl.LightningModule:
         net = USleep_Lightning(self.lr,
@@ -47,7 +48,8 @@ class USleep_Factory(IModel_Factory):
                                self.progression_factor,
                                self.lr_patience,
                                self.lr_factor,
-                               self.lr_minimum)
+                               self.lr_minimum,
+                               self.num_channels)
         
         return net
 

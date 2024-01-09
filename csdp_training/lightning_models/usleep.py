@@ -16,10 +16,12 @@ class USleep_Lightning(Base_Lightning):
         progression_factor,
         lr_patience,
         lr_factor,
-        lr_minimum
+        lr_minimum,
+        num_channels
     ):
-        
-        inner = USleep(num_channels=2,
+        assert num_channels == 1 or num_channels == 2
+
+        inner = USleep(num_channels=num_channels,
                        initial_filters=initial_filters,
                        complexity_factor=complexity_factor,
                        progression_factor=progression_factor)
@@ -34,9 +36,15 @@ class USleep_Lightning(Base_Lightning):
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
-                
-        self.save_hyperparameters(ignore=['model'])
+        self.num_channels = num_channels
     
+    def forward(self, x):
+        if self.num_channels == 1:
+            x = x[:,0,:]
+            x = torch.unsqueeze(x, dim=1)
+
+        return self.model(x)
+
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
         y_pred = torch.reshape(y_pred, (-1, 5))
@@ -154,9 +162,6 @@ class USleep_Lightning(Base_Lightning):
     def test_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, tags = batch
-
-        print(x_eeg.shape)
-        print(x_eog.shape)
         
         if any(dim == 0 for dim in x_eog.shape):
             print("Found no EOG channel, duplicating EEG instead")
@@ -169,9 +174,4 @@ class USleep_Lightning(Base_Lightning):
         tag = tags[0]
         tags = tag.split("/")
 
-        kap = kappa(channels_pred, ybatch, 5)
-
-        print(tag)
-        print(kap)
-        
         log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)
