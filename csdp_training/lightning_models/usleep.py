@@ -17,9 +17,10 @@ class USleep_Lightning(Base_Lightning):
         lr_patience,
         lr_factor,
         lr_minimum,
-        num_channels
+        loss_weights,
+        include_eog = True,
     ):
-        assert num_channels == 1 or num_channels == 2
+        num_channels = 2 if include_eog == True else 1
 
         inner = USleep(num_channels=num_channels,
                        initial_filters=initial_filters,
@@ -31,56 +32,45 @@ class USleep_Lightning(Base_Lightning):
                          batch_size,
                          lr_patience,
                          lr_factor,
-                         lr_minimum)
+                         lr_minimum,
+                         loss_weights)
 
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
+        self.include_eog = include_eog
         self.num_channels = num_channels
-    
-    def forward(self, x):
-        if self.num_channels == 1:
-            x = x[:,0,:]
-            x = torch.unsqueeze(x, dim=1)
 
-        return self.model(x)
+    def channels_prediction_EEGONLY(self, x_eegs):
+        eegshape = x_eegs.shape
+        
+        num_eegs = eegshape[1]
+        
+        signal_len = eegshape[2]
+        num_epochs = int(signal_len / 128 / 30)
+        
+        votes = torch.zeros(num_epochs, 5) # fordi vi summerer løbende
+        
+        for i in range(num_eegs):
+            x_eeg = x_eegs[:,i,...]
 
-    def compute_train_metrics(self, y_pred, y_true):
-        y_pred = torch.swapdims(y_pred, 1, 2)
-        y_pred = torch.reshape(y_pred, (-1, 5))
-        y_true = torch.flatten(y_true)
-
-        loss = self.loss(y_pred, y_true)
-
-        y_pred = torch.argmax(y_pred, dim=1)
-        
-        accu = acc(y_pred, y_true)
-        kap = kappa(y_pred, y_true, 5)
-        f1_score = f1(y_pred, y_true, average=False)
-        
-        return loss, accu, kap, f1_score
-    
-    
-    def compute_test_metrics(self, y_pred, y_true):
-        y_true = torch.flatten(y_true)
-        
-        accu = acc(y_pred, y_true)
-        kap = kappa(y_pred, y_true, 5)
-        f1_score = f1(y_pred, y_true, average=False)
-        
-        return accu, kap, f1_score
-    
+            x_eeg = torch.unsqueeze(x_eeg, 1)
             
-    def single_prediction(self, x_eeg, x_eog):
-        chan1 = x_eeg[:,0,...]
-        chan2 = x_eog[:,0,...]
-        
-        xbatch = torch.stack([chan1, chan2], dim=1)
+            pred = self(x_eeg)
+            pred = torch.nn.functional.softmax(pred, dim=1)
+            pred = torch.squeeze(pred)
+            pred = pred.swapaxes(0,1)
+            pred = pred.cpu()
+            
+            votes = torch.add(votes, pred)
 
-        single_pred = self(xbatch.float())
+        votes = torch.argmax(votes, axis=1)
+
+        device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+        votes = votes.to(device)
         
-        return single_pred
-    
+        return votes
     
     def channels_prediction(self, x_eegs, x_eogs):
         eegshape = x_eegs.shape
@@ -102,16 +92,12 @@ class USleep_Lightning(Base_Lightning):
                 x_eeg = x_eegs[:,i,...]
                 x_eog = x_eogs[:,p,...]
 
-                assert x_eeg.shape == x_eog.shape
+                x_eeg = torch.unsqueeze(x_eeg, 1)
+                x_eog = torch.unsqueeze(x_eog, 1)
                 
-                x_temp = torch.stack([x_eeg, x_eog], dim=0)
-                x_temp = torch.squeeze(x_temp)
-                x_temp = torch.unsqueeze(x_temp, 0)
-
-                assert x_temp.shape[1] == 2
-                assert x_temp.shape[0 ]
+                x_temp = torch.cat([x_eeg, x_eog], dim=1)
                 
-                pred = self(x_temp.float())
+                pred = self(x_temp)
                 pred = torch.nn.functional.softmax(pred, dim=1)
                 pred = torch.squeeze(pred)
                 pred = pred.swapaxes(0,1)
@@ -127,14 +113,20 @@ class USleep_Lightning(Base_Lightning):
         
         return votes
 
-    def training_step(self, batch, idx):
+    def training_step(self, batch, _):
         x_eeg, x_eog, ybatch, _ = batch
 
-        xbatch = torch.cat((x_eeg, x_eog), dim=1)
+        assert len(x_eeg.shape) == 3
+        assert x_eeg.shape[1] == 1
 
-        xbatch = xbatch.float()
+        if self.include_eog == True:
+            assert len(x_eog.shape) == 3
+            assert x_eog.shape[1] == 1
+            xbatch = torch.cat((x_eeg, x_eog), dim=1)
+        else:
+            xbatch = x_eeg
 
-        pred = self.forward(xbatch)
+        pred = self(xbatch)
 
         step_loss, _, _, _ = self.compute_train_metrics(pred, ybatch)
 
@@ -145,12 +137,18 @@ class USleep_Lightning(Base_Lightning):
     def validation_step(self, batch, _):
         # Step per record
         x_eeg, x_eog, ybatch, _ = batch
-        
-        if any(dim == 0 for dim in x_eog.shape):
-            print("Found no EOG channel, duplicating EEG instead")
-            x_eog = x_eeg
-        
-        pred = self.single_prediction(x_eeg, x_eog)
+
+        assert len(x_eeg.shape) == 3
+        assert x_eeg.shape[1] == 1
+
+        if self.include_eog == True:
+            assert len(x_eog.shape) == 3
+            assert x_eog.shape[1] == 1
+            xbatch = torch.cat((x_eeg, x_eog), dim=1)
+        else:
+            xbatch = x_eeg
+
+        pred = self(xbatch)
         
         step_loss, step_acc, step_kap, step_f1 = self.compute_train_metrics(pred, ybatch)
 
@@ -161,17 +159,21 @@ class USleep_Lightning(Base_Lightning):
                 
     def test_step(self, batch, _):
         # Step per record
-        x_eeg, x_eog, ybatch, tags = batch
-        
-        if any(dim == 0 for dim in x_eog.shape):
-            print("Found no EOG channel, duplicating EEG instead")
-            x_eog = x_eeg
+        x_eeg, x_eog, ybatch, meta = batch
 
+        assert len(x_eeg.shape) == 3
         ybatch = torch.flatten(ybatch)
-        single_pred = self.single_prediction(x_eeg, x_eog)
-        channels_pred = self.channels_prediction(x_eeg, x_eog)
         
-        tag = tags[0]
-        tags = tag.split("/")
+        if self.include_eog == True:
+            assert len(x_eog.shape) == 3
+            channels_pred = self.channels_prediction(x_eeg, x_eog)
+        else:
+            channels_pred = self.channels_prediction_EEGONLY(x_eeg)
 
-        log_test_step("results", self.logger.version, tags[0], tags[1], tags[2], channel_pred=channels_pred, single_pred=single_pred, labels=ybatch)
+        log_test_step("results",
+                      self.logger.version, 
+                      dataset=meta["dataset"][0],
+                      subject=meta["subject"][0],
+                      record=meta["record"][0], 
+                      channel_pred=channels_pred,
+                      labels=ybatch)

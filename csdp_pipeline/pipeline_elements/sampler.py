@@ -139,10 +139,17 @@ class Sampler(IPipe):
         
         x_eeg = x_eeg.unsqueeze(0)
         x_eog = x_eog.unsqueeze(0)
-        
-        # Create a tag for debugging purposes
-        tag = f"{r_dataset}/{r_subject}/{r_record}/{eeg}, {eog}/{x_start_index}-{x_start_index+(self.epoch_length*30*128)}"
 
+        tag = {
+            "dataset": r_dataset,
+            "subject": r_subject,
+            "record": r_record,
+            "eeg": eeg,
+            "eog": eog,
+            "start_idx": x_start_index,
+            "end_idx": x_start_index+(self.epoch_length*30*128)
+        }
+        
         return x_eeg, x_eog, y, tag
 
     def __pick_random_channel(self, channel_list, type):

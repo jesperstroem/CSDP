@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
 from csdp_pipeline.pipeline_elements.sampler import Sampler
-from csdp_pipeline.pipeline_elements.augmenters import Augmenter
 from csdp_pipeline.pipeline_elements.resampler import Resampler
 from csdp_pipeline.pipeline_elements.spectrogram import Spectrogram
 from csdp_pipeline.pipeline_elements.determ_sampler import Determ_sampler
-
 
 class IPipeline_Factory(ABC):
     @abstractmethod
@@ -19,7 +17,6 @@ class IPipeline_Factory(ABC):
     def create_test_pipeline(self):
         pass
 
-
 class USleep_Pipeline_Factory(IPipeline_Factory):
     def __init__(self,
                  hdf5_base_path, 
@@ -27,44 +24,25 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                  trainsets, 
                  valsets, 
                  testsets, 
-                 sub_percentage=1.0,
-                 use_augmentation=False):
+                 sub_percentage=1.0):
         self.split_path = split_path
         self.hdf5_base_path = hdf5_base_path
         self.trainsets = trainsets
         self.valsets = valsets
         self.testsets = testsets
         self.sub_percentage = sub_percentage
-        self.use_augmentation = use_augmentation
 
     def create_training_pipeline(self):
-        if self.use_augmentation == True:
-            train_pipes = [
-                Sampler(
-                    self.hdf5_base_path,
-                    self.trainsets,
-                    split_type="train",
-                    num_epochs=35,
-                    split_file_path=self.split_path,
-                    subject_percentage=self.sub_percentage,
-                ),
-                Augmenter(0.001,
-                          0.3,
-                          0.1,
-                          1.0,
-                          0.0)
-            ]
-        else:
-            train_pipes = [
-                Sampler(
-                    self.hdf5_base_path,
-                    self.trainsets,
-                    split_type="train",
-                    num_epochs=35,
-                    split_file_path=self.split_path,
-                    subject_percentage=self.sub_percentage,
-                )
-            ]
+        train_pipes = [
+            Sampler(
+                self.hdf5_base_path,
+                self.trainsets,
+                split_type="train",
+                num_epochs=35,
+                split_file_path=self.split_path,
+                subject_percentage=self.sub_percentage,
+            )
+        ]
         return train_pipes
 
     def create_validation_pipeline(self):
@@ -76,7 +54,7 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                 num_epochs=35,
                 split_file=self.split_path,
                 subject_percentage=self.sub_percentage
-            )
+            ),
         ]
 
         return val_pipes
@@ -90,7 +68,7 @@ class USleep_Pipeline_Factory(IPipeline_Factory):
                 num_epochs=35,
                 split_file=self.split_path,
                 get_all_channels=True
-            )
+            ),
         ]
 
         return test_pipes

@@ -46,7 +46,6 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
         data_split_path: str = None,
         sub_percentage = 1.0,
         create_random_split: bool = False,
-        use_augmentation: bool = False
     ):
         """_summary_
         Args:
@@ -63,10 +62,9 @@ class USleep_Dataloader_Factory(IDataloader_Factory):
 
         self.gradient_steps = gradient_steps
         self.batch_size = batch_size
-        self.use_augmentation = use_augmentation
 
         self.fac = USleep_Pipeline_Factory(
-            hdf5_base_path, self.data_split_path, trainsets, valsets, testsets, sub_percentage = sub_percentage, use_augmentation=use_augmentation
+            hdf5_base_path, self.data_split_path, trainsets, valsets, testsets, sub_percentage = sub_percentage
         )
 
     def create_training_loader(self, num_workers=1) -> DataLoader:

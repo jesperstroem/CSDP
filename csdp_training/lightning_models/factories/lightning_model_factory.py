@@ -28,7 +28,8 @@ class USleep_Factory(IModel_Factory):
                  lr_patience = 50,
                  lr_factor = 0.5,
                  lr_minimum = 1e-7,
-                 num_channels = 2,
+                 include_eog = True,
+                 loss_weights = None,
                  ):
         self.lr = lr
         self.lr_patience = lr_patience
@@ -38,7 +39,8 @@ class USleep_Factory(IModel_Factory):
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
         self.progression_factor = progression_factor
-        self.num_channels = num_channels
+        self.include_eog = include_eog
+        self.loss_weights = loss_weights
 
     def create_new_net(self) -> pl.LightningModule:
         net = USleep_Lightning(self.lr,
@@ -49,7 +51,8 @@ class USleep_Factory(IModel_Factory):
                                self.lr_patience,
                                self.lr_factor,
                                self.lr_minimum,
-                               self.num_channels)
+                               self.loss_weights,
+                               self.include_eog)
         
         return net
 
@@ -60,6 +63,7 @@ class USleep_Factory(IModel_Factory):
                                                      lr_patience = self.lr_patience,
                                                      lr_factor = self.lr_factor,
                                                      lr_minimum = self.lr_minimum,
+                                                     loss_weights = self.loss_weights,
                                                      map_location=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
         return net
 

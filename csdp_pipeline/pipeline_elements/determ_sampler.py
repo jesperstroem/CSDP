@@ -36,9 +36,13 @@ class Determ_sampler(IPipe):
         self.get_all_channels = get_all_channels
 
     def process(self, index):
-        sample = self.__get_sample(index)
+        x_eeg, x_eog, label, tag = self.__get_sample(index)
 
-        return sample
+        if any(dim == 0 for dim in x_eog.shape):
+            print("Found no EOG channel, duplicating EEG instead")
+            x_eog = x_eeg
+
+        return x_eeg, x_eog, label, tag
 
     def list_records(self):
         list_of_records = []
@@ -91,8 +95,15 @@ class Determ_sampler(IPipe):
             psg_channels = list(hdf5[subject][rec]["psg"].keys())
 
             eeg_data, eog_data, eeg_tag, eog_tag = self.__load_data(hdf5, subject, rec, psg_channels)
- 
-        tag = f"{dataset}/{subject}/{rec}/{eeg_tag}, {eog_tag}"
+
+        tag = {
+            "dataset": dataset,
+            "subject": subject,
+            "record": rec,
+            "eeg": eeg_tag,
+            "eog": eog_tag
+        }
+
         y = torch.tensor(y)
 
         return eeg_data, eog_data, y, tag
@@ -138,25 +149,4 @@ class Determ_sampler(IPipe):
         eeg_data = torch.Tensor(eeg_data)
         
         return eeg_data, eog_data, eeg_tag, eog_tag
-    
-            
-if __name__ == '__main__':
-    s = Determ_sampler("C:/Users/au588953/hdf5",
-                       ["abc"],
-                       "val",
-                       35,
-                       None,
-                       subject_percentage=1,
-                       get_all_channels=False)
-    
-    dataset = PipelineDataset([s], 10)
-    loader = DataLoader(
-        dataset,
-        batch_size=1,
-        shuffle=False,
-        num_workers=1,
-        pin_memory=True,
-    )
-
-    dataiter = iter(loader)
     

@@ -8,6 +8,7 @@ Created on Thu Feb  2 13:40:59 2023
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
+from csdp_training.utility import kappa, acc, f1
 
 class Base_Lightning(pl.LightningModule):
     def __init__(
@@ -17,7 +18,8 @@ class Base_Lightning(pl.LightningModule):
         batch_size,
         lr_patience,
         lr_factor,
-        lr_minimum
+        lr_minimum,
+        loss_weights
     ):
         super().__init__()
 
@@ -27,17 +29,22 @@ class Base_Lightning(pl.LightningModule):
         self.lr_patience = lr_patience
         self.lr_factor = lr_factor
         self.lr_minimum = lr_minimum
+        self.loss_weights = loss_weights
         self.training_step_outputs = []
         self.validation_step_loss = []
         self.validation_step_acc = []
         self.validation_step_kap = []
         self.validation_step_f1 = []
-        self.loss = nn.CrossEntropyLoss(ignore_index=5)
+
+        weights = torch.tensor(loss_weights) if loss_weights != None else None
+
+        self.loss = nn.CrossEntropyLoss(weight=weights,
+                                        ignore_index=5)
 
         self.save_hyperparameters(ignore=['model'])
 
     def forward(self, x):
-        return self.model(x)
+        return self.model(x.float()) 
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
@@ -59,6 +66,31 @@ class Base_Lightning(pl.LightningModule):
             'lr_scheduler': scheduler
         }
     
+    def compute_train_metrics(self, y_pred, y_true):
+        y_pred = torch.swapdims(y_pred, 1, 2)
+        y_pred = torch.reshape(y_pred, (-1, 5))
+        y_true = torch.flatten(y_true)
+
+        loss = self.loss(y_pred, y_true)
+
+        y_pred = torch.argmax(y_pred, dim=1)
+        
+        accu = acc(y_pred, y_true)
+        kap = kappa(y_pred, y_true, 5)
+        f1_score = f1(y_pred, y_true, average=False)
+        
+        return loss, accu, kap, f1_score
+    
+    
+    def compute_test_metrics(self, y_pred, y_true):
+        y_true = torch.flatten(y_true)
+        
+        accu = acc(y_pred, y_true)
+        kap = kappa(y_pred, y_true, 5)
+        f1_score = f1(y_pred, y_true, average=False)
+        
+        return accu, kap, f1_score
+
     def on_train_epoch_end(self):
         all_outputs = self.training_step_outputs
         

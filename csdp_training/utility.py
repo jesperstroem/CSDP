@@ -9,10 +9,6 @@ import pickle
 import os
 import json
 
-def dump(t):
-    print(t)
-    print(t.shape)
-
 def log_test_step(base, run_id, dataset, subject, record, **kwargs):
         """
         Used for logging raw predictions and true labels for a single step. Extra logging to Neptune happens through kwargs.
@@ -20,7 +16,9 @@ def log_test_step(base, run_id, dataset, subject, record, **kwargs):
         Naming convention of file: {model_name}_{run_id} ???
         """
 
-        print(f"logging for: {dataset}/{subject}/{record}")
+        identifier = f"{dataset}.{subject}.{record}"
+
+        print(f"logging for: {dataset}/{identifier}")
         
         print(f"kwargs: {kwargs}")
 
@@ -29,7 +27,7 @@ def log_test_step(base, run_id, dataset, subject, record, **kwargs):
         if not os.path.exists(path):
             os.makedirs(path)
 
-        filename = f"{path}/{dataset}.{subject}_{record}"
+        filename = f"{path}/{identifier}"
 
         print(f"log preds and labels to file: {filename}")
 
