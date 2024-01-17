@@ -379,7 +379,6 @@ class BaseDataset(ABC):
             subgrp_record.create_dataset("hypnogram", data=y)
             self.log_info('Successfully wrote record to hdf5 file', subject_number, record_number)
     
-    @abstractmethod
     def download(self):
         self.log_warning('Download function was called, but no download functionality has been implemented')
         pass
