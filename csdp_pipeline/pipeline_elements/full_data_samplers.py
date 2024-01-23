@@ -91,7 +91,14 @@ class Full_Eval_Dataset_Sampler(IPipe):
                         
                         record_data.append(data)
                         record_hyps.append(hyp)
-                        record_meta.append(f"{subj_key}-{rec_key}")
+
+                        tag = {
+                            "dataset": self.dataset_name,
+                            "subject": subj_key,
+                            "record": rec_key
+                        }
+
+                        record_meta.append(tag)
 
                 except:
                     print(f"Did not find subject {subj_key} in dataset EESM with split type {self.split_type}")
@@ -158,7 +165,7 @@ class Full_Train_Dataset_Sampler(IPipe):
         x_sample = data[:,x_start_idx:x_end_idx]
         y_sample = hyp[y_start_idx:y_end_idx]
 
-        return x_sample, y_sample, ""
+        return x_sample, y_sample, {}
     
     def __get_data(self):
         with h5py.File(self.file_path, "r") as hdf5:
