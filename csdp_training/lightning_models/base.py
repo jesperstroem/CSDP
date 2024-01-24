@@ -75,9 +75,14 @@ class Base_Lightning(pl.LightningModule):
 
         y_pred = torch.argmax(y_pred, dim=1)
         
-        accu = acc(y_pred, y_true)
-        kap = kappa(y_pred, y_true, 5)
-        f1_score = f1(y_pred, y_true, average=False)
+        try:
+            accu = acc(y_pred, y_true)
+            kap = kappa(y_pred, y_true, 5)
+            f1_score = f1(y_pred, y_true, average=False)
+        except:
+            accu = None
+            kap = None
+            f1_score = None
         
         return loss, accu, kap, f1_score
     

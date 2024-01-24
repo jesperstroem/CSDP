@@ -152,6 +152,8 @@ class USleep_Lightning(Base_Lightning):
         
         step_loss, step_acc, step_kap, step_f1 = self.compute_train_metrics(pred, ybatch)
 
+        assert (step_acc != None) and (step_kap != None) and (step_f1 != None)
+
         self.validation_step_loss.append(step_loss)
         self.validation_step_acc.append(step_acc)
         self.validation_step_kap.append(step_kap)
