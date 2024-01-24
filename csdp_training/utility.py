@@ -8,6 +8,10 @@ import h5py
 import pickle
 import os
 import json
+import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
+import numpy as np
 
 def log_test_step(base, run_id, dataset, subject, record, **kwargs):
         """
@@ -42,7 +46,24 @@ def filter_unknowns(predictions, labels):
     assert len(labels) == len(predictions)
     
     return predictions, labels
+
+def plot_confusionmatrix(conf, title, percentages = True, formatting = '.2f', save_figure=False, save_path=None):
+
+    if percentages:
+        conf = conf.astype('float') / conf.sum(axis=1)[:, np.newaxis]
+        
+    df_cm = pd.DataFrame(conf,
+                         index = [i for i in ["Wake", "N1", "N2", "N3", "REM"]],
+                         columns = [i for i in ["Wake", "N1", "N2", "N3", "REM"]])
     
+    plt.title(title)
+    plt.figure(figsize=(10,7))
+
+    f = sn.heatmap(df_cm, annot=True, fmt=formatting)
+    f.set(xlabel='Predicted', ylabel='Truth')
+
+    return f.figure
+
 def kappa(predictions, labels, num_classes=5):
     predictions, labels = filter_unknowns(predictions, labels)
     

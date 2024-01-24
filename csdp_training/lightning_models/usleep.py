@@ -3,7 +3,7 @@
 
 import torch
 from csdp_training.lightning_models.base import Base_Lightning
-from csdp_training.utility import kappa, acc, f1, log_test_step
+from csdp_training.utility import log_test_step
 from ml_architectures.usleep.usleep import USleep
 
 class USleep_Lightning(Base_Lightning):
@@ -127,7 +127,7 @@ class USleep_Lightning(Base_Lightning):
             xbatch = x_eeg
 
         pred = self(xbatch)
-
+        
         step_loss, _, _, _ = self.compute_train_metrics(pred, ybatch)
 
         self.training_step_outputs.append(step_loss)
@@ -152,10 +152,20 @@ class USleep_Lightning(Base_Lightning):
         
         step_loss, step_acc, step_kap, step_f1 = self.compute_train_metrics(pred, ybatch)
 
+        assert (step_acc != None) and (step_kap != None) and (step_f1 != None)
+
         self.validation_step_loss.append(step_loss)
         self.validation_step_acc.append(step_acc)
         self.validation_step_kap.append(step_kap)
         self.validation_step_f1.append(step_f1)
+
+        pred = torch.swapdims(pred, 1, 2)
+        pred = torch.reshape(pred, (-1, 5))
+        pred = torch.argmax(pred, dim=1)
+        ybatch = torch.flatten(ybatch)
+        
+        self.validation_labels.append(ybatch)
+        self.validation_preds.append(pred)
                 
     def test_step(self, batch, _):
         # Step per record
