@@ -8,7 +8,10 @@ Created on Thu Feb  2 13:40:59 2023
 import torch
 import torch.nn as nn
 import pytorch_lightning as pl
-from csdp_training.utility import kappa, acc, f1
+from csdp_training.utility import kappa, acc, f1, plot_confusionmatrix, filter_unknowns
+from sklearn.metrics import confusion_matrix
+import numpy as np
+from neptune.utils import stringify_unsupported
 
 class Base_Lightning(pl.LightningModule):
     def __init__(
@@ -35,6 +38,8 @@ class Base_Lightning(pl.LightningModule):
         self.validation_step_acc = []
         self.validation_step_kap = []
         self.validation_step_f1 = []
+        self.validation_preds = []
+        self.validation_labels = []
 
         weights = torch.tensor(loss_weights) if loss_weights != None else None
 
@@ -110,6 +115,18 @@ class Base_Lightning(pl.LightningModule):
         all_acc = self.validation_step_acc
         all_kap = self.validation_step_kap    
         all_f1 = self.validation_step_f1
+        all_preds = self.validation_preds
+        all_labels = self.validation_labels
+
+        all_preds = torch.cat(all_preds)
+        all_labels = torch.cat(all_labels)
+
+        all_preds, all_labels = filter_unknowns(all_preds, all_labels)
+
+        all_preds = np.array(all_preds)
+        all_labels = np.array(all_labels)
+
+        cm = confusion_matrix(all_labels, all_preds)
 
         mean_loss = torch.mean(torch.stack(all_losses, dim=0))
         mean_acc = torch.mean(torch.stack(all_acc, dim=0))
@@ -131,8 +148,13 @@ class Base_Lightning(pl.LightningModule):
         self.log('val_f1_c2', mean_f1c2, batch_size=batch_size, rank_zero_only=True)
         self.log('val_f1_c3', mean_f1c3, batch_size=batch_size, rank_zero_only=True)
         self.log('val_f1_c4', mean_f1c4, batch_size=batch_size, rank_zero_only=True)
-        
+
+        cm = plot_confusionmatrix(cm, "")
+        self.logger.experiment["training/val_cm"].append(stringify_unsupported(cm))
+
         self.validation_step_loss.clear()
         self.validation_step_acc.clear()
         self.validation_step_kap.clear()
         self.validation_step_f1.clear()
+        self.validation_labels.clear()
+        self.validation_preds.clear()
