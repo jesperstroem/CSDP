@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 from abc import abstractmethod
 import subprocess
 
-from csdp_datastore.base import BaseDataset
+from csdp_datastore.base import BaseDataset, FilterSettings
 
 class SleepdataOrg(BaseDataset):
 
@@ -12,6 +12,8 @@ class SleepdataOrg(BaseDataset):
         self, 
         dataset_path: str, 
         output_path: str,
+        filter: bool = True,
+        filtersettings = FilterSettings(),
         download_token: str = None,
         max_num_subjects: int = None, 
         scale_and_clip: bool = True,
@@ -23,6 +25,8 @@ class SleepdataOrg(BaseDataset):
         super().__init__(dataset_path,
                          output_path,
                          max_num_subjects,
+                         filter,
+                         filtersettings,
                          scale_and_clip,
                          output_sample_rate,
                          data_format,

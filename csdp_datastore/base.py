@@ -9,7 +9,19 @@ from pathlib import Path
 from h5py import File
 from enum import Enum, auto, IntEnum
 from .logger import LoggingModule, EventSeverity
+from scipy import signal
 
+class FilterSettings():
+    def __init__(self,
+                 win_len = 5,
+                 cutoffs: list[float] = [0.1, 40]):
+        assert len(cutoffs) == 2
+
+        self.cutoffs = cutoffs
+        self.win_len = win_len
+
+    cutoffs: list[float]
+    win_len: int
 
 class BaseDataset(ABC):
     def __init__(
@@ -17,6 +29,8 @@ class BaseDataset(ABC):
         dataset_path: str, 
         output_path: str,
         max_num_subjects: int = None, 
+        filter: bool = True,
+        filtersettings: FilterSettings = FilterSettings(),
         scale_and_clip: bool = True,
         output_sample_rate: int = 128,
         data_format: str ="hdf5",
@@ -40,6 +54,9 @@ class BaseDataset(ABC):
         self.logger = LoggingModule(logging_path)
         self.scale_and_clip = scale_and_clip
         self.output_sample_rate = output_sample_rate
+        self.filter = filter
+
+        self.filtersettings = filtersettings
         
         if data_format == "hdf5":
             self.write_function = self.write_record_to_database_hdf5
@@ -272,7 +289,23 @@ class BaseDataset(ABC):
             for r in record_list:
                 for file_path in r:
                     assert os.path.exists(file_path), f"Datapath: {file_path}"
-    
+        
+    def filter_channel(self, channel, fs):
+        win_len = self.filtersettings.win_len
+        l_cut = self.filtersettings.cutoffs[0]
+        h_cut = self.filtersettings.cutoffs[1]
+
+        orderFIR = int(fs * win_len)
+        orderInput = int(fs)
+        f = np.linspace(start=0, stop=(fs / 2), num=orderInput)
+
+        mag_all = np.zeros(orderInput)
+        mag_all[(f > l_cut) & (f < h_cut)] = 1
+        filter = signal.firwin2(orderFIR + 1, f, mag_all, fs=fs)
+
+        channel_filt = signal.filtfilt(filter, 1, channel)
+        return channel_filt
+
     def __map_channels(self, dic, y_len):
         new_dict = dict()
 
@@ -290,6 +323,9 @@ class BaseDataset(ABC):
             
             assert len(data) == y_len*sample_rate*30, "Length of data does not match the length of labels"
             
+            if self.filter:
+                data = self.filter_channel(data, sample_rate)
+
             if self.scale_and_clip:
                 data = self.scale_channel(data)
                 data = self.clip_channel(data)
@@ -342,7 +378,26 @@ class BaseDataset(ABC):
 
         return channel_resampled
     
-    
+    def save_dataset_metadata(self):
+        filtersettings = self.filtersettings
+        output_samplerate = self.output_sample_rate
+        
+        file_path = f"{self.output_path}{self.dataset_name()}.hdf5"
+
+        try:
+            with File(file_path, "a") as f:
+                meta_grp = f.create_group("meta")
+
+                filter_grp = meta_grp.create_group("filtersettings")
+                filter_grp.create_dataset("win_len", data=filtersettings.win_len)
+                filter_grp.create_dataset("cutoffs", data=filtersettings.cutoffs)
+
+                meta_grp.create_dataset("samplerate", data=output_samplerate)
+
+                self.log_info('Successfully saved metadata')
+        except Exception as error:
+            self.log_error(f"Could not save metadata due to error: {error}")
+
     def write_record_to_database_parquet(self, output_basepath, subject_number, record_number, x, y):
         """
         Function to write PSG data along with labels to the shared database containing all datasets in Parquet format.
@@ -388,14 +443,20 @@ class BaseDataset(ABC):
 
         self.__check_paths(paths_dict)
 
+        subject_list = list(paths_dict.keys())[:self.max_num_subjects]
+
+        if len(subject_list) == 0:
+            self.log_error("No data found, could not port dataset")
+            return
+
         file_path = f"{self.output_path}/{self.dataset_name()}.hdf5"
         exists = os.path.exists(file_path)
-        
+
         if exists:
             self.log_warning("HDF5 file already exists. Removing it")
             os.remove(file_path)
         
-        for subject_number in list(paths_dict.keys())[:self.max_num_subjects]:
+        for subject_number in subject_list:
             record_number = 0
             
             for record in paths_dict[subject_number]:
@@ -420,5 +481,6 @@ class BaseDataset(ABC):
                 
                 record_number = record_number + 1
         
+        self.save_dataset_metadata()
         self.log_info('Successfully ported dataset')
   
