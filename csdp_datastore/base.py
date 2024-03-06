@@ -379,6 +379,7 @@ class BaseDataset(ABC):
         return channel_resampled
     
     def save_dataset_metadata(self):
+        filtering_used = self.filter
         filtersettings = self.filtersettings
         output_samplerate = self.output_sample_rate
         
@@ -389,10 +390,11 @@ class BaseDataset(ABC):
                 meta_grp = f.create_group("meta")
 
                 filter_grp = meta_grp.create_group("filtersettings")
+                filter_grp.create_dataset("filter_applied", data=filtering_used)
                 filter_grp.create_dataset("win_len", data=filtersettings.win_len)
                 filter_grp.create_dataset("cutoffs", data=filtersettings.cutoffs)
 
-                meta_grp.create_dataset("samplerate", data=output_samplerate)
+                meta_grp.create_dataset("output_samplerate", data=output_samplerate)
 
                 self.log_info('Successfully saved metadata')
         except Exception as error:
@@ -422,8 +424,10 @@ class BaseDataset(ABC):
         file_path = f"{output_basepath}{self.dataset_name()}.hdf5"
         
         with File(file_path, "a") as f:
+            data_group = f.require_group("data")
+
             # Require subject group, since we want to use the existing one, if subject has more records
-            grp_subject = f.require_group(f"{subject_number}")
+            grp_subject = data_group.require_group(f"{subject_number}")
             subgrp_record = grp_subject.create_group(f"{record_number}")
             
             subsubgrp_psg = subgrp_record.create_group("psg")
