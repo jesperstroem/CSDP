@@ -75,7 +75,8 @@ class Base_Lightning(pl.LightningModule):
         y_pred = torch.swapdims(y_pred, 1, 2)
         y_pred = torch.reshape(y_pred, (-1, 5))
         y_true = torch.flatten(y_true)
-
+        
+        y_true = y_true.long()
         loss = self.loss(y_pred, y_true)
 
         y_pred = torch.argmax(y_pred, dim=1)
@@ -126,7 +127,7 @@ class Base_Lightning(pl.LightningModule):
         all_preds = np.array(all_preds)
         all_labels = np.array(all_labels)
 
-        cm = confusion_matrix(all_labels, all_preds)
+        #cm = confusion_matrix(all_labels, all_preds)
 
         mean_loss = torch.mean(torch.stack(all_losses, dim=0))
         mean_acc = torch.mean(torch.stack(all_acc, dim=0))
@@ -149,8 +150,8 @@ class Base_Lightning(pl.LightningModule):
         self.log('val_f1_c3', mean_f1c3, batch_size=batch_size, rank_zero_only=True)
         self.log('val_f1_c4', mean_f1c4, batch_size=batch_size, rank_zero_only=True)
 
-        cm = plot_confusionmatrix(cm, "")
-        self.logger.experiment["training/val_cm"].append(stringify_unsupported(cm))
+        #cm = plot_confusionmatrix(cm, "")
+        #self.logger.experiment["training/val_cm"].append(stringify_unsupported(cm))
 
         self.validation_step_loss.clear()
         self.validation_step_acc.clear()

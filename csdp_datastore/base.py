@@ -13,15 +13,15 @@ from scipy import signal
 
 class FilterSettings():
     def __init__(self,
-                 win_len = 5,
+                 order = 5,
                  cutoffs: list[float] = [0.1, 40]):
         assert len(cutoffs) == 2
 
         self.cutoffs = cutoffs
-        self.win_len = win_len
+        self.order = order
 
     cutoffs: list[float]
-    win_len: int
+    order: int
 
 class BaseDataset(ABC):
     def __init__(
@@ -291,20 +291,14 @@ class BaseDataset(ABC):
                     assert os.path.exists(file_path), f"Datapath: {file_path}"
         
     def filter_channel(self, channel, fs):
-        win_len = self.filtersettings.win_len
+        order = self.filtersettings.order
         l_cut = self.filtersettings.cutoffs[0]
         h_cut = self.filtersettings.cutoffs[1]
 
-        orderFIR = int(fs * win_len)
-        orderInput = int(fs)
-        f = np.linspace(start=0, stop=(fs / 2), num=orderInput)
+        sos = signal.butter(order, [l_cut, h_cut], btype='bandpass', fs=fs, output="sos")
+        channel = signal.sosfiltfilt(sos, channel)
+        return channel
 
-        mag_all = np.zeros(orderInput)
-        mag_all[(f > l_cut) & (f < h_cut)] = 1
-        filter = signal.firwin2(orderFIR + 1, f, mag_all, fs=fs)
-
-        channel_filt = signal.filtfilt(filter, 1, channel)
-        return channel_filt
 
     def __map_channels(self, dic, y_len):
         new_dict = dict()
@@ -424,10 +418,10 @@ class BaseDataset(ABC):
         file_path = f"{output_basepath}{self.dataset_name()}.hdf5"
         
         with File(file_path, "a") as f:
-            data_group = f.require_group("data")
+            #data_group = f.require_group("data")
 
             # Require subject group, since we want to use the existing one, if subject has more records
-            grp_subject = data_group.require_group(f"{subject_number}")
+            grp_subject = f.require_group(f"{subject_number}")
             subgrp_record = grp_subject.create_group(f"{record_number}")
             
             subsubgrp_psg = subgrp_record.create_group("psg")
@@ -485,6 +479,6 @@ class BaseDataset(ABC):
                 
                 record_number = record_number + 1
         
-        self.save_dataset_metadata()
+        #self.save_dataset_metadata()
         self.log_info('Successfully ported dataset')
   
