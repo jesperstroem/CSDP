@@ -65,10 +65,6 @@ class USleep_Lightning(Base_Lightning):
             votes = torch.add(votes, pred)
 
         votes = torch.argmax(votes, axis=1)
-
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-        votes = votes.to(device)
         
         return votes
     
@@ -106,10 +102,6 @@ class USleep_Lightning(Base_Lightning):
                 votes = torch.add(votes, pred)
 
         votes = torch.argmax(votes, axis=1)
-
-        device = 'cuda' if torch.cuda.is_available() else 'cpu'
-
-        votes = votes.to(device)
         
         return votes
 
