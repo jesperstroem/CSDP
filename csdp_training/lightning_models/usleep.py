@@ -7,6 +7,19 @@ from csdp_training.utility import log_test_step
 from ml_architectures.usleep.usleep import USleep
 
 class USleep_Lightning(Base_Lightning):
+        """lightning wrapper for the usleep network class
+
+    Forward pass expects the following output:
+    x_eeg: torch.Tensor
+        EEG signal
+    x_eog: torch.Tensor
+        EOG signal
+    ybatch: torch.Tensor
+        target labels
+    tags: list
+        ID tags for a given set of epochs, to make it easier to identify the results (mostly for debugging purposes)
+
+    """
     def __init__(
         self,
         lr,
