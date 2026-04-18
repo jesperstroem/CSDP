@@ -14,6 +14,14 @@ Run the following command to install:
 pip install git+https://github.com/jesperstroem/CSDP.git
 ```
 
+Alternatively, clone the repository and install locally:
+
+```console
+git clone https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline
+cd common-sleep-data-pipeline
+pip install .
+```
+
 ## Downloading and preprocessing
 
 Before you can use the dataloaders and lightning modules, you need to download and preprocess the raw data. So far, automatic download is only implemented for the datasets from https://sleepdata.org/. Note that to download the data from https://sleepdata.org/, you need a personal download token from their website, and you need the NSRR ruby gem installed: https://github.com/nsrr/nsrr-gem.
@@ -71,7 +79,7 @@ test_loader = dataloader_factory.create_testing_loader(num_workers=1)
 
 ## Use the lightning models
 
-To also use the implemented pytorch lightning versions of U-Sleep, see the following example.
+To also use the implemented Lightning versions of U-Sleep, see the following example.
 
 If you want a pretrained model, you need to specify a checkpoint. A checkpoint for u-sleep is available in the checkpoints folder.
 

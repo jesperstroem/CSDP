@@ -35,3 +35,4 @@ lseq_results/THES-348/metrics/
 usleep/*
 build/
 commonsleepdatapipeline.egg-info/
+.venv/

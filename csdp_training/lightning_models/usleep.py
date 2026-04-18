@@ -7,7 +7,7 @@ from csdp_training.utility import log_test_step
 from ml_architectures.usleep.usleep import USleep
 
 class USleep_Lightning(Base_Lightning):
-        """lightning wrapper for the usleep network class
+    """lightning wrapper for the usleep network class
 
     Forward pass expects the following output:
     x_eeg: torch.Tensor

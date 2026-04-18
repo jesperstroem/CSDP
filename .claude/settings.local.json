@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip index *)",
+      "Bash(python3.11 -m venv .venv)",
+      "Bash(.venv/Scripts/pip install *)",
+      "Bash(py -3.11 --version)",
+      "Bash(py -3.11 -m venv .venv)"
+    ]
+  }
+}

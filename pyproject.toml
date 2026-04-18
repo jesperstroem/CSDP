@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "commonsleepdatapipeline"
+version = "1.0.1"
+description = "Package for data serving neural networks in automatic sleep staging"
+authors = [{ name = "Jesper Strøm", email = "js@ece.au.dk" }]
+urls = { repository = "https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline" }
+dependencies = [
+    "numpy>=1.26.2",
+    "scipy~=1.17.1",
+    "torch~=2.11.0",
+    "h5py~=3.16.0",
+    "mne~=1.12.0",
+    "lightning~=2.6.1",
+    "pandas>=2.1.4",
+    "pyarrow~=23.0.1",
+    "scikit-learn~=1.8.0",
+    "wfdb~=4.3.1",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
