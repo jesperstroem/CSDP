@@ -1,0 +1,72 @@
+name: CD — Build & Push Container
+
+# Triggers on version tags: git tag v1.2.3 && git push --tags
+on:
+  push:
+    tags: ["v*.*.*"]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  build-and-push:
+    name: Build Docker image → GHCR
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,prefix=git-
+
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # Build CUDA variant for production HPC use.
+          # Override at build time for ROCm (LUMI) or CPU (testing):
+          #   docker build --build-arg PYTORCH_CHANNEL=rocm6.2 .
+          #   docker build --build-arg PYTORCH_CHANNEL=cpu .
+          build-args: PYTORCH_CHANNEL=cu121
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Optional: convert to Singularity .sif and upload as release asset
+  # Uncomment if you want automated .sif artifacts for LUMI/HPC use.
+  #
+  # singularity:
+  #   needs: build-and-push
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Install Singularity
+  #       run: |
+  #         sudo apt-get install -y singularity-container
+  #     - name: Pull Docker image and convert to SIF
+  #       run: |
+  #         singularity pull csdp_${{ github.ref_name }}.sif \
+  #           docker://${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+  #     - name: Upload SIF to GitHub Release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         files: csdp_*.sif

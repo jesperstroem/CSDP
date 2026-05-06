@@ -7,7 +7,7 @@ Created on Thu Feb  2 13:40:59 2023
 
 import torch
 import torch.nn as nn
-import pytorch_lightning as pl
+import lightning as pl
 from csdp_training.utility import kappa, acc, f1
 
 class Base_Lightning(pl.LightningModule):

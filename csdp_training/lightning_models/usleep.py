@@ -10,7 +10,7 @@ import torch
 from csdp_training.lightning_models.base import Base_Lightning
 from csdp_training.utility import log_test_step
 from ml_architectures.usleep.usleep import USleep
-import pytorch_lightning as pl
+import lightning as pl
 import os
 import torch.nn as nn
 from timeit import default_timer as timer

@@ -4,7 +4,7 @@ from ml_architectures.lseqsleepnet.long_sequence_model import LongSequenceModel
 from ml_architectures.lseqsleepnet.classifier import Classifier
 from ml_architectures.lseqsleepnet.utils import make_lseqsleepnet_config
 from ml_architectures.usleep.usleep import USleep
-import pytorch_lightning as pl
+import lightning as pl
 from csdp_training.lightning_models.usleep import USleep_Lightning
 from csdp_training.lightning_models.lseqsleepnet import LSeqSleepNet_Lightning
 import torch

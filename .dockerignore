@@ -1,3 +1,7 @@
+# Version control
+.git/
+.github/
+
 # Python artifacts
 __pycache__/
 *.pyc
@@ -6,11 +10,8 @@ __pycache__/
 build/
 dist/
 .venv/
-.claude/
-.ipynb_checkpoints/
-**/*.ipynb_checkpoints/
 
-# Data files
+# Data files (never include in image — mount at runtime)
 data/
 test_data/
 *.hdf5
@@ -18,20 +19,16 @@ test_data/
 *.pickle
 *.mat
 
-# ML outputs
+# ML outputs / weights
 results/
 lightning_logs/
 *.png
-*.out
+*.ckpt
+weights/
 usleep/
 lseqsleepnet_pytorch/
 
-# Neptune
-.neptune/
-
-# SLURM / HPC scratch
-*.scratch
-.nfs*
-
-# OS
-.DS_Store
+# Dev tooling
+.vscode/
+.claude/
+tests/

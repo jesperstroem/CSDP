@@ -1,5 +1,5 @@
-import pytorch_lightning as pl
-from pytorch_lightning.callbacks import ModelCheckpoint, EarlyStopping
+import lightning as pl
+from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 import torch
 from neptune.utils import stringify_unsupported
 import h5py
@@ -9,7 +9,7 @@ from csdp_pipeline.pipeline_elements.pipeline import PipelineConfiguration
 from csdp_pipeline.factories.dataloader_factory import Dataloader_Factory
 from csdp_training.lightning_models.usleep import USleep_Lightning
 from copy import deepcopy
-from pytorch_lightning.loggers import NeptuneLogger
+from lightning.pytorch.loggers import NeptuneLogger
 import neptune
 from csdp_pipeline.pipeline_elements.models import Split, Dataset_Split
 from sklearn.model_selection import KFold

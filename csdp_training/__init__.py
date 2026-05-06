@@ -1,3 +1,6 @@
-from .lightning_models.usleep import USleep_Lightning
-from .lightning_models.lseqsleepnet import LSeqSleepNet_Lightning
-from .lightning_models.factories.lightning_model_factory import USleep_Factory
+try:
+    from .lightning_models.usleep import USleep_Lightning
+    from .lightning_models.lseqsleepnet import LSeqSleepNet_Lightning
+    from .lightning_models.factories.lightning_model_factory import USleep_Factory
+except ImportError:
+    pass
