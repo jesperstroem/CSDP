@@ -1,12 +1,13 @@
 # ── Build args ────────────────────────────────────────────────────────────
 # PYTORCH_CHANNEL controls which PyTorch wheel index is used:
-#   cu121   → CUDA 12.1  (NVIDIA — default for most HPC clusters)
+#   cu128   → CUDA 12.8  (NVIDIA — default; torch >=2.7.0 requires >=cu124)
+#   cu124   → CUDA 12.4  (NVIDIA — older clusters)
 #   rocm6.2 → ROCm 6.2   (AMD — required for LUMI supercomputer)
 #   cpu     → CPU-only   (testing / preprocessing nodes)
 #
 # Example:
 #   docker build --build-arg PYTORCH_CHANNEL=rocm6.2 -t csdp:lumi .
-ARG PYTORCH_CHANNEL=cu121
+ARG PYTORCH_CHANNEL=cu128
 
 FROM python:3.12-slim
 
@@ -22,7 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # and pip won't pull the large CUDA default when resolving deps.
 ARG PYTORCH_CHANNEL
 RUN pip install --no-cache-dir \
-    "torch~=2.11.0" \
+    "torch>=2.7.0" \
     --index-url "https://download.pytorch.org/whl/${PYTORCH_CHANNEL}"
 
 # Copy package source (data dirs and weights are excluded via .dockerignore)

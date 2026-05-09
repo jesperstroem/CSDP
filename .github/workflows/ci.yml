@@ -79,9 +79,9 @@ jobs:
           cache: pip
 
       # Install CPU-only torch first so pip won't pull the full CUDA wheel
-      # when it resolves the torch~=2.11.0 constraint from pyproject.toml.
+      # when it resolves the torch>=2.7.0 constraint from pyproject.toml.
       - name: Install PyTorch (CPU-only, smaller CI download)
-        run: pip install "torch~=2.11.0" --index-url https://download.pytorch.org/whl/cpu
+        run: pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 
       - name: Install package + dev extras
         run: pip install -e ".[dev]"
