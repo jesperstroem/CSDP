@@ -114,13 +114,16 @@ The workaround is to install the CPU-only variant first, before `pip install -e 
 
 ```yaml
 - name: Install PyTorch (CPU-only)
-  run: pip install "torch~=2.11.0" --index-url https://download.pytorch.org/whl/cpu
+  run: pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 
 - name: Install package + dev extras
   run: pip install -e ".[dev]"
+
+- name: Install ml_architectures
+  run: pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
 ```
 
-**Tests that require `ml_architectures` are automatically skipped** — see [External dependency: ml_architectures](#external-dependency-ml_architectures).
+**`ml_architectures` is installed in CI** — see [External dependency: ml_architectures](#external-dependency-ml_architectures). All 123 tests run; none are skipped.
 
 ---
 
@@ -257,7 +260,7 @@ source .venv/Scripts/activate    # Windows Git Bash / WSL
 # or: .venv\Scripts\activate     # Windows CMD / PowerShell
 
 # 3. Install CPU torch first (avoids downloading the 2 GB CUDA wheel)
-pip install "torch~=2.11.0" --index-url https://download.pytorch.org/whl/cpu
+pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 
 # 4. Install the package in editable mode with dev tools
 pip install -e ".[dev]"
@@ -277,11 +280,19 @@ pytest
 
 ## External dependency: ml_architectures
 
-The `ml_architectures` package (USleep, LSeqSleepNet neural network definitions) lives on the Aarhus University GitLab instance and **cannot be installed automatically in GitHub Actions CI** without credentials.
+The `ml_architectures` package (USleep, LSeqSleepNet neural network definitions) lives on the Aarhus University GitLab instance. CI installs it from the public `@main` branch before running tests:
+
+```bash
+pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
+```
 
 **Impact on CI:**
-- `import csdp_training` succeeds — `csdp_training/__init__.py` wraps the `ml_architectures` imports in `try/except ImportError`.
-- Tests that require `ml_architectures` (e.g., `test_import_usleep_lightning`) use `pytest.importorskip("ml_architectures")` and are **automatically skipped** when the package is absent.
+- All 123 tests run — none are skipped.
+- If the GitLab instance is temporarily unreachable, the install step will fail and the test job will be blocked. In that case, investigate connectivity rather than removing the install step.
+
+**Local environments without `ml_architectures`:**
+- `import csdp_training` still succeeds — `csdp_training/__init__.py` wraps the imports in `try/except ImportError`.
+- Tests that require the package (e.g., `test_import_usleep_lightning`) use `pytest.importorskip("ml_architectures")` and are **automatically skipped** locally when the package is absent.
 
 **Impact on Docker:**
 - The Docker image installs all listed dependencies from `pyproject.toml` but does not install `ml_architectures`.
@@ -307,7 +318,7 @@ Run `ruff check --fix .` locally to auto-fix what can be fixed automatically.
 **`torch` version conflict during `pip install -e ".[dev]"`:**
 ```bash
 pip uninstall torch -y
-pip install "torch~=2.11.0" --index-url https://download.pytorch.org/whl/cpu
+pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 pip install -e ".[dev]"
 ```
 

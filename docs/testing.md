@@ -5,6 +5,12 @@
 The guiding principle for every test: **no data files, no GPU, no network**.
 All 123 tests run in ~3 seconds using synthetic tensors, temporary HDF5 files, and pickle files.
 Tests are organised into nine files, each covering a distinct layer of the package.
+A minimum coverage of **30 %** is enforced in CI (`--cov-fail-under=30`). The current
+aggregate sits at ~35 %. The ceiling is intentionally modest because large modules
+(`samplers.py`, `mne_sleep_dataset.py`, the Lightning model internals, experiment
+runners) require real data files, a GPU, or a training loop to exercise — all of which
+are explicitly excluded by the "no data files, no GPU, no network" policy. The threshold
+is set to catch deletions of the unit-testable core, not to demand integration coverage.
 
 ```
 tests/
@@ -21,7 +27,7 @@ tests/
 ```
 
 Run the full suite:
-
+2
 ```bash
 pytest tests/ -v
 # With coverage:
@@ -68,15 +74,17 @@ load time, before any test logic runs. These tests catch that immediately.
 
 **ml_architectures:** `USleep` and `LSeqSleepNet` depend on
 `ml_architectures` (`gitlab.au.dk/tech_ear-eeg/ml_architectures`), a private package
-that is not bundled in this repo. It must be installed separately:
+that is not bundled in this repo.
+
+CI installs it automatically before running the test suite:
 
 ```bash
 pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
 ```
 
-With `ml_architectures` installed all 11 tests pass. Without it, the two USleep tests
-are **skipped** rather than failed — `pytest.importorskip("ml_architectures")` handles
-this gracefully so CI still reports a clean run.
+All 11 import tests therefore pass in CI. In a local environment without `ml_architectures`
+the two USleep tests are **skipped** rather than failed — `pytest.importorskip("ml_architectures")`
+handles this gracefully.
 
 The matching `try/except ImportError` guard in `csdp_training/__init__.py` ensures
 `import csdp_training` itself always succeeds, even without `ml_architectures`, so the
@@ -316,7 +324,7 @@ Cohen's Kappa measures inter-rater agreement, correcting for chance. Range: −1
 | `test_perfect_predictions_give_one` | Identical preds and labels → kappa = 1.0 |
 | `test_result_is_scalar` | Output is a 0-dimensional tensor |
 | `test_unknowns_are_excluded` | Label-5 epochs ignored; perfect non-unknown preds still give 1.0 |
-| `test_all_same_class_gives_zero_or_less` | Predicting one class for all inputs → kappa ≤ 0 |
+| `test_all_same_class_gives_zero_or_less` | Predicting one class for all inputs → kappa ≤ 0.0 (exact bound) |
 
 ### TestAcc (5 tests)
 
@@ -346,8 +354,8 @@ Macro-averaged F1 score across all 5 AASM sleep stages.
 
 `get_majority_vote_predictions(path)` reads a pickle file containing per-channel
 prediction score tensors of shape `(epochs, classes)`, sums the votes across channels,
-and returns the winning class per epoch. Tests use a synthetic pickle written to a
-`tempfile.NamedTemporaryFile`.
+and returns the winning class per epoch. Tests write a synthetic pickle to pytest's
+`tmp_path` fixture, which is cleaned up automatically after each test.
 
 | Test | What it verifies |
 |---|---|

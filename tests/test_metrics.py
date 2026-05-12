@@ -6,7 +6,6 @@ verify that the filtering is applied before metric computation.
 """
 
 import pickle
-import tempfile
 
 import torch
 import pytest
@@ -62,7 +61,7 @@ class TestKappa:
         labels = torch.arange(100) % 5
         preds = torch.zeros(100, dtype=torch.long)
         result = kappa(preds, labels)
-        assert result.item() <= 0.05
+        assert result.item() <= 0.0
 
 
 # ── acc ───────────────────────────────────────────────────────────────────
@@ -136,30 +135,30 @@ def _write_majority_vote_pickle(path, preds_dict, labels):
 
 
 class TestGetMajorityVotePredictions:
-    def test_output_length_matches_labels(self):
+    def test_output_length_matches_labels(self, tmp_path):
         n_epochs, n_classes = 20, 5
         labels = torch.arange(n_epochs) % n_classes
         scores = torch.zeros(n_epochs, n_classes)
         for i in range(n_epochs):
             scores[i, labels[i]] = 1.0
-        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as tmp:
-            _write_majority_vote_pickle(tmp.name, {"ch0": scores}, labels)
-            votes, out_labels = get_majority_vote_predictions(tmp.name)
+        path = tmp_path / "votes.pkl"
+        _write_majority_vote_pickle(path, {"ch0": scores}, labels)
+        votes, out_labels = get_majority_vote_predictions(path)
         assert len(votes) == n_epochs
         assert len(out_labels) == n_epochs
 
-    def test_unanimous_predictions_are_correct(self):
+    def test_unanimous_predictions_are_correct(self, tmp_path):
         n_epochs, n_classes = 20, 5
         labels = torch.arange(n_epochs) % n_classes
         scores = torch.zeros(n_epochs, n_classes)
         for i in range(n_epochs):
             scores[i, labels[i]] = 1.0
-        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as tmp:
-            _write_majority_vote_pickle(tmp.name, {"ch0": scores}, labels)
-            votes, _ = get_majority_vote_predictions(tmp.name)
+        path = tmp_path / "votes.pkl"
+        _write_majority_vote_pickle(path, {"ch0": scores}, labels)
+        votes, _ = get_majority_vote_predictions(path)
         assert torch.equal(votes, labels)
 
-    def test_majority_wins_with_multiple_channels(self):
+    def test_majority_wins_with_multiple_channels(self, tmp_path):
         # 3 channels vote; 2 vote for class 0, 1 votes for class 1 → class 0 wins
         n_epochs, n_classes = 10, 5
         labels = torch.zeros(n_epochs, dtype=torch.long)
@@ -168,16 +167,16 @@ class TestGetMajorityVotePredictions:
         vote_for_1 = torch.zeros(n_epochs, n_classes)
         vote_for_1[:, 1] = 1.0
         preds = {"ch0": vote_for_0, "ch1": vote_for_0, "ch2": vote_for_1}
-        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as tmp:
-            _write_majority_vote_pickle(tmp.name, preds, labels)
-            votes, _ = get_majority_vote_predictions(tmp.name)
+        path = tmp_path / "votes.pkl"
+        _write_majority_vote_pickle(path, preds, labels)
+        votes, _ = get_majority_vote_predictions(path)
         assert torch.all(votes == 0)
 
-    def test_returned_labels_match_stored_labels(self):
+    def test_returned_labels_match_stored_labels(self, tmp_path):
         n_epochs, n_classes = 15, 5
         labels = torch.arange(n_epochs) % n_classes
         scores = torch.ones(n_epochs, n_classes)
-        with tempfile.NamedTemporaryFile(suffix=".pkl", delete=False) as tmp:
-            _write_majority_vote_pickle(tmp.name, {"ch0": scores}, labels)
-            _, out_labels = get_majority_vote_predictions(tmp.name)
+        path = tmp_path / "votes.pkl"
+        _write_majority_vote_pickle(path, {"ch0": scores}, labels)
+        _, out_labels = get_majority_vote_predictions(path)
         assert torch.equal(out_labels, labels)

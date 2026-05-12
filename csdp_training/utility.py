@@ -11,7 +11,7 @@ import json
 
 def log_test_step(base, dataset, subject, record, **kwargs):
         """
-        Used for logging raw predictions and true labels for a single step. Extra logging to Neptune happens through kwargs.
+        Used for logging raw predictions and true labels for a single step. Extra logging to MLflow happens through kwargs.
         Logging to file at location: ???
         Naming convention of file: {model_name}_{run_id} ???
         """

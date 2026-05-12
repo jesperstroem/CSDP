@@ -26,8 +26,8 @@ lightning_logs/
 usleep/
 lseqsleepnet_pytorch/
 
-# Neptune
-.neptune/
+# MLflow
+mlruns/
 
 # SLURM / HPC scratch
 *.scratch

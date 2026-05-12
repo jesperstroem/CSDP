@@ -54,7 +54,6 @@ pip install pre-commit && pre-commit install
 ## Running the tests
 
 The test suite requires no data files, no GPU, and no network access.
-121 tests run in under 5 seconds.
 
 ```bash
 pytest tests/ -v

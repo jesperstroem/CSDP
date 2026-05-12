@@ -1,7 +1,8 @@
 import lightning as pl
 from lightning.pytorch.callbacks import ModelCheckpoint, EarlyStopping
 import torch
-from neptune.utils import stringify_unsupported
+import mlflow
+from lightning.pytorch.loggers import MLFlowLogger
 import h5py
 from sklearn.model_selection import train_test_split
 from csdp_pipeline.pipeline_elements.samplers import Random_Sampler, Determ_sampler, SamplerConfiguration
@@ -9,8 +10,6 @@ from csdp_pipeline.pipeline_elements.pipeline import PipelineConfiguration
 from csdp_pipeline.factories.dataloader_factory import Dataloader_Factory
 from csdp_training.lightning_models.usleep import USleep_Lightning
 from copy import deepcopy
-from lightning.pytorch.loggers import NeptuneLogger
-import neptune
 from csdp_pipeline.pipeline_elements.models import Split, Dataset_Split
 from sklearn.model_selection import KFold
 import os
@@ -32,7 +31,7 @@ class CV_Experiment:
                  test_first: bool = False,
                  pipeline_configuration: PipelineConfiguration = PipelineConfiguration(),
                  continue_existing: bool = False,
-                 neptune_run: neptune.Run | None = None,
+                 mlflow_run_id: str | None = None,
                  split_filepath = None):
         """_summary_
 
@@ -47,7 +46,7 @@ class CV_Experiment:
             test_first (bool, optional): If True, the base model will be tested first on all records. Defaults to False.
             pipeline_configuration (PipelineConfiguration, optional): A desired pipeline configuration. The default parameter has no pipes. Defaults to PipelineConfiguration().
             experiment_name (str, optional): The name of the experiment and the name of the test output folder. Defaults to "LOSO".
-            neptune_run (neptune.Run | None, optional): An initialized neptune logging run. Defaults to None.
+            mlflow_run_id (str | None, optional): The run ID of an active MLflow run to log into. Defaults to None.
         """
 
         self.continue_existing = continue_existing
@@ -58,7 +57,7 @@ class CV_Experiment:
         self.pipeline_configuration = pipeline_configuration
         self.logging_folder = logging_folder
         self.training_epochs = training_epochs
-        self.neptune_run = neptune_run
+        self.mlflow_run_id = mlflow_run_id
         self.base_net = base_net
         self.batch_size = batch_size
         self.earlystopping_patience = earlystopping_patience
@@ -163,11 +162,13 @@ class CV_Experiment:
 
         callbacks = [checkpoint_callback, early_stopping]
 
-        if self.neptune_run != None:
-            self.neptune_run[f"{split_name}/split_data"] = stringify_unsupported(split_data.get_dict())
-
-            logger = NeptuneLogger(run=self.neptune_run,
-                                   prefix=split_name)
+        if self.mlflow_run_id is not None:
+            mlflow.MlflowClient().log_dict(
+                run_id=self.mlflow_run_id,
+                dictionary=split_data.get_dict(),
+                artifact_file=f"{split_name}_split.json",
+            )
+            logger = MLFlowLogger(run_id=self.mlflow_run_id, prefix=split_name)
         else:
             logger = None
         
