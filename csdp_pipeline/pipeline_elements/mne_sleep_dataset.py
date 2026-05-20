@@ -3,8 +3,6 @@
 #pylint: disable=invalid-name
 
 
-#TODO: it's not ideal that all data is loaded before all labels. if there's an issue with a label loading, you get that feedback pretty late. better to go night-by-night
-
 
 #%% set up dataset
 
@@ -70,39 +68,33 @@ class sleep_dataset_from_paths(torch.utils.data.Dataset):
 
         self.checkDerivations()
 
-        #preload data files and preprocess:
         self.data_arrays=[]
         self.nansamples=[]
-        for path in self.file_paths:
+        if len(self.scoring_paths)>0:
+            self.scoring_arrays=[]
+
+        for idx,path in enumerate(self.file_paths):
             tempRaw= sleep_dataset_from_paths.open_eeg_file(path)
 
             if self.derivations is not None:
                 data=np.zeros((len(self.derivations),tempRaw.get_data().shape[1]))
-                for idx,deriv in enumerate(self.derivations):
-                    data[idx,:]=np.nanmean(tempRaw.get_data(picks=deriv[0]),axis=0)-np.nanmean(tempRaw.get_data(picks=deriv[1]),axis=0)
+                for didx,deriv in enumerate(self.derivations):
+                    data[didx,:]=np.nanmean(tempRaw.get_data(picks=deriv[0]),axis=0)-np.nanmean(tempRaw.get_data(picks=deriv[1]),axis=0)
             elif ch_names is not None:
                 data=tempRaw.get_data(picks=ch_names)
             else:
                 data=tempRaw.get_data()
 
-            data=self.preprocess_data(data,sfreq= tempRaw.info['sfreq'])
-
+            data=self.preprocess_data(data,sfreq=tempRaw.info['sfreq'])
             self.data_arrays.append(data)
 
-
-        #preload scoring files and match lengths with data arrays:
-        if len(self.scoring_paths)>0:
-            self.scoring_arrays=[]
-            for idx,path in enumerate(self.scoring_paths):
-
+            if len(self.scoring_paths)>0:
                 #appends to scoring_arrays internally:
                 self.preprocess_scoring(idx)
 
-                #make sure that the scoring arrays are the same length as the data arrays:
+                #make sure that the scoring array matches the data array before moving on:
                 assert len(self.scoring_arrays[idx])==self.data_arrays[idx].shape[1]//self.epochLength
-        else:
-            #just make sure the data has length equal to integer number of epochs:
-            for idx,data in enumerate(self.data_arrays):
+            else:
                 nSamples=data.shape[1]
                 nSamples=(nSamples//self.epochLength)*self.epochLength
                 self.data_arrays[idx]=data[:,:nSamples]
