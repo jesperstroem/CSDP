@@ -34,10 +34,8 @@ pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 # 2. Install the package
 pip install -e .
 
-# 3. Install private dependencies (requires GitLab access to gitlab.au.dk)
-pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
-pip install git+https://gitlab.au.dk/tech_ear-eeg/sleep-code/sleep_preprocessing_pipeline.git
-pip install git+https://gitlab.au.dk/tech_ear-eeg/sleep-code/sleep_dataset_class.git
+# 3. Install dependencies (requires GitLab access to gitlab.au.dk)
+python -m pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 ```
 
 ### Development install
