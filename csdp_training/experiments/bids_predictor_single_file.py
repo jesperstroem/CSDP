@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as plt
 
 from csdp_pipeline.pipeline_elements.mne_sleep_dataset import sleep_dataset_from_paths
+from csdp_pipeline.pipeline_elements.plot_hypnogram import plotHypnoGram
 from csdp_training.lightning_models.usleep import USleep_Lightning
 import torch
 
@@ -88,24 +89,6 @@ def _predict_all_pairs(model, dataset, eeg_indices, eog_indices):
     return avg_outputs
 
 
-def _plot_hypnogram(labels: np.ndarray) -> plt.Figure:
-    """Return a matplotlib Figure of the hypnogram for the given label sequence."""
-    stage_order = ["W", "R", "N1", "N2", "N3"]
-    label_to_y = {i: -i for i in range(len(stage_order))}
-
-    y = np.array([label_to_y.get(int(l), np.nan) if not np.isnan(l) else np.nan for l in labels])
-
-    fig, ax = plt.subplots(figsize=(12, 3))
-    ax.step(np.arange(len(y)), y, where='post', color='black', linewidth=0.8)
-    ax.set_yticks(list(label_to_y.values()))
-    ax.set_yticklabels(stage_order)
-    ax.set_xlabel("Epoch")
-    ax.set_ylabel("Stage")
-    ax.set_title("Hypnogram")
-    fig.tight_layout()
-    return fig
-
-
 # ── Public API ─────────────────────────────────────────────────────────────────
 
 def score_file(input_path: str,
@@ -143,14 +126,14 @@ def score_file(input_path: str,
 
     avg_outputs = _predict_all_pairs(usleep_pretrained, dataset, eeg_indices, eog_indices)
 
-    labels = np.argmax(avg_outputs, axis=0)  # (nEpochs,) — avg_outputs is (nClasses, nEpochs)
+    raw_labels = np.argmax(avg_outputs, axis=0)  # (nEpochs,) in model order: 0=W,1=N1,2=N2,3=N3,4=R
 
-    labels = _translate_labels(labels,
+    nan_epochs = np.nonzero(np.all(dataset.nanEpochs[0], axis=0))[0]
+
+    labels = _translate_labels(raw_labels,
                                 input_order=['W', 'N1', 'N2', 'N3', 'R'],
                                 output_order=['W', 'R', 'N1', 'N2', 'N3'])
     labels = labels.astype(float)
-
-    nan_epochs = np.nonzero(np.all(dataset.nanEpochs[0], axis=0))[0]
     labels[nan_epochs] = np.nan
 
     epochsUsed = np.arange(len(labels))
@@ -168,7 +151,11 @@ def score_file(input_path: str,
     filename = os.path.splitext(os.path.basename(output_path))[0]
     png_path = os.path.join(parent_dir, filename + '.png')
 
-    fig = _plot_hypnogram(labels)
+    plot_labels = raw_labels.copy()
+    plot_labels[nan_epochs] = 5  # plotHypnoGram uses 5 for unknown/NaN epochs
+
+    fig, ax = plt.subplots(figsize=(12, 4))
+    plotHypnoGram(plot_labels, ax)
     fig.savefig(str(png_path), dpi=300)
     plt.close(fig)
 
