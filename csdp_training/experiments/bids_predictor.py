@@ -1,4 +1,4 @@
-from csdp_pipeline.pipeline_elements.mne_sleep_dataset import sleep_dataset_from_paths
+from csdp_pipeline.pipeline_elements.sleep_dataset_class import sleep_dataset_from_paths
 import mne_bids as mb
 import torch
 from ..lightning_models.factories.lightning_model_factory import USleep_Factory, USleep_Lightning

@@ -3,27 +3,28 @@
 ## Overview
 
 The guiding principle for every test: **no data files, no GPU, no network**.
-All 123 tests run in ~3 seconds using synthetic tensors, temporary HDF5 files, and pickle files.
-Tests are organised into nine files, each covering a distinct layer of the package.
+All 141 tests run in ~10 seconds using synthetic tensors, synthetic MNE Raw objects, temporary HDF5 files, and pickle files.
+Tests are organised into ten files, each covering a distinct layer of the package.
 A minimum coverage of **30 %** is enforced in CI (`--cov-fail-under=30`). The current
 aggregate sits at ~35 %. The ceiling is intentionally modest because large modules
-(`samplers.py`, `mne_sleep_dataset.py`, the Lightning model internals, experiment
-runners) require real data files, a GPU, or a training loop to exercise — all of which
-are explicitly excluded by the "no data files, no GPU, no network" policy. The threshold
-is set to catch deletions of the unit-testable core, not to demand integration coverage.
+(`samplers.py`, the Lightning model internals, experiment runners) require real data
+files, a GPU, or a training loop to exercise — all of which are explicitly excluded by
+the "no data files, no GPU, no network" policy. The threshold is set to catch deletions
+of the unit-testable core, not to demand integration coverage.
 
 ```
 tests/
-├── conftest.py                # Shared pytest fixtures (synthetic signal batches)
-├── test_imports.py            # Import smoke tests for all public modules
-├── test_pipeline_elements.py  # Resampler + Spectrogram pipeline elements
-├── test_preprocessing.py      # FilterSettings + create_spectrogram_images
-├── test_training_utils.py     # filter_unknowns
-├── test_models.py             # Data model classes (Dataset_Split, Split, ISample, ITag)
-├── test_usleep_prep_steps.py  # Signal preprocessing functions (filter, clip, scale, resample)
-├── test_metrics.py            # kappa, acc, f1, get_majority_vote_predictions
-├── test_augmenters.py         # GlobalGaussianNoise, RegionalGaussianNoise, Augmenter
-└── test_split_factories.py    # Split factory classmethods + create_split_file
+├── conftest.py                    # Shared pytest fixtures (synthetic signal batches)
+├── test_imports.py                # Import smoke tests for all public modules
+├── test_pipeline_elements.py      # Resampler + Spectrogram pipeline elements
+├── test_preprocessing.py          # FilterSettings + create_spectrogram_images
+├── test_training_utils.py         # filter_unknowns
+├── test_models.py                 # Data model classes (Dataset_Split, Split, ISample, ITag)
+├── test_usleep_prep_steps.py      # Signal preprocessing functions (filter, clip, scale, resample)
+├── test_metrics.py                # kappa, acc, f1, get_majority_vote_predictions
+├── test_augmenters.py             # GlobalGaussianNoise, RegionalGaussianNoise, Augmenter
+├── test_split_factories.py        # Split factory classmethods + create_split_file
+└── test_sleep_dataset_class.py    # sleep_dataset_from_paths (EDF loading, preprocessing, SDC round-trip)
 ```
 
 Run the full suite:
@@ -480,3 +481,73 @@ directory. Tests use `monkeypatch.chdir` to redirect the output file into `tmp_p
 | `test_json_has_train_val_test_keys` | Each dataset entry contains `train`, `val`, `test` |
 | `test_all_subjects_distributed` | Union of train+val+test equals the full subject list |
 | `test_no_subject_in_two_splits` | Sets are disjoint — no subject in multiple splits |
+
+---
+
+## test_sleep_dataset_class.py — EDF Dataset Class (18 tests)
+
+`sleep_dataset_from_paths` (`csdp_pipeline/pipeline_elements/sleep_dataset_class.py`) is
+the core dataset class that loads EDF/SET/VHDR recordings, applies the full USleep
+preprocessing pipeline (DC removal, resampling, highpass filter, normalisation, clipping),
+and exposes a PyTorch `Dataset` interface for training and inference.
+
+Tests use **synthetic MNE `RawArray` objects** — no real EDF files needed. A `patch_open`
+fixture monkeypatches `sleep_dataset_from_paths.open_eeg_file` to return a 4-channel,
+150-second (5 epoch) synthetic signal, keeping tests fast and hermetic.
+
+### Fixtures
+
+| Fixture | What it provides |
+|---|---|
+| `patch_open` | Monkeypatches `open_eeg_file` to return a synthetic 4-channel MNE Raw; returns the Raw object |
+
+### TestGetAvailableChannels (2 tests)
+
+| Test | What it verifies |
+|---|---|
+| `test_returns_channel_names` | Single file → one list of channel names returned |
+| `test_multiple_files` | Two files → two lists returned, both equal |
+
+### TestConstructFromPaths (7 tests)
+
+| Test | What it verifies |
+|---|---|
+| `test_ch_names_channel_count` | `ch_names` parameter: output has correct number of channels |
+| `test_ch_names_epoch_samples` | Sample dimension is an integer multiple of 30 s × 128 Hz |
+| `test_derivations_channel_count` | `derivations` parameter: bipolar pairs reduce to correct channel count |
+| `test_no_args_loads_all_channels` | No `ch_names` or `derivations`: all channels loaded |
+| `test_output_is_float32_tensor` | Data arrays are `torch.float32` tensors |
+| `test_nan_epochs_shape` | `nanEpochs[0]` has shape `(n_channels, n_epochs)` |
+| `test_nan_epochs_are_bool` | `nanEpochs` dtype is `bool` |
+
+### TestFullRecordsMode (2 tests)
+
+| Test | What it verifies |
+|---|---|
+| `test_len_equals_num_files` | `len(dataset)` equals the number of input files |
+| `test_getitem_returns_data_and_index` | `dataset[0]` returns `(tensor, file_index)` |
+
+### TestMinibatchMode (3 tests)
+
+| Test | What it verifies |
+|---|---|
+| `test_len_positive` | At least one draw is available |
+| `test_getitem_data_shape` | `L=1`: shape is `(n_channels, 128 × 30)` |
+| `test_getitem_L2_shape` | `L=2`: shape is `(n_channels, 128 × 60)` |
+
+### TestCheckDerivations (2 tests)
+
+| Test | What it verifies |
+|---|---|
+| `test_valid_derivation_passes` | Valid channel names return a result of correct length |
+| `test_invalid_channel_returns_none_descriptor` | Unknown channel name prints a warning and returns a `None` descriptor instead of crashing |
+
+### TestSdcRoundTrip (2 tests)
+
+`save_to_sdc` / `construct_from_sdc` serialise the fully preprocessed dataset to an
+`.sdc` file (HDF5 under the hood) so expensive preprocessing only runs once.
+
+| Test | What it verifies |
+|---|---|
+| `test_data_preserved` | Data tensors are identical before and after save/load round-trip |
+| `test_shape_preserved` | `len(dataset)` is the same after reloading from SDC |
