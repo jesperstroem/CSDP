@@ -64,7 +64,7 @@ pytest tests/ --cov --cov-report=term-missing
 ```
 
 Two tests (`test_import_usleep_lightning`, `test_import_usleep_factory`) are skipped
-unless `ml_architectures` is installed. With it installed, all 123 tests pass.
+unless `ml_architectures` is installed.
 
 See [docs/testing.md](docs/testing.md) for a full description of every test file and what each test covers.
 
