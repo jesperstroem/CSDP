@@ -13,6 +13,7 @@ dist/
 # Data files
 data/
 test_data/
+test/
 *.hdf5
 *.parquet
 *.pickle
