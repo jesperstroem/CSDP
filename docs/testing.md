@@ -28,7 +28,6 @@ tests/
 ```
 
 Run the full suite:
-2
 ```bash
 pytest tests/ -v
 # With coverage:

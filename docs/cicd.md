@@ -296,7 +296,7 @@ pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 
 **Impact on Docker:**
 - The Docker image installs all listed dependencies from `pyproject.toml` but does not install `ml_architectures`.
-- Add the GitLab install step to the Dockerfile if the image needs to run training.
+- Add the GitHub install step to the Dockerfile if the image needs to run training.
 
 ---
 
