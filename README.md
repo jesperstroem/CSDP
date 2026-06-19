@@ -34,7 +34,7 @@ pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 # 2. Install the package
 pip install -e .
 
-# 3. Install dependencies (requires GitLab access to gitlab.au.dk)
+# 3. Install dependencies
 python -m pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 ```
 

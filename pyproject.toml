@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "commonsleepdatapipeline"
+name = "CSDP"
 version = "1.0.1"
 description = "Package for data serving neural networks in automatic sleep staging"
 authors = [{ name = "Jesper Strøm", email = "js@ece.au.dk" }]

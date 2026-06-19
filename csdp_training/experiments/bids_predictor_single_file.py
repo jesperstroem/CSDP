@@ -2,7 +2,7 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-from csdp_pipeline.pipeline_elements.mne_sleep_dataset import sleep_dataset_from_paths
+from csdp_pipeline.pipeline_elements.sleep_dataset_class import sleep_dataset_from_paths
 from csdp_pipeline.pipeline_elements.plot_hypnogram import plotHypnoGram
 from csdp_training.lightning_models.usleep import USleep_Lightning
 import torch
