@@ -87,7 +87,7 @@ jobs:
         run: pip install -e ".[dev]"
 
       - name: Install ml_architectures
-        run: pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
+        run: pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 
       - name: Run tests
         run: pytest tests/ --cov --cov-report=term-missing --cov-fail-under=30
