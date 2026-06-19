@@ -1,37 +1,44 @@
+# Coverage
+.coverage
+.coverage.*
+htmlcov/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.venv/
+.claude/
 .ipynb_checkpoints/
-.nfs*
-data/
-*.pyc
-*.scratch
-usleep-pytorch/lightning_logs/
-*.hdf5
-*.txt
-*.pyc
 **/*.ipynb_checkpoints/
-.ipynb_checkpoints
-lseqsleepnet-pytorch/datasets/
-lseqsleepnet-pytorch/lightning_logs/
-lseqsleepnet-pytorch/spectrograms/
-lseqsleepnet-pytorch/preprocessing/dcsmspectro
 
-lightning_logs/
-
+# Data files
+data/
+test_data/
+test/
+*.hdf5
 *.parquet
 *.pickle
 *.mat
-*.txt
-*.pyc
-*.out
+*.ipynb
 
-test_data/
-
+# ML outputs
 results/
-.neptune/
-lseqsleepnet_pytorch/model/__pycache__/
-
-lseqsleepnet_pytorch/pytorch_datasets/datastream/
+lightning_logs/
 *.png
-lseq_results/THES-348/metrics/
-usleep/*
-build/
-commonsleepdatapipeline.egg-info/
+*.out
+usleep/
+lseqsleepnet_pytorch/
+
+# MLflow
+mlruns/
+
+# SLURM / HPC scratch
+*.scratch
+.nfs*
+
+# OS
+.DS_Store

@@ -6,17 +6,18 @@ from csdp_datastore.base import BaseDataset
 class Base_Sedf(BaseDataset):
     """
     ABOUT THIS DATASET
-    
+
     The naming convention of records is as follows: SC4ssNE0 where:
     SC: Sleep Cassette study.
     ss: Subject number (notice that most subjects has 2 records), e.g. 00.
     N: Night (1 or 2).
-    
+
     Channels included in dataset: ['EEG Fpz-Cz', 'EEG Pz-Oz', 'EOG horizontal', 'Resp oro-nasal', 'EMG submental', 'Temp rectal', 'Event marker'].
 
-    
+
     EEG and EOG signals were each sampled at 100Hz.
-    """        
+    """
+
     def label_mapping(self):
         return {
             "Sleep stage W": self.Labels.Wake,
@@ -26,32 +27,28 @@ class Base_Sedf(BaseDataset):
             "Sleep stage 4": self.Labels.N3,
             "Sleep stage R": self.Labels.REM,
             "Sleep stage ?": self.Labels.UNKNOWN,
-            "Movement time": self.Labels.UNKNOWN
+            "Movement time": self.Labels.UNKNOWN,
         }
-    
-  
+
     def sample_rate(self):
         return 100
-        
-        
+
     @property
-    @abstractmethod    
+    @abstractmethod
     def dataset_name(self):
         pass
-    
-    
+
     def channel_mapping(self):
         return {
-            "EOG horizontal": self.Mapping(self.TTRef.EL, self.TTRef.ER), 
+            "EOG horizontal": self.Mapping(self.TTRef.EL, self.TTRef.ER),
             "EEG Fpz-Cz": self.Mapping(self.TTRef.Fpz, self.TTRef.Cz),
-            "EEG Pz-Oz": self.Mapping(self.TTRef.Pz, self.TTRef.Oz)
+            "EEG Pz-Oz": self.Mapping(self.TTRef.Pz, self.TTRef.Oz),
         }
-    
-    
-    @abstractmethod    
+
+    @abstractmethod
     def list_records(self):
         pass
-    
+
     @abstractmethod
     def read_psg(self, record):
         pass

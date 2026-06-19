@@ -1,105 +1,94 @@
-import torch
-
-from torchmetrics.classification import MulticlassCohenKappa, MulticlassF1Score
-from torchmetrics.functional import accuracy # pytorch_lightning.metrics.Accuracy does not work anymore
-
-from sklearn.model_selection import train_test_split
-import h5py
-import pickle
-import os
 import json
-import pandas as pd
-import seaborn as sn
-import matplotlib.pyplot as plt
-import numpy as np
+import os
+import pickle
 
-def log_test_step(base, run_id, dataset, subject, record, **kwargs):
-        """
-        Used for logging raw predictions and true labels for a single step. Extra logging to Neptune happens through kwargs.
-        Logging to file at location: ???
-        Naming convention of file: {model_name}_{run_id} ???
-        """
+import h5py
+import torch
+from sklearn.model_selection import train_test_split
+from torchmetrics.classification import MulticlassCohenKappa, MulticlassF1Score
+from torchmetrics.functional import accuracy  # pytorch_lightning.metrics.Accuracy does not work anymore
 
-        identifier = f"{dataset}.{subject}.{record}"
 
-        print(f"logging for: {dataset}/{identifier}")
-        
-        print(f"kwargs: {kwargs}")
+def log_test_step(base, dataset, subject, record, **kwargs):
+    """
+    Used for logging raw predictions and true labels for a single step. Extra logging to MLflow happens through kwargs.
+    Logging to file at location: ???
+    Naming convention of file: {model_name}_{run_id} ???
+    """
 
-        path = f"{base}/{run_id}/{dataset}"
+    # if eeg_tag != None and eog_tag != None:
+    #    identifier = f"pred_{eeg_tag}.{eog_tag}"
+    # else:
+    #    identifier = f"pred"
 
-        if not os.path.exists(path):
-            os.makedirs(path)
+    # print(f"logging for: {dataset}/{identifier}")
 
-        filename = f"{path}/{identifier}"
+    # print(f"kwargs: {kwargs}")
 
-        print(f"log preds and labels to file: {filename}")
+    identifier = "preds"
 
-        with open(filename, "ab") as f:
-            pickle.dump(kwargs, f)
+    path = f"{base}/{dataset}/{subject}/{record}"
+
+    if not os.path.exists(path):
+        os.makedirs(path)
+
+    filename = f"{path}/{identifier}"
+
+    print(f"log preds and labels to file: {filename}")
+
+    with open(filename, "ab") as f:
+        pickle.dump(kwargs, f)
+
 
 def filter_unknowns(predictions, labels):
     mask = labels != 5
     labels = torch.masked_select(labels, mask)
     predictions = torch.masked_select(predictions, mask)
-    
+
     assert len(labels) == len(predictions)
-    
+
     return predictions, labels
 
-def plot_confusionmatrix(conf, title, percentages = True, formatting = '.2f', save_figure=False, save_path=None):
-
-    if percentages:
-        conf = conf.astype('float') / conf.sum(axis=1)[:, np.newaxis]
-        
-    df_cm = pd.DataFrame(conf,
-                         index = [i for i in ["Wake", "N1", "N2", "N3", "REM"]],
-                         columns = [i for i in ["Wake", "N1", "N2", "N3", "REM"]])
-    
-    plt.title(title)
-    plt.figure(figsize=(10,7))
-
-    f = sn.heatmap(df_cm, annot=True, fmt=formatting)
-    f.set(xlabel='Predicted', ylabel='Truth')
-
-    return f.figure
 
 def kappa(predictions, labels, num_classes=5):
     predictions, labels = filter_unknowns(predictions, labels)
-    
+
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
+
     labels = labels.to(device)
-    
+
     predictions = predictions.to(device)
-    
+
     metric = MulticlassCohenKappa(num_classes=num_classes).to(device)
-    
+
     kappa = metric(predictions, labels)
     return kappa
 
+
 def acc(predictions, labels):
     predictions, labels = filter_unknowns(predictions, labels)
-    
+
     accu = accuracy(task="multiclass", num_classes=5, preds=predictions, target=labels)
-    
+
     return accu
+
 
 def f1(predictions, labels, average=True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     predictions, labels = filter_unknowns(predictions, labels)
-    
+
     predictions = predictions.to(device)
     labels = labels.to(device)
-    
+
     if average:
         metric = MulticlassF1Score(num_classes=5).to(device)
     else:
         metric = MulticlassF1Score(num_classes=5, average=None).to(device)
-        
+
     score = metric(predictions, labels)
-    
+
     return score
+
 
 def create_split_file(hdf5_basepath):
     output_name = "random_split.json"
@@ -123,14 +112,28 @@ def create_split_file(hdf5_basepath):
             output_dic[dataset_name]["test"] = test
 
     json_object = json.dumps(output_dic, indent=4)
-    print(json_object)
 
-    with open("random_split.json", 'w') as fp:
+    with open("random_split.json", "w") as fp:
         fp.write(json_object)
-    
+
     return output_name
 
 
-if __name__ == '__main__':
-    create_split_file("C:/Users/au588953/test_hdf5")
-    
+def get_majority_vote_predictions(path):
+    with open(path, "rb") as f:
+        data = pickle.load(f)
+        preds = data["preds"]
+        labels = data["labels"]
+
+    num_epochs = labels.shape[0]
+    num_classes = 5
+
+    votes = torch.zeros(num_epochs, num_classes)
+
+    for item in preds.items():
+        pred = item[1]
+        votes = torch.add(votes, pred)
+
+    votes = torch.argmax(votes, axis=1)
+
+    return votes, labels

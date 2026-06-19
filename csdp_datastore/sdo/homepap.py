@@ -1,29 +1,26 @@
+from ..models import Mapping, TTRef
 from .sdo_base import SleepdataOrg
 
+
 class HOMEPAP(SleepdataOrg):
-
-    def download_name(self):
-        return "homepap"
-
     def channel_mapping(self):
         return {
-            "E1": self.Mapping(self.TTRef.EL, self.TTRef.Fpz),
-            "E2": self.Mapping(self.TTRef.ER, self.TTRef.Fpz),
-            "F3": self.Mapping(self.TTRef.F3, self.TTRef.Fpz),
-            "F4": self.Mapping(self.TTRef.F4, self.TTRef.Fpz),
-            "C3": self.Mapping(self.TTRef.C3, self.TTRef.Fpz),
-            "C4": self.Mapping(self.TTRef.C4, self.TTRef.Fpz),
-            "O1": self.Mapping(self.TTRef.O1, self.TTRef.Fpz),
-            "O2": self.Mapping(self.TTRef.O2, self.TTRef.Fpz),
-            "M1": self.Mapping(self.TTRef.LPA, self.TTRef.Fpz),
-            "M2": self.Mapping(self.TTRef.RPA, self.TTRef.Fpz),
-            "E1-M2": self.Mapping(self.TTRef.EL, self.TTRef.RPA),
-            "E2-M1": self.Mapping(self.TTRef.ER, self.TTRef.LPA),
-            "F3-M2": self.Mapping(self.TTRef.F3, self.TTRef.RPA),
-            "F4-M1": self.Mapping(self.TTRef.F4, self.TTRef.LPA),
-            "C3-M2": self.Mapping(self.TTRef.C3, self.TTRef.RPA),
-            "C4-M1": self.Mapping(self.TTRef.C4, self.TTRef.LPA),
-            "O1-M2": self.Mapping(self.TTRef.O1, self.TTRef.RPA),
-            "O2-M1": self.Mapping(self.TTRef.O2, self.TTRef.LPA)
+            "E1": Mapping(TTRef.EL, TTRef.Fpz),
+            "E2": Mapping(TTRef.ER, TTRef.Fpz),
+            "F3": Mapping(TTRef.F3, TTRef.Fpz),
+            "F4": Mapping(TTRef.F4, TTRef.Fpz),
+            "C3": Mapping(TTRef.C3, TTRef.Fpz),
+            "C4": Mapping(TTRef.C4, TTRef.Fpz),
+            "O1": Mapping(TTRef.O1, TTRef.Fpz),
+            "O2": Mapping(TTRef.O2, TTRef.Fpz),
+            "M1": Mapping(TTRef.LPA, TTRef.Fpz),
+            "M2": Mapping(TTRef.RPA, TTRef.Fpz),
+            "E1-M2": Mapping(TTRef.EL, TTRef.RPA),
+            "E2-M1": Mapping(TTRef.ER, TTRef.LPA),
+            "F3-M2": Mapping(TTRef.F3, TTRef.RPA),
+            "F4-M1": Mapping(TTRef.F4, TTRef.LPA),
+            "C3-M2": Mapping(TTRef.C3, TTRef.RPA),
+            "C4-M1": Mapping(TTRef.C4, TTRef.LPA),
+            "O1-M2": Mapping(TTRef.O1, TTRef.RPA),
+            "O2-M1": Mapping(TTRef.O2, TTRef.LPA),
         }
-        

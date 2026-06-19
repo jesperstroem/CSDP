@@ -1,16 +1,16 @@
+from ..models import Mapping, TTRef
 from .sdo_base import SleepdataOrg
 
-class MROS(SleepdataOrg):    
-    def download_name(self):
-        return "mros"
 
+class MROS(SleepdataOrg):
     def channel_mapping(self):
         return {
-            "C3": self.Mapping(self.TTRef.C3, self.TTRef.Fpz),
-            "C4": self.Mapping(self.TTRef.C4, self.TTRef.Fpz),
-            "A1": self.Mapping(self.TTRef.LPA, self.TTRef.Fpz),
-            "A2": self.Mapping(self.TTRef.RPA, self.TTRef.Fpz),
-            "ROC": self.Mapping(self.TTRef.ER, self.TTRef.Fpz),
-            "LOC": self.Mapping(self.TTRef.EL, self.TTRef.Fpz)
+            "C3": Mapping(TTRef.C3, TTRef.Fpz),
+            "C4": Mapping(TTRef.C4, TTRef.Fpz),
+            "A1": Mapping(TTRef.LPA, TTRef.Fpz),
+            "A2": Mapping(TTRef.RPA, TTRef.Fpz),
+            "M1": Mapping(TTRef.LPA, TTRef.Fpz),
+            "M2": Mapping(TTRef.RPA, TTRef.Fpz),
+            "ROC": Mapping(TTRef.ER, TTRef.Fpz),
+            "LOC": Mapping(TTRef.EL, TTRef.Fpz),
         }
-        

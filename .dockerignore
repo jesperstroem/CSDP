@@ -1,0 +1,34 @@
+# Version control
+.git/
+.github/
+
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+build/
+dist/
+.venv/
+
+# Data files (never include in image — mount at runtime)
+data/
+test_data/
+*.hdf5
+*.parquet
+*.pickle
+*.mat
+
+# ML outputs / weights
+results/
+lightning_logs/
+*.png
+*.ckpt
+weights/
+usleep/
+lseqsleepnet_pytorch/
+
+# Dev tooling
+.vscode/
+.claude/
+tests/

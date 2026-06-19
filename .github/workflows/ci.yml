@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  # ── 1. Lint & format (no heavy deps — runs in ~30 s) ─────────────────────
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install ruff
+        run: pip install "ruff>=0.9"
+
+      - name: Check linting (ruff check)
+        run: ruff check .
+
+      - name: Check formatting (ruff format --check)
+        run: ruff format --check .
+
+  # ── 2. Build wheel (validates packaging, no runtime deps needed) ──────────
+  build:
+    name: Build Wheel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install build frontend
+        run: pip install build
+
+      - name: Build wheel
+        run: python -m build --wheel
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ github.sha }}
+          path: dist/*.whl
+          retention-days: 7
+
+  # ── 3. Test matrix (CPU-only torch for speed) ─────────────────────────────
+  # NOTE: CI installs ml_architectures so tests that require it
+  # (USleep, LSeqSleepNet) run in the matrix. In local environments
+  # without ml_architectures, those tests are skipped automatically.
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      # Install CPU-only torch first so pip won't pull the full CUDA wheel
+      # when it resolves the torch>=2.7.0 constraint from pyproject.toml.
+      - name: Install PyTorch (CPU-only, smaller CI download)
+        run: pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install package + dev extras
+        run: pip install -e ".[dev]"
+
+      - name: Install ml_architectures
+        run: pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
+
+      - name: Run tests
+        run: pytest tests/ --cov --cov-report=term-missing --cov-fail-under=30
+
+      - name: Upload coverage report
+        if: matrix.python-version == '3.12'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-${{ github.sha }}
+          path: .coverage
+          retention-days: 7
