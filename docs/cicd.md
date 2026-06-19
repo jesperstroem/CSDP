@@ -120,7 +120,7 @@ The workaround is to install the CPU-only variant first, before `pip install -e 
   run: pip install -e ".[dev]"
 
 - name: Install ml_architectures
-  run: pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
+  run: pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 ```
 
 **`ml_architectures` is installed in CI** — see [External dependency: ml_architectures](#external-dependency-ml_architectures). All 123 tests run; none are skipped.
@@ -223,11 +223,11 @@ docker build --build-arg PYTORCH_CHANNEL=rocm6.2 -t csdp:lumi .
 docker build --build-arg PYTORCH_CHANNEL=cpu -t csdp:cpu .
 ```
 
-**Note on `ml_architectures`:** The Docker image does not include `ml_architectures` by default because it resides on a private GitLab instance. To add it to the image, append the following to the `Dockerfile` after `pip install -e .`:
+**Note on `ml_architectures`:** The Docker image does not include `ml_architectures` by default. To add it to the image, append the following to the `Dockerfile` after `pip install -e .`:
 
 ```dockerfile
 RUN pip install --no-cache-dir \
-    git+https://gitlab.au.dk/tech_ear-eeg/<path>/ml_architectures.git
+    git+https://github.com/RuneSchroeder/ml_architectures.git@main
 ```
 
 ---
@@ -265,8 +265,8 @@ pip install "torch>=2.7.0" --index-url https://download.pytorch.org/whl/cpu
 # 4. Install the package in editable mode with dev tools
 pip install -e ".[dev]"
 
-# 5. Install ml_architectures (private dependency — requires GitLab access)
-pip install git+https://gitlab.au.dk/tech_ear-eeg/sleep-code/sleep_dataset_class.git
+# 5. Install ml_architectures
+pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 
 # 6. Install pre-commit hooks
 pip install pre-commit
@@ -280,15 +280,15 @@ pytest
 
 ## External dependency: ml_architectures
 
-The `ml_architectures` package (USleep, LSeqSleepNet neural network definitions) lives on the Aarhus University GitLab instance. CI installs it from the public `@main` branch before running tests:
+The `ml_architectures` package (USleep, LSeqSleepNet neural network definitions) is installed from GitHub in CI before running tests:
 
 ```bash
-pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
+pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 ```
 
 **Impact on CI:**
 - All 123 tests run — none are skipped.
-- If the GitLab instance is temporarily unreachable, the install step will fail and the test job will be blocked. In that case, investigate connectivity rather than removing the install step.
+- If GitHub is temporarily unreachable, the install step will fail and the test job will be blocked. In that case, investigate connectivity rather than removing the install step.
 
 **Local environments without `ml_architectures`:**
 - `import csdp_training` still succeeds — `csdp_training/__init__.py` wraps the imports in `try/except ImportError`.

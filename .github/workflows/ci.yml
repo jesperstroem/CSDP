@@ -59,9 +59,9 @@ jobs:
           retention-days: 7
 
   # ── 3. Test matrix (CPU-only torch for speed) ─────────────────────────────
-  # NOTE: Tests that require ml_architectures (USleep, LSeqSleepNet) are
-  # skipped in CI because that package lives on a private GitLab instance
-  # (gitlab.au.dk). Install it manually in your local environment.
+  # NOTE: CI installs ml_architectures so tests that require it
+  # (USleep, LSeqSleepNet) run in the matrix. In local environments
+  # without ml_architectures, those tests are skipped automatically.
   test:
     name: Test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest

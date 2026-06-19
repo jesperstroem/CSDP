@@ -74,13 +74,13 @@ load time, before any test logic runs. These tests catch that immediately.
 | `test_import_usleep_factory` | `USleep_Factory` from `csdp_training.lightning_models.factories` |
 
 **ml_architectures:** `USleep` and `LSeqSleepNet` depend on
-`ml_architectures` (`gitlab.au.dk/tech_ear-eeg/ml_architectures`), a private package
-that is not bundled in this repo.
+`ml_architectures` (`github.com/RuneSchroeder/ml_architectures`), which is not bundled
+in this repo.
 
 CI installs it automatically before running the test suite:
 
 ```bash
-pip install git+https://gitlab.au.dk/tech_ear-eeg/ml_architectures.git@main
+pip install git+https://github.com/RuneSchroeder/ml_architectures.git@main
 ```
 
 All 11 import tests therefore pass in CI. In a local environment without `ml_architectures`

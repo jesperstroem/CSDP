@@ -39,8 +39,8 @@ def test_import_training_utility():
     pass
 
 
-# Tests below require ml_architectures from the private GitLab instance.
-# They are skipped automatically in CI where ml_architectures is not available.
+# Tests below require ml_architectures.
+# They are skipped automatically in environments where ml_architectures is not available.
 
 
 def test_import_usleep_lightning():
