@@ -1,16 +1,17 @@
-import numpy as np
 import os
-import matplotlib.pyplot as plt
 
-from csdp_pipeline.pipeline_elements.sleep_dataset_class import sleep_dataset_from_paths
-from csdp_pipeline.pipeline_elements.plot_hypnogram import plotHypnoGram
-from csdp_training.lightning_models.usleep import USleep_Lightning
+import matplotlib.pyplot as plt
+import numpy as np
 import torch
 
+from csdp_pipeline.pipeline_elements.plot_hypnogram import plotHypnoGram
+from csdp_pipeline.pipeline_elements.sleep_dataset_class import sleep_dataset_from_paths
+from csdp_training.lightning_models.usleep import USleep_Lightning
 
 # ── Private helpers ────────────────────────────────────────────────────────────
 
-def _load_model(checkpoint_path: str, device: str = 'cpu'):
+
+def _load_model(checkpoint_path: str, device: str = "cpu"):
     usleep_pretrained = USleep_Lightning.load_from_checkpoint(checkpoint_path)
     usleep_pretrained.eval()
     usleep_pretrained.to(device)
@@ -84,19 +85,22 @@ def _predict_all_pairs(model, dataset, eeg_indices, eog_indices):
         eog_signal = _make_derivation(dataset, derivation[1])
         output = _predict_single_pair(model, eeg_signal=eeg_signal, eog_signal=eog_signal)
         outputs.append(output)
-    outputs = np.array(outputs)        # (nPairs, nClasses, nEpochs)
-    avg_outputs = np.mean(outputs, axis=0)   # (nClasses, nEpochs)
+    outputs = np.array(outputs)  # (nPairs, nClasses, nEpochs)
+    avg_outputs = np.mean(outputs, axis=0)  # (nClasses, nEpochs)
     return avg_outputs
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
 
-def score_file(input_path: str,
-               eeg_inputs: list = None,
-               eog_inputs: list = None,
-               checkpoint: str = None,
-               output_path: str = None,
-               device: str = 'cpu'):
+
+def score_file(
+    input_path: str,
+    eeg_inputs: list = None,
+    eog_inputs: list = None,
+    checkpoint: str = None,
+    output_path: str = None,
+    device: str = "cpu",
+):
     """Score a single BIDS-compatible EDF file using a pretrained U-Sleep checkpoint.
 
     Args:
@@ -130,9 +134,9 @@ def score_file(input_path: str,
 
     nan_epochs = np.nonzero(np.all(dataset.nanEpochs[0], axis=0))[0]
 
-    labels = _translate_labels(raw_labels,
-                                input_order=['W', 'N1', 'N2', 'N3', 'R'],
-                                output_order=['W', 'R', 'N1', 'N2', 'N3'])
+    labels = _translate_labels(
+        raw_labels, input_order=["W", "N1", "N2", "N3", "R"], output_order=["W", "R", "N1", "N2", "N3"]
+    )
     labels = labels.astype(float)
     labels[nan_epochs] = np.nan
 
@@ -149,7 +153,7 @@ def score_file(input_path: str,
     np.savez(output_path, labels=labels, avg_outputs=avg_outputs)
 
     filename = os.path.splitext(os.path.basename(output_path))[0]
-    png_path = os.path.join(parent_dir, filename + '.png')
+    png_path = os.path.join(parent_dir, filename + ".png")
 
     plot_labels = raw_labels.copy()
     plot_labels[nan_epochs] = 5  # plotHypnoGram uses 5 for unknown/NaN epochs

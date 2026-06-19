@@ -1,8 +1,8 @@
+from ..models import Mapping, TTRef
 from .sdo_base import SleepdataOrg
-from ..models import TTRef, Mapping
+
 
 class HOMEPAP(SleepdataOrg):
-
     def channel_mapping(self):
         return {
             "E1": Mapping(TTRef.EL, TTRef.Fpz),
@@ -22,6 +22,5 @@ class HOMEPAP(SleepdataOrg):
             "C3-M2": Mapping(TTRef.C3, TTRef.RPA),
             "C4-M1": Mapping(TTRef.C4, TTRef.LPA),
             "O1-M2": Mapping(TTRef.O1, TTRef.RPA),
-            "O2-M1": Mapping(TTRef.O2, TTRef.LPA)
+            "O2-M1": Mapping(TTRef.O2, TTRef.LPA),
         }
-        

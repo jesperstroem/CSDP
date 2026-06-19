@@ -7,8 +7,8 @@ verify that the filtering is applied before metric computation.
 
 import pickle
 
-import torch
 import pytest
+import torch
 
 from csdp_training.utility import acc, f1, get_majority_vote_predictions, kappa
 

@@ -6,32 +6,31 @@ Created on Fri Feb 17 10:25:31 2023
 """
 
 import torch
-
-from csdp_pipeline.pipeline_elements.pipeline import IPipe
 from scipy.signal import resample_poly
 
+from csdp_pipeline.pipeline_elements.pipeline import IPipe
+
+
 class Resampler(IPipe):
-    def __init__(self,
-                source_sample,
-                target_sample):
+    def __init__(self, source_sample, target_sample):
         self.source_sample = source_sample
         self.target_sample = target_sample
-    
+
     def resample_collection(self, coll):
         resampled = []
-        
+
         for i in range(len(coll)):
             chnl = coll[i]
-        
+
             if self.source_sample != self.target_sample:
                 chnl = resample_poly(chnl, self.target_sample, self.source_sample, axis=0)
-            
+
             chnl = torch.tensor(chnl)
             resampled.append(chnl)
-            
-        resampled = torch.stack(resampled, dim=0)    
+
+        resampled = torch.stack(resampled, dim=0)
         return resampled
-    
+
     def process(self, x):
         eegs = x[0]
         eogs = x[1]
@@ -40,7 +39,7 @@ class Resampler(IPipe):
 
         # Channels, samples
         assert eegs.dim() == 2, eogs.dim() == 2
-        
+
         eeg_resampled = self.resample_collection(eegs)
         eog_resampled = self.resample_collection(eogs)
 

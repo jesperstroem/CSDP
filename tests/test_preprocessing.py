@@ -1,7 +1,6 @@
 """Unit tests for pure signal-processing functions and data models — no data files required."""
 
 import numpy as np
-import pytest
 
 from csdp_datastore.models import FilterSettings
 from csdp_pipeline.preprocessing.spectrogram import create_spectrogram_images

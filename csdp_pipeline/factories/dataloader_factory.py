@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
+
 from torch.utils.data import DataLoader
-from csdp_pipeline.pipeline_elements.pipeline import PipelineDataset, PipelineConfiguration
-from csdp_pipeline.pipeline_elements.samplers import Random_Sampler, SamplerConfiguration, Determ_sampler
+
+from csdp_pipeline.pipeline_elements.pipeline import PipelineConfiguration, PipelineDataset
+from csdp_pipeline.pipeline_elements.samplers import SamplerConfiguration
+
 
 class IDataloader_Factory(ABC):
     @abstractmethod
@@ -16,8 +19,8 @@ class IDataloader_Factory(ABC):
     def testing_loader(self, num_workers):
         pass
 
-class Dataloader_Factory(IDataloader_Factory):
 
+class Dataloader_Factory(IDataloader_Factory):
     def __init__(
         self,
         training_batch_size: int,
@@ -40,8 +43,7 @@ class Dataloader_Factory(IDataloader_Factory):
         self.samplers = samplers
         self.training_batch_size = training_batch_size
 
-    def training_loader(self,
-                        num_workers=1) -> DataLoader:
+    def training_loader(self, num_workers=1) -> DataLoader:
         """_summary_
 
         Args:
@@ -51,8 +53,9 @@ class Dataloader_Factory(IDataloader_Factory):
             DataLoader: The training dataloader. When drawing samples from this dataloader, the data will be served with 4 values - (eeg_data, eog_data, labels, tags).
         """
 
-        dataset = PipelineDataset(self.samplers.get_sampler_by_stage("train"),
-                                  self.pipe_configuration.get_pipe_by_stage("train"))
+        dataset = PipelineDataset(
+            self.samplers.get_sampler_by_stage("train"), self.pipe_configuration.get_pipe_by_stage("train")
+        )
 
         trainloader = DataLoader(
             dataset,
@@ -64,8 +67,7 @@ class Dataloader_Factory(IDataloader_Factory):
 
         return trainloader
 
-    def validation_loader(self,
-                          num_workers=1) -> DataLoader:
+    def validation_loader(self, num_workers=1) -> DataLoader:
         """_summary_
 
         Args:
@@ -77,16 +79,17 @@ class Dataloader_Factory(IDataloader_Factory):
 
         sampler = self.samplers.get_sampler_by_stage("val")
 
-        dataset = PipelineDataset(sampler,
-                                  self.pipe_configuration.get_pipe_by_stage("val"))
-        
+        dataset = PipelineDataset(sampler, self.pipe_configuration.get_pipe_by_stage("val"))
+
         valloader = DataLoader(
-            dataset, batch_size=1, shuffle=False, num_workers=num_workers,
+            dataset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=num_workers,
         )
         return valloader
 
-    def testing_loader(self,
-                       num_workers=1) -> DataLoader:
+    def testing_loader(self, num_workers=1) -> DataLoader:
         """_summary_
 
         Args:
@@ -98,14 +101,17 @@ class Dataloader_Factory(IDataloader_Factory):
 
         sampler = self.samplers.get_sampler_by_stage("test")
 
-        dataset = PipelineDataset(sampler,
-                                  self.pipe_configuration.get_pipe_by_stage("test"))
+        dataset = PipelineDataset(sampler, self.pipe_configuration.get_pipe_by_stage("test"))
 
         testloader = DataLoader(
-            dataset, batch_size=1, shuffle=False, num_workers=num_workers,
+            dataset,
+            batch_size=1,
+            shuffle=False,
+            num_workers=num_workers,
         )
 
         return testloader
+
 
 # class DefaultUSleepDataloader(IDataloader_Factory):
 #     def __init__(self,
@@ -117,7 +123,7 @@ class Dataloader_Factory(IDataloader_Factory):
 #                 testsets: list[str],
 #                 data_split_path: str,
 #                 sub_percentage = 1.0):
-        
+
 #         train_sampler = Random_Sampler(
 #                 hdf5_base_path,
 #                 trainsets,
@@ -134,7 +140,7 @@ class Dataloader_Factory(IDataloader_Factory):
 #                 split_file=data_split_path,
 #                 get_all_channels= False,
 #             )
-        
+
 #         test_sampler = Determ_sampler(
 #                 hdf5_base_path,
 #                 testsets,
@@ -156,13 +162,12 @@ class Dataloader_Factory(IDataloader_Factory):
 
 #     def training_loader(self, num_workers):
 #         return self.fac.training_loader(num_workers)
-    
+
 #     def validation_loader(self, num_workers):
 #         return self.fac.validation_loader(num_workers)
-    
+
 #     def testing_loader(self, num_workers):
 #         return self.fac.testing_loader(num_workers)
-
 
 
 # class LSeqSleepNet_Dataloader_Factory(IDataloader_Factory):

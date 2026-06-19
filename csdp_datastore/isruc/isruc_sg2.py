@@ -2,15 +2,16 @@ import os
 
 from .isruc_base import Isruc_base
 
+
 class ISRUC_SG2(Isruc_base):
     """
-    ABOUT THIS DATASET 
-    
+    ABOUT THIS DATASET
+
     """
-        
+
     def dataset_name(self):
         return "isruc_sg2"
-    
+
     # Overridden because of filenames being different.
     def list_records(self, basepath):
         paths_dict = {}
@@ -21,9 +22,9 @@ class ISRUC_SG2(Isruc_base):
             if "ipynb_checkpoints" in path:
                 continue
 
-            recordpath = basepath+path+'/'
-            datapath = recordpath+"subject"+path+".mat"
-            labelpath = recordpath+"1_1.txt"
+            recordpath = basepath + path + "/"
+            datapath = recordpath + "subject" + path + ".mat"
+            labelpath = recordpath + "1_1.txt"
 
             paths_dict[path] = [(datapath, labelpath)]
 

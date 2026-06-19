@@ -1,7 +1,7 @@
 """Tests for augmentation pipeline elements — pure tensor operations, no data files."""
 
-import torch
 import pytest
+import torch
 
 from csdp_pipeline.pipeline_elements.augmenters import (
     Augmenter,

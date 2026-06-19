@@ -1,4 +1,5 @@
-from enum import Enum, auto, IntEnum
+from enum import Enum, IntEnum, auto
+
 
 class EarEEGRef(Enum):
     # Ear-EEG ONLY
@@ -15,14 +16,15 @@ class EarEEGRef(Enum):
     ERT = auto()
     ERE = auto()
     ERI = auto()
-    
+
     EL_AVG = auto()
     ER_AVG = auto()
 
-    #Common ref
+    # Common ref
     REF = auto()
 
-class TTRef(Enum):        
+
+class TTRef(Enum):
     # 10-10 EEG system for scalp PSG
 
     """
@@ -31,10 +33,10 @@ class TTRef(Enum):
     T4 is now T8
     T5 is now P7
     T6 is now P8"
-    
+
     Source: https://en.wikipedia.org/wiki/10%E2%80%9320_system_(EEG)
     """
-    
+
     Nz = auto()
     Fpz = auto()
     Fp1 = auto()
@@ -66,7 +68,7 @@ class TTRef(Enum):
     FC6 = auto()
     FT8 = auto()
     FT10 = auto()
-    T7 = auto() # Same as T3 in 10-20 system
+    T7 = auto()  # Same as T3 in 10-20 system
     C5 = auto()
     C3 = auto()
     C1 = auto()
@@ -74,7 +76,7 @@ class TTRef(Enum):
     C2 = auto()
     C4 = auto()
     C6 = auto()
-    T8 = auto() # Same as T4 in 10-20 system
+    T8 = auto()  # Same as T4 in 10-20 system
     TP9 = auto()
     TP7 = auto()
     CP5 = auto()
@@ -87,7 +89,7 @@ class TTRef(Enum):
     TP8 = auto()
     TP10 = auto()
     P9 = auto()
-    P7 = auto() # Same as T5 in 10-20 system
+    P7 = auto()  # Same as T5 in 10-20 system
     P5 = auto()
     P3 = auto()
     P1 = auto()
@@ -95,7 +97,7 @@ class TTRef(Enum):
     P2 = auto()
     P4 = auto()
     P6 = auto()
-    P8 = auto() # Same as T6 in 10-20 system
+    P8 = auto()  # Same as T6 in 10-20 system
     P10 = auto()
     PO7 = auto()
     PO3 = auto()
@@ -106,30 +108,32 @@ class TTRef(Enum):
     Oz = auto()
     O2 = auto()
     Iz = auto()
-    LPA = auto() # Same as A1 in 10-20 system
-    RPA = auto() # Same as A2 in 10-20 system
-    
+    LPA = auto()  # Same as A1 in 10-20 system
+    RPA = auto()  # Same as A2 in 10-20 system
+
     EL = auto()
     ER = auto()
-    
+
     # Computed linked Ear and Linked Ear Reference. May be rare, and so far is only in MASS. Can only find this article describing it: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5479869/
     CLE = auto()
     LER = auto()
-    
+
     def __str__(self):
         return self.name
+
 
 class Mapping:
     def __init__(self, ref1, ref2):
         self.ref1: Enum = ref1
         self.ref2: Enum = ref2
-    
+
     def __eq__(self, other):
         return (self.ref1, self.ref2) == (other.ref1, other.ref2)
-    
+
     def get_mapping(self):
-        ctype = 'EOG' if self.ref1 in [TTRef.EL, TTRef.ER] else 'EEG'
-        return f'{ctype}_{self.ref1.name}-{self.ref2.name}'
+        ctype = "EOG" if self.ref1 in [TTRef.EL, TTRef.ER] else "EEG"
+        return f"{ctype}_{self.ref1.name}-{self.ref2.name}"
+
 
 class Labels(IntEnum):
     Wake = 0
@@ -139,7 +143,8 @@ class Labels(IntEnum):
     REM = 4
     UNKNOWN = 5
 
-class Rereference():
+
+class Rereference:
     first: TTRef
     second: TTRef
     result: TTRef
@@ -149,25 +154,22 @@ class Rereference():
         self.second = second
         self.result = result
 
-class ChannelCalculations():
+
+class ChannelCalculations:
     drop_existing: bool
     rereferences: list[Rereference]
 
-    def __init__(self,
-                 rereferences: list[Rereference], 
-                 drop_existing=False):
+    def __init__(self, rereferences: list[Rereference], drop_existing=False):
         self.rereferences = rereferences
         self.drop_existing = drop_existing
-        
-class FilterSettings():
-    def __init__(self,
-                 lcut = 0.1,
-                 hcut = None,
-                 order = 2):
-        if lcut != None and hcut == None:
+
+
+class FilterSettings:
+    def __init__(self, lcut=0.1, hcut=None, order=2):
+        if lcut is not None and hcut is None:
             type = "highpass"
             self.cutoffs = lcut
-        elif hcut != None and lcut == None:
+        elif hcut is not None and lcut is None:
             type = "lowpass"
             self.cutoffs = hcut
         else:

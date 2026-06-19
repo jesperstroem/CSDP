@@ -1,7 +1,6 @@
 """Unit tests for usleep_prep_steps — pure numpy/scipy functions, no data files needed."""
 
 import numpy as np
-import pytest
 
 from csdp_datastore.models import FilterSettings
 from csdp_pipeline.preprocessing.usleep_prep_steps import (

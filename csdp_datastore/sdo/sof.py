@@ -1,8 +1,8 @@
+from ..models import Mapping, TTRef
 from .sdo_base import SleepdataOrg
-from ..models import TTRef, Mapping
+
 
 class SOF(SleepdataOrg):
-    
     def channel_mapping(self):
         return {
             "C3": Mapping(TTRef.C3, TTRef.Fpz),
@@ -10,6 +10,5 @@ class SOF(SleepdataOrg):
             "A1": Mapping(TTRef.LPA, TTRef.Fpz),
             "A2": Mapping(TTRef.RPA, TTRef.Fpz),
             "ROC": Mapping(TTRef.ER, TTRef.Fpz),
-            "LOC": Mapping(TTRef.EL, TTRef.Fpz)
+            "LOC": Mapping(TTRef.EL, TTRef.Fpz),
         }
-        

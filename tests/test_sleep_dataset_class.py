@@ -1,6 +1,6 @@
+import mne
 import numpy as np
 import pytest
-import mne
 import torch
 
 from csdp_pipeline.pipeline_elements.sleep_dataset_class import sleep_dataset_from_paths
@@ -27,6 +27,7 @@ def patch_open(monkeypatch):
 
 # ── get_available_channels ────────────────────────────────────────────────────
 
+
 class TestGetAvailableChannels:
     def test_returns_channel_names(self, monkeypatch):
         raw = _make_raw()
@@ -43,6 +44,7 @@ class TestGetAvailableChannels:
 
 
 # ── construction ──────────────────────────────────────────────────────────────
+
 
 class TestConstructFromPaths:
     def test_ch_names_channel_count(self, patch_open):
@@ -84,6 +86,7 @@ class TestConstructFromPaths:
 
 # ── __getitem__ modes ─────────────────────────────────────────────────────────
 
+
 class TestFullRecordsMode:
     def test_len_equals_num_files(self, patch_open):
         ds = sleep_dataset_from_paths(["fake.edf"], ch_names=CH_NAMES, L=1, fullRecords=True)
@@ -116,6 +119,7 @@ class TestMinibatchMode:
 
 # ── checkDerivations ──────────────────────────────────────────────────────────
 
+
 class TestCheckDerivations:
     def test_valid_derivation_passes(self, patch_open):
         ds = sleep_dataset_from_paths(["fake.edf"], ch_names=CH_NAMES, L=1)
@@ -132,6 +136,7 @@ class TestCheckDerivations:
 
 
 # ── SDC round-trip ────────────────────────────────────────────────────────────
+
 
 class TestSdcRoundTrip:
     def test_data_preserved(self, patch_open, tmp_path):

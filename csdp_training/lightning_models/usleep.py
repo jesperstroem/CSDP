@@ -1,19 +1,21 @@
-'''Usleep wrapped in lightning module, based on a base class'''
+"""Usleep wrapped in lightning module, based on a base class"""
 
 
 # Code inspired by U-Sleep article
 # and https://github.com/neergaard/utime-pytorch
 
-#pylint: disable=missing-function-docstring,invalid-name
+# pylint: disable=missing-function-docstring,invalid-name
 
+import os
+
+import lightning as pl
 import torch
+import torch.nn as nn
+from ml_architectures.usleep.usleep import USleep
+
 from csdp_training.lightning_models.base import Base_Lightning
 from csdp_training.utility import log_test_step
-from ml_architectures.usleep.usleep import USleep
-import lightning as pl
-import os
-import torch.nn as nn
-from timeit import default_timer as timer
+
 
 class USleep_Lightning(Base_Lightning):
     """lightning wrapper for the usleep network class
@@ -28,36 +30,33 @@ class USleep_Lightning(Base_Lightning):
     tags: list
         ID tags for a given set of epochs, to make it easier to identify the results (mostly for debugging purposes)
     """
+
     def __init__(
         self,
         lr,
         batch_size,
-        initial_filters = 5,
-        complexity_factor = 1.67,
-        progression_factor = 2,
-        depth = 12,
-        lr_patience = 50,
-        lr_factor = 0.5,
-        lr_minimum = 0.0000001,
-        loss_weights = None,
-        include_eog = True,
+        initial_filters=5,
+        complexity_factor=1.67,
+        progression_factor=2,
+        depth=12,
+        lr_patience=50,
+        lr_factor=0.5,
+        lr_minimum=0.0000001,
+        loss_weights=None,
+        include_eog=True,
     ):
         num_channels = 2 if include_eog is True else 1
 
-        inner = USleep(num_channels=num_channels,
-                       initial_filters=initial_filters,
-                       complexity_factor=complexity_factor,
-                       progression_factor=progression_factor,
-                       depth=depth)
-        
-        super().__init__(inner,
-                         lr,
-                         batch_size,
-                         lr_patience,
-                         lr_factor,
-                         lr_minimum,
-                         loss_weights)
-        
+        inner = USleep(
+            num_channels=num_channels,
+            initial_filters=initial_filters,
+            complexity_factor=complexity_factor,
+            progression_factor=progression_factor,
+            depth=depth,
+        )
+
+        super().__init__(inner, lr, batch_size, lr_patience, lr_factor, lr_minimum, loss_weights)
+
         self.prediction_resolution = 3840
         self.initial_filters = initial_filters
         self.complexity_factor = complexity_factor
@@ -65,7 +64,7 @@ class USleep_Lightning(Base_Lightning):
         self.depth = depth
         self.include_eog = include_eog
         self.num_channels = num_channels
-    
+
     def get_preds(self, x, resolution):
         self.model.classifier.avgpool = nn.AvgPool1d(resolution)
 
@@ -74,7 +73,7 @@ class USleep_Lightning(Base_Lightning):
         pred = pred.to("cpu")
 
         return pred
-    
+
     def __single_channels_prediction__(self, x_eegs, tags=None):
         eegshape = x_eegs.shape
 
@@ -83,13 +82,13 @@ class USleep_Lightning(Base_Lightning):
         output = {}
 
         for i in range(num_eegs):
-            x_eeg = x_eegs[:,i,...]
+            x_eeg = x_eegs[:, i, ...]
 
             x_eeg = torch.unsqueeze(x_eeg, 1)
-            
-            y_pred = self.get_preds(x_eeg, resolution = self.prediction_resolution)
 
-            if tags != None:
+            y_pred = self.get_preds(x_eeg, resolution=self.prediction_resolution)
+
+            if tags is not None:
                 eeg_tag = tags["eeg"][i]
             else:
                 eeg_tag = i
@@ -111,9 +110,8 @@ class USleep_Lightning(Base_Lightning):
 
         for i in range(num_eegs):
             for p in range(num_eogs):
-
-                x_eeg = x_eegs[:,i,...]
-                x_eog = x_eogs[:,p,...]
+                x_eeg = x_eegs[:, i, ...]
+                x_eog = x_eogs[:, p, ...]
 
                 x_eeg = torch.unsqueeze(x_eeg, 1)
                 x_eog = torch.unsqueeze(x_eog, 1)
@@ -122,7 +120,7 @@ class USleep_Lightning(Base_Lightning):
 
                 y_pred = self.get_preds(x_temp, self.prediction_resolution)
 
-                if tags != None:
+                if tags is not None:
                     eeg_tag = tags["eeg"][i]
                     eog_tag = tags["eog"][p]
                 else:
@@ -133,32 +131,31 @@ class USleep_Lightning(Base_Lightning):
 
         return output
 
-
     def __perform_predictions__(self, x_eegs, x_eogs=None, tags=None):
         output = {}
 
-        if x_eogs != None:
+        if x_eogs is not None:
             assert x_eogs.shape[0] == 1
             output = self.__two_channels_prediction__(x_eegs, x_eogs, tags)
         else:
             output = self.__single_channels_prediction__(x_eegs, tags)
 
         return output
-    
-    def majority_vote_prediction(self, x_eegs, x_eogs = None, tags = None):
+
+    def majority_vote_prediction(self, x_eegs, x_eogs=None, tags=None):
         with torch.no_grad():
             assert x_eegs.shape[0] == 1
 
             output = self.__perform_predictions__(x_eegs, x_eogs, tags)
 
         return output
-    
+
     def prep_batch(self, x_eeg, x_eog):
 
         assert len(x_eeg.shape) == 3, "EEG shape must be on the form (batch_size, num_channels, data)"
         assert x_eeg.shape[1] == 1, "Only one EEG channel allowed"
 
-        if self.include_eog == True:
+        if self.include_eog:
             assert len(x_eog.shape) == 3, "EOG shape must be on the form (batch_size, num_channels, data)"
             assert x_eog.shape[1] == 1, "Only one EOG channel allowed"
             xbatch = torch.cat((x_eeg, x_eog), dim=1)
@@ -189,14 +186,14 @@ class USleep_Lightning(Base_Lightning):
         ybatch = batch["labels"]
 
         xbatch = self.prep_batch(x_eeg, x_eog)
-        
+
         pred = self(xbatch)
 
         step_loss, step_acc, step_kap, step_f1 = self.compute_train_metrics(pred, ybatch)
 
         assert (step_acc is not None) and (step_kap is not None) and (step_f1 is not None)
 
-        #detach metrics from graph and move to cpu:
+        # detach metrics from graph and move to cpu:
         step_loss = step_loss.cpu().detach()
         step_acc = step_acc.cpu().detach()
         step_kap = step_kap.cpu().detach()
@@ -217,18 +214,14 @@ class USleep_Lightning(Base_Lightning):
         self.validation_labels.append(ybatch)
         self.validation_preds.append(pred)
 
-    def run_test(self, 
-                 trainer: pl.Trainer,
-                 loader,
-                 output_folder_prefix,
-                 load_best_model = True):
+    def run_test(self, trainer: pl.Trainer, loader, output_folder_prefix, load_best_model=True):
         self.eval()
-        
+
         os.makedirs(output_folder_prefix)
 
         self.output_folder_prefix = output_folder_prefix
 
-        if load_best_model == True:
+        if load_best_model:
             _ = trainer.test(self, loader, ckpt_path="best")
         else:
             _ = trainer.test(self, loader)
@@ -243,18 +236,19 @@ class USleep_Lightning(Base_Lightning):
         assert len(x_eeg.shape) == 3
 
         ybatch = torch.flatten(ybatch)
-        
-        if self.include_eog == False:
+
+        if not self.include_eog:
             x_eog = None
         else:
             assert len(x_eog.shape) == 3
-        
+
         output = self.majority_vote_prediction(x_eeg, x_eog, tags)
 
-        log_test_step(self.output_folder_prefix,
-                      dataset=tags["dataset"],
-                      subject=tags["subject"],
-                      record=tags["record"],
-                      output=output,
-                      labels=ybatch.to("cpu"))
-
+        log_test_step(
+            self.output_folder_prefix,
+            dataset=tags["dataset"],
+            subject=tags["subject"],
+            record=tags["record"],
+            output=output,
+            labels=ybatch.to("cpu"),
+        )

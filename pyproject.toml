@@ -26,7 +26,7 @@ dependencies = [
 ]
 
 [project.urls]
-repository = "https://gitlab.au.dk/tech_ear-eeg/common-sleep-data-pipeline"
+repository = "https://github.com/jesperstroem/CSDP"
 
 [project.optional-dependencies]
 dev = [

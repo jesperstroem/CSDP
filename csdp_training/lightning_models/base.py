@@ -5,22 +5,15 @@ Created on Thu Feb  2 13:40:59 2023
 @author: repse
 """
 
+import lightning as pl
 import torch
 import torch.nn as nn
-import lightning as pl
-from csdp_training.utility import kappa, acc, f1
+
+from csdp_training.utility import acc, f1, kappa
+
 
 class Base_Lightning(pl.LightningModule):
-    def __init__(
-        self,
-        model,
-        lr,
-        batch_size,
-        lr_patience,
-        lr_factor,
-        lr_minimum,
-        loss_weights
-    ):
+    def __init__(self, model, lr, batch_size, lr_patience, lr_factor, lr_minimum, loss_weights):
         super().__init__()
 
         self.model = model
@@ -38,14 +31,13 @@ class Base_Lightning(pl.LightningModule):
         self.validation_preds = []
         self.validation_labels = []
 
-        weights = torch.tensor(loss_weights) if loss_weights != None else None
+        weights = torch.tensor(loss_weights) if loss_weights is not None else None
 
-        self.loss = nn.CrossEntropyLoss(weight=weights,
-                                        ignore_index=5)
+        self.loss = nn.CrossEntropyLoss(weight=weights, ignore_index=5)
 
-        self.save_hyperparameters(ignore=['model'])
+        self.save_hyperparameters(ignore=["model"])
 
-        self.log_to_progress_bar=False
+        self.log_to_progress_bar = False
 
     def forward(self, x):
         return self.model(x.float())
@@ -53,22 +45,20 @@ class Base_Lightning(pl.LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
 
-        scheduler=torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer,
-                                                             mode='max',
-                                                             factor=self.lr_factor,
-                                                             patience=self.lr_patience,
-                                                             threshold=1e-4,
-                                                             threshold_mode='rel',
-                                                             cooldown=0,
-                                                             min_lr=self.lr_minimum,
-                                                             eps=1e-8,
-                                                             verbose=True)
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optimizer,
+            mode="max",
+            factor=self.lr_factor,
+            patience=self.lr_patience,
+            threshold=1e-4,
+            threshold_mode="rel",
+            cooldown=0,
+            min_lr=self.lr_minimum,
+            eps=1e-8,
+            verbose=True,
+        )
 
-        return {
-            'optimizer': optimizer,
-            'monitor': 'valKap',
-            'lr_scheduler': scheduler
-        }
+        return {"optimizer": optimizer, "monitor": "valKap", "lr_scheduler": scheduler}
 
     def compute_train_metrics(self, y_pred, y_true):
         y_pred = torch.swapdims(y_pred, 1, 2)
@@ -83,13 +73,12 @@ class Base_Lightning(pl.LightningModule):
             accu = acc(y_pred, y_true)
             kap = kappa(y_pred, y_true, 5)
             f1_score = f1(y_pred, y_true, average=False)
-        except:
+        except Exception:
             accu = None
             kap = None
             f1_score = None
 
         return loss, accu, kap, f1_score
-
 
     def compute_test_metrics(self, y_pred, y_true):
         y_true = torch.flatten(y_true)
@@ -105,7 +94,7 @@ class Base_Lightning(pl.LightningModule):
 
         mean_loss = torch.mean(torch.stack(all_outputs, dim=0))
 
-        self.log('trainLoss', mean_loss, batch_size=self.batch_size, rank_zero_only=True)
+        self.log("trainLoss", mean_loss, batch_size=self.batch_size, rank_zero_only=True)
 
         self.training_step_outputs.clear()
 
@@ -114,7 +103,6 @@ class Base_Lightning(pl.LightningModule):
         all_acc = self.validation_step_acc
         all_kap = self.validation_step_kap
         all_f1 = self.validation_step_f1
-
 
         mean_loss = torch.mean(torch.stack(all_losses, dim=0))
         mean_acc = torch.mean(torch.stack(all_acc, dim=0))
@@ -126,16 +114,16 @@ class Base_Lightning(pl.LightningModule):
         mean_f1c3 = torch.mean(torch.stack(all_f1, dim=1)[3])
         mean_f1c4 = torch.mean(torch.stack(all_f1, dim=1)[4])
 
-        batch_size=1
+        batch_size = 1
 
-        self.log('valLoss', mean_loss, batch_size=batch_size, rank_zero_only=True)
-        self.log('valAcc', mean_acc, batch_size=batch_size, rank_zero_only=True)
-        self.log('valKap', mean_kap, batch_size=batch_size, rank_zero_only=True, prog_bar=self.log_to_progress_bar)
-        self.log('val_f1_c0', mean_f1c0, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c1', mean_f1c1, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c2', mean_f1c2, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c3', mean_f1c3, batch_size=batch_size, rank_zero_only=True)
-        self.log('val_f1_c4', mean_f1c4, batch_size=batch_size, rank_zero_only=True)
+        self.log("valLoss", mean_loss, batch_size=batch_size, rank_zero_only=True)
+        self.log("valAcc", mean_acc, batch_size=batch_size, rank_zero_only=True)
+        self.log("valKap", mean_kap, batch_size=batch_size, rank_zero_only=True, prog_bar=self.log_to_progress_bar)
+        self.log("val_f1_c0", mean_f1c0, batch_size=batch_size, rank_zero_only=True)
+        self.log("val_f1_c1", mean_f1c1, batch_size=batch_size, rank_zero_only=True)
+        self.log("val_f1_c2", mean_f1c2, batch_size=batch_size, rank_zero_only=True)
+        self.log("val_f1_c3", mean_f1c3, batch_size=batch_size, rank_zero_only=True)
+        self.log("val_f1_c4", mean_f1c4, batch_size=batch_size, rank_zero_only=True)
 
         self.validation_step_loss.clear()
         self.validation_step_acc.clear()
